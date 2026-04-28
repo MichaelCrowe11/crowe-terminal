@@ -6,35 +6,36 @@
 @source "../node_modules/streamdown/dist/index.js";
 
 @theme {
-    --color-background: rgb(34, 34, 34);
+    --color-background: rgb(11, 11, 12);
     --color-foreground: #f7f7f7;
     --color-white: #f7f7f7;
     --color-primary: #f7f7f7;
     --color-muted-foreground: rgb(195, 200, 194);
     --color-secondary: rgb(195, 200, 194);
     --color-muted: rgb(140, 145, 140);
-    --color-accent-50: rgb(236, 253, 232);
-    --color-accent-100: rgb(209, 250, 202);
-    --color-accent-200: rgb(167, 243, 168);
-    --color-accent-300: rgb(110, 231, 133);
-    --color-accent-400: rgb(88, 193, 66); /* main accent color */
-    --color-accent-500: rgb(63, 162, 51);
-    --color-accent-600: rgb(47, 133, 47);
-    --color-accent-700: rgb(34, 104, 43);
-    --color-accent-800: rgb(22, 81, 35);
-    --color-accent-900: rgb(15, 61, 29);
+    /* Crowe Logic gold accent palette (#bfa669 anchor). */
+    --color-accent-50: rgb(255, 247, 223);
+    --color-accent-100: rgb(244, 232, 188);
+    --color-accent-200: rgb(232, 213, 145);
+    --color-accent-300: rgb(216, 192, 137);
+    --color-accent-400: rgb(191, 166, 105); /* main accent color — Crowe gold */
+    --color-accent-500: rgb(170, 142, 80);
+    --color-accent-600: rgb(143, 117, 60);
+    --color-accent-700: rgb(115, 92, 45);
+    --color-accent-800: rgb(86, 68, 32);
+    --color-accent-900: rgb(58, 45, 21);
     --color-error: rgb(229, 77, 46);
     --color-warning: rgb(224, 185, 86);
     --color-success: rgb(78, 154, 6);
-    --color-panel: rgba(31, 33, 31, 0.5);
+    --color-panel: rgba(20, 22, 28, 0.5);
     --color-hover: rgba(255, 255, 255, 0.1);
-    --color-border: rgba(255, 255, 255, 0.16);
-    --color-modalbg: #232323;
-    --color-accentbg: rgba(88, 193, 66, 0.5);
+    --color-border: rgba(191, 166, 105, 0.16);
+    --color-modalbg: #1a1d24;
+    --color-accentbg: rgba(191, 166, 105, 0.5);
     --color-hoverbg: rgba(255, 255, 255, 0.2);
     --color-highlightbg: rgba(255, 255, 255, 0.2);
-    --color-accent: rgb(88, 193, 66);
-    --color-accenthover: rgb(118, 223, 96);
+    --color-accent: rgb(191, 166, 105);
+    --color-accenthover: rgb(216, 192, 137);
 
     --font-sans: "Inter", sans-serif;
     --font-mono: "Hack", monospace;

@@ -5,6 +5,7 @@ import { handleWaveAIContextMenu } from "@/app/aipanel/aipanel-contextmenu";
 import { useAtomValue } from "jotai";
 import { memo } from "react";
 import { WaveAIModel } from "./waveai-model";
+import croweFace from "@/app/asset/crowe-face.png";
 
 export const AIPanelHeader = memo(() => {
     const model = WaveAIModel.getInstance();
@@ -25,7 +26,7 @@ export const AIPanelHeader = memo(() => {
             onContextMenu={handleContextMenu}
         >
             <h2 className="text-white text-sm @xs:text-lg font-semibold flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
-                <i className="fa fa-sparkles text-accent"></i>
+                <img src={croweFace} alt="Crowe Logic" className="h-6 w-6 rounded-full object-cover" />
                 Crowe Logic
             </h2>
 
