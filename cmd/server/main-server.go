@@ -14,6 +14,12 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/wavetermdev/waveterm/pkg/agent"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/allowlist"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/applescript"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/playwright"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/system"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/terminal"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat"
 	"github.com/wavetermdev/waveterm/pkg/authkey"
 	"github.com/wavetermdev/waveterm/pkg/blockcontroller"
@@ -598,6 +604,7 @@ func main() {
 		return
 	}
 	go web.RunWebSocketServer(wsListener)
+	agent.InitAgent(context.Background())
 	unixListener, err := web.MakeUnixListener()
 	if err != nil {
 		log.Printf("error creating unix listener: %v\n", err)

@@ -1,7 +1,94 @@
 # Crowe Terminal — Agentic Orchestrator Design
 
 Date: 2026-04-28
-Status: Approved (locked, moving to implementation)
+Status: v1 architecture complete — triple-tool transport + 5 tool families shipped
+
+## Architecture (as built)
+
+**Triple-tool: one registry, three transports.** Same handler code reachable
+from CroweLM (via Foundry), from any OpenAI/Anthropic/Gemini model (via Wave's
+native AI block), and from any MCP-aware client (Claude Desktop, Cursor, other
+Crowe surfaces) — all without duplication.
+
+```
+                   ┌────────────────────────────────┐
+                   │   Tool Registry (Go, in-proc)  │
+                   │   pkg/agent/registry           │
+                   └──┬──────────┬──────────┬───────┘
+                      │          │          │
+            ┌─────────▼┐  ┌──────▼──────┐  ┌▼──────────────┐
+            │ HTTP/WS  │  │ Wave native │  │ MCP stdio     │
+            │ adapter  │  │ aiusechat   │  │ adapter       │
+            │ :8012    │  │ adapter     │  │ (cmd/crowe-mcp│
+            │ +X-Auth  │  │ (in-proc)   │  │  binary)      │
+            └────┬─────┘  └──────┬──────┘  └───────┬───────┘
+                 │               │                  │
+                 ▼               ▼                  ▼
+         Foundry bridge   Wave AI panel     Claude Desktop /
+         + crowe_terminal tooluse cards     Cursor / external
+         proxy registers  + approval flow   MCP clients
+         each tool as     (existing)
+         ct_*
+```
+
+## Implementation snapshot (2026-04-28)
+
+**Tool registry + 3 transports — all shipped:**
+- `pkg/agent/registry` — schemas + handlers + dispatch
+- `pkg/agent/transport/agenthttp` — HTTP/WS, X-AuthKey, loopback-only
+- `pkg/agent/transport/waveadapter` — wraps registry tools as
+  `uctypes.ToolDefinition`; appended to Wave's tool list in
+  `GenerateTabStateAndTools`. Inherits Wave's existing approval +
+  action-card rendering for free.
+- `pkg/agent/transport/agentmcp` — MCP server over stdio
+  (initialize / tools/list / tools/call). Standalone binary at
+  `cmd/crowe-mcp` for external clients.
+
+**Tool families — all shipped:**
+
+| Family | Tools | Notes |
+|---|---|---|
+| `system.*` | `metrics`, `run_applescript`, `tell_app` | gopsutil + osascript (darwin) |
+| `terminal.*` | `exec_safe`, `propose_command`, `list_blocks` | Denylist (17 patterns), wstore queries, BlockInputUnion |
+| `allowlist.*` | `check`, `list`, `add` | Persisted JSON, denylist override, glob patterns |
+| `browser.*` | All Playwright MCP tools, dynamically | Outbound MCP client; activate with `CROWE_AGENT_PLAYWRIGHT=1` |
+
+**Outbound MCP client:**
+- `pkg/agent/mcpclient` — minimal JSON-RPC stdio client
+- Spawns Playwright MCP on demand via `npx @playwright/mcp@latest`
+- Each upstream tool registered as agent tool (`browser_navigate` →
+  `browser.navigate`); model sees them like any other agent tool.
+
+**Foundry bridge integration:**
+- `tools/crowe_terminal.py` (in foundry repo) auto-registers every
+  registry tool as a Foundry tool (`ct_*`) at import time when
+  `CROWE_AGENT_TOOLS=1`. Surfaces tool errors correctly.
+- `emain/emain-foundry-bridge.ts` passes auth key + agent host/port +
+  enable flag through env on bridge spawn.
+
+**Triple round-trip verified:**
+The same `system.metrics` tool returns live host data when called via
+- HTTP `POST /v1/call` (curl direct)
+- Foundry's `ct_system_metrics(topn=1)` (Python proxy)
+- MCP `tools/call name=system.metrics` (stdio crowe-mcp binary)
+
+**Discovered during build:**
+- Wave already ships a `sysinfo` block with live CPU/mem charts. No
+  new sysmon block needed; combined with `system.metrics` and the
+  Wave adapter's action cards, the spec is covered.
+- Wave's `aiusechat` already has a complete tool-approval pipeline
+  (`RegisterToolApproval`/`UpdateToolApproval`/`WaitForToolApproval`)
+  + frontend action-card UI in `aitooluse.tsx`. By going through the
+  Wave adapter, agent tools inherit ALL of this for free.
+
+**Not yet built:**
+- `browser.in_window.*` (drive the in-window webview block) —
+  requires Electron `emain/` TS work; deferred. Playwright covers the
+  needed automation surface in the meantime.
+- Allowlist editor in Settings — JSON file is editable today at
+  `~/.config/crowe-terminal/allowlist.json`. UI is polish.
+- `npm run dev` Electron smoke — manual validation step left for the
+  next session.
 
 ## Goal
 
