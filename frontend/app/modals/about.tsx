@@ -28,11 +28,11 @@ const AboutModalV = ({ versionString, updaterChannel, onClose }: AboutModalVProp
             <div className="flex flex-col gap-[26px] w-full relative z-10">
                 <div className="flex flex-col items-center justify-center gap-4 self-stretch w-full text-center">
                     <Logo />
-                    <div className="text-[25px]">Wave Terminal</div>
+                    <div className="text-[25px]">Crowe Terminal</div>
                     <div className="leading-5">
-                        Open-Source AI-Integrated Terminal
+                        AI-Native Terminal Powered by Crowe Logic
                         <br />
-                        Built for Seamless Workflows
+                        Built on Wave Terminal (Apache 2.0)
                     </div>
                 </div>
                 <div className="items-center gap-4 self-stretch w-full text-center">
@@ -42,7 +42,7 @@ const AboutModalV = ({ versionString, updaterChannel, onClose }: AboutModalVProp
                 </div>
                 <div className="grid grid-cols-2 gap-[10px] self-stretch w-full">
                     <a
-                        href="https://github.com/wavetermdev/waveterm?ref=about"
+                        href="https://github.com/MichaelCrowe11/crowe-terminal?ref=about"
                         target="_blank"
                         rel="noopener"
                         className="inline-flex items-center justify-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
@@ -50,32 +50,34 @@ const AboutModalV = ({ versionString, updaterChannel, onClose }: AboutModalVProp
                         <i className="fa-brands fa-github mr-2"></i>GitHub
                     </a>
                     <a
-                        href="https://www.waveterm.dev/?ref=about"
+                        href="https://crowelogic.com/?ref=about"
                         target="_blank"
                         rel="noopener"
                         className="inline-flex items-center justify-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
                     >
-                        <i className="fa-sharp fa-light fa-globe mr-2"></i>Website
+                        <i className="fa-sharp fa-light fa-globe mr-2"></i>Crowe Logic
                     </a>
                     <a
-                        href="https://github.com/wavetermdev/waveterm/blob/main/ACKNOWLEDGEMENTS.md"
+                        href="https://github.com/wavetermdev/waveterm?ref=upstream"
                         target="_blank"
                         rel="noopener"
                         className="inline-flex items-center justify-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
                     >
-                        <i className="fa-sharp fa-light fa-book mr-2"></i>Open Source
+                        <i className="fa-sharp fa-light fa-code-branch mr-2"></i>Upstream
                     </a>
                     <a
-                        href="https://github.com/sponsors/wavetermdev"
+                        href="https://github.com/MichaelCrowe11/crowe-terminal/blob/main/NOTICE"
                         target="_blank"
                         rel="noopener"
                         className="inline-flex items-center justify-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
                     >
-                        <i className="fa-sharp fa-light fa-heart mr-2"></i>Sponsor
+                        <i className="fa-sharp fa-light fa-book mr-2"></i>Acknowledgments
                     </a>
                 </div>
-                <div className="items-center gap-4 self-stretch w-full text-center">
-                    &copy; {currentDate.getFullYear()} Command Line Inc.
+                <div className="items-center gap-4 self-stretch w-full text-center text-[11px] opacity-70">
+                    &copy; {currentDate.getFullYear()} Crowe Logic Inc.
+                    <br />
+                    Wave Terminal &copy; Command Line Inc. (Apache 2.0)
                 </div>
             </div>
         </Modal>

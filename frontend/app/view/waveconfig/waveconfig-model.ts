@@ -80,7 +80,7 @@ function makeConfigFiles(isWindows: boolean): ConfigFile[] {
             hasJsonView: true,
         },
         {
-            name: "Wave AI Modes",
+            name: "Crowe Logic Modes",
             path: "waveai.json",
             language: "json",
             description: "Local models and BYOK",
