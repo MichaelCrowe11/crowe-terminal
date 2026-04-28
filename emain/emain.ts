@@ -41,6 +41,7 @@ import {
 } from "./emain-platform";
 import { ensureHotSpareTab, setMaxTabCacheSize } from "./emain-tabview";
 import { getIsWaveSrvDead, getWaveSrvProc, getWaveSrvReady, runWaveSrv } from "./emain-wavesrv";
+import { startFoundryBridge, stopFoundryBridge } from "./emain-foundry-bridge";
 import {
     createBrowserWindow,
     createNewWaveWindow,
@@ -298,6 +299,7 @@ electronApp.on("before-quit", (e) => {
         return;
     }
     getWaveSrvProc()?.kill("SIGINT");
+    stopFoundryBridge();
     shutdownWshrpc();
     if (getForceQuit()) {
         return;
@@ -397,6 +399,7 @@ async function appMain() {
     }
     const ready = await getWaveSrvReady();
     console.log("wavesrv ready signal received", ready, Date.now() - startTs, "ms");
+    startFoundryBridge().catch((e) => console.warn("[foundry-bridge] startup failed", e));
     await electronApp.whenReady();
     configureAuthKeyRequestInjection(electron.session.defaultSession);
     initIpcHandlers();

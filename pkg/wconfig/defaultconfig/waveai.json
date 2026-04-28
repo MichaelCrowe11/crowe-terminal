@@ -1,43 +1,38 @@
 {
-    "waveai@quick": {
-        "display:name": "Quick",
+    "waveai@crowelm-supreme": {
+        "display:name": "CroweLM Supreme",
         "display:order": -3,
-        "display:icon": "bolt",
-        "display:description": "Fastest responses (gpt-5-mini)",
-        "ai:provider": "wave",
-        "ai:apitype": "openai-responses",
-        "ai:model": "gpt-5-mini",
-        "ai:thinkinglevel": "low",
-        "ai:verbosity": "low",
-        "ai:capabilities": ["tools", "images", "pdfs"],
-        "ai:switchcompat": ["wavecloud"]
-    },
-    "waveai@balanced": {
-        "display:name": "Balanced",
-        "display:order": -2,
         "display:icon": "sparkles",
-        "display:description": "Good mix of speed and accuracy\n(gpt-5.1 with minimal thinking)",
-        "ai:provider": "wave",
-        "ai:apitype": "openai-responses",
-        "ai:model": "gpt-5.1",
-        "ai:thinkinglevel": "low",
-        "ai:verbosity": "low",
-        "ai:capabilities": ["tools", "images", "pdfs"],
-        "waveai:premium": true,
-        "ai:switchcompat": ["wavecloud"]
+        "display:description": "Crowe Logic's flagship model.\nFull tool access via local Foundry agent.",
+        "ai:provider": "crowe-logic",
+        "ai:apitype": "openai-chat",
+        "ai:baseurl": "http://127.0.0.1:8011/v1",
+        "ai:model": "crowelm-supreme",
+        "ai:capabilities": ["tools", "images"],
+        "ai:switchcompat": ["crowe-logic"]
     },
-    "waveai@deep": {
-        "display:name": "Deep",
+    "waveai@crowelm-apex": {
+        "display:name": "CroweLM Apex",
+        "display:order": -2,
+        "display:icon": "bolt",
+        "display:description": "Peak-performance reasoning tier.\nFast, precise, executive-grade.",
+        "ai:provider": "crowe-logic",
+        "ai:apitype": "openai-chat",
+        "ai:baseurl": "http://127.0.0.1:8011/v1",
+        "ai:model": "crowelm-apex",
+        "ai:capabilities": ["tools"],
+        "ai:switchcompat": ["crowe-logic"]
+    },
+    "waveai@crowelm-auto": {
+        "display:name": "CroweLM Auto",
         "display:order": -1,
         "display:icon": "lightbulb",
-        "display:description": "Slower but most capable\n(gpt-5.1 with full reasoning)",
-        "ai:provider": "wave",
-        "ai:apitype": "openai-responses",
-        "ai:model": "gpt-5.1",
-        "ai:thinkinglevel": "medium",
-        "ai:verbosity": "low",
-        "ai:capabilities": ["tools", "images", "pdfs"],
-        "waveai:premium": true,
-        "ai:switchcompat": ["wavecloud"]
+        "display:description": "Auto router — picks the right tier per turn.",
+        "ai:provider": "crowe-logic",
+        "ai:apitype": "openai-chat",
+        "ai:baseurl": "http://127.0.0.1:8011/v1",
+        "ai:model": "crowelm-auto",
+        "ai:capabilities": ["tools"],
+        "ai:switchcompat": ["crowe-logic"]
     }
 }

@@ -4,16 +4,42 @@
         "display:order": -1,
         "ai:*": true
     },
-    "ai@wave": {
-        "display:name": "Wave Proxy - gpt-5-mini",
+    "ai@crowelm-supreme": {
+        "display:name": "CroweLM Supreme",
         "display:order": 0,
         "ai:*": true,
-        "ai:apitype": "",
-        "ai:baseurl": "",
+        "ai:apitype": "openai-chat",
+        "ai:baseurl": "http://127.0.0.1:8011/v1",
         "ai:apitoken": "",
-        "ai:name": "",
+        "ai:name": "Crowe Logic",
         "ai:orgid": "",
-        "ai:model": "gpt-5-mini",
+        "ai:model": "crowelm-supreme",
+        "ai:maxtokens": 8000,
+        "ai:timeoutms": 120000
+    },
+    "ai@crowelm-apex": {
+        "display:name": "CroweLM Apex",
+        "display:order": 1,
+        "ai:*": true,
+        "ai:apitype": "openai-chat",
+        "ai:baseurl": "http://127.0.0.1:8011/v1",
+        "ai:apitoken": "",
+        "ai:name": "Crowe Logic",
+        "ai:orgid": "",
+        "ai:model": "crowelm-apex",
+        "ai:maxtokens": 4000,
+        "ai:timeoutms": 60000
+    },
+    "ai@crowelm-auto": {
+        "display:name": "CroweLM Auto (Router)",
+        "display:order": 2,
+        "ai:*": true,
+        "ai:apitype": "openai-chat",
+        "ai:baseurl": "http://127.0.0.1:8011/v1",
+        "ai:apitoken": "",
+        "ai:name": "Crowe Logic",
+        "ai:orgid": "",
+        "ai:model": "crowelm-auto",
         "ai:maxtokens": 4000,
         "ai:timeoutms": 60000
     }
