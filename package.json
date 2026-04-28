@@ -1,16 +1,16 @@
 {
-    "name": "waveterm",
+    "name": "crowe-terminal",
     "author": {
-        "name": "Command Line Inc",
-        "email": "info@commandline.dev"
+        "name": "Crowe Logic, Inc.",
+        "email": "michael@crowelogic.com"
     },
-    "productName": "Wave",
-    "description": "Open-Source AI-Native Terminal Built for Seamless Workflows",
+    "productName": "Crowe Terminal",
+    "description": "Crowe Terminal: AI-native multi-pane terminal with browser, file, and CroweLM chat panes. Part of the Crowe Logic platform.",
     "license": "Apache-2.0",
     "version": "0.14.5",
     "homepage": "https://waveterm.dev",
     "build": {
-        "appId": "dev.commandline.waveterm"
+        "appId": "io.crowelogic.terminal"
     },
     "private": true,
     "main": "./dist/main/index.js",
@@ -139,5 +139,9 @@
     "workspaces": [
         "docs",
         "tsunami/frontend"
-    ]
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/MichaelCrowe11/crowe-terminal.git"
+    }
 }
