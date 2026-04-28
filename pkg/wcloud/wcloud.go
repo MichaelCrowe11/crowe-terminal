@@ -23,9 +23,14 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/wavebase"
 )
 
-const WCloudEndpoint = "https://api.waveterm.dev/central"
+// Crowe Terminal does not phone home to upstream Wave by default.
+// telemetry:enabled is false in defaultconfig/settings.json, and these
+// endpoints are intentionally left blank so an accidental enable from a
+// user's settings.json cannot send data to api.waveterm.dev. Operators
+// who want telemetry must point these env vars at their own collector.
+const WCloudEndpoint = ""
 const WCloudEndpointVarName = "WCLOUD_ENDPOINT"
-const WCloudPingEndpoint = "https://ping.waveterm.dev/central"
+const WCloudPingEndpoint = ""
 const WCloudPingEndpointVarName = "WCLOUD_PING_ENDPOINT"
 
 var WCloudEndpoint_VarCache string
