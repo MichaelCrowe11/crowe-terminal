@@ -7,7 +7,7 @@
 <h1 align="center">Crowe Terminal</h1>
 
 <p align="center">
-  <strong>The terminal with Claude Opus 4.7 built in.</strong><br/>
+  <strong>The terminal with CroweLM Supreme built in.</strong><br/>
   An AI-native terminal powered by the Crowe Logic Foundry agent.<br/>
   macOS · Linux · Windows
 </p>
@@ -26,7 +26,7 @@ Crowe Terminal is a fork of [Wave Terminal](https://www.waveterm.dev) (Apache 2.
 
 Out of the box you get:
 
-- **Five CroweLM models** in the AI block: Auto (router), Supreme (Claude Opus 4.7), Apex, Titan, Oracle
+- **Five CroweLM models** in the AI block: Auto (router), Supreme (flagship reasoning), Apex (peak performance), Titan (long-context), Oracle (deep foresight)
 - **Local agent bridge** — the Foundry agent runs on your machine via a local OpenAI-compatible API at `127.0.0.1:8011`. Your code stays local; only model calls leave the machine
 - **Wave's terminal foundation** — split panes, browser block, SSH sessions, themes, dynamic layout
 
@@ -65,7 +65,7 @@ The **Crowe Logic agent** behind it follows the [Crowe Logic pricing](https://cr
 
 | Tier | Price | What you get |
 |---|---|---|
-| BYOK | $19/mo | Bring your Anthropic / OpenAI / Azure keys, agent runs locally, full feature set |
+| BYOK | $19/mo | Bring your own provider API keys, agent runs locally, full feature set |
 | Personal | $29/mo | Hosted CroweLM Auto/Apex/Titan, 750 credits/mo, no key management |
 | Pro | $99/mo | Adds Supreme/Oracle/Sovereign, unmetered dual-mode, 5h session memory |
 | Team | $49/seat/mo | Pooled credits, shared workspace, admin cost reporting (3+ seats) |
