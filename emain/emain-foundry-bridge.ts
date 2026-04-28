@@ -80,6 +80,8 @@ export async function startFoundryBridge(): Promise<boolean> {
             CROWE_BRIDGE_HOST: BRIDGE_HOST,
             CROWE_BRIDGE_PORT: String(BRIDGE_PORT),
             PYTHONPATH: foundryRoot,
+            CROWE_PORTFOLIO_URL: process.env.CROWE_PORTFOLIO_URL ?? "",
+            CROWE_PORTFOLIO_TOKEN: process.env.CROWE_PORTFOLIO_TOKEN ?? "",
         },
         stdio: ["ignore", "pipe", "pipe"],
     });

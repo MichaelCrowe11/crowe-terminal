@@ -70,6 +70,17 @@ The **Crowe Logic agent** behind it follows the [Crowe Logic pricing](https://cr
 | Pro | $99/mo | Adds Supreme/Oracle/Sovereign, unmetered dual-mode, 5h session memory |
 | Team | $49/seat/mo | Pooled credits, shared workspace, admin cost reporting (3+ seats) |
 
+## Portfolio integration (optional)
+
+If you also run [`crowe-portfolio`](https://github.com/MichaelCrowe11/crowe-portfolio) (the unified knowledge plane across all your repos), Crowe Terminal will pass two env vars through to the Foundry bridge:
+
+```bash
+export CROWE_PORTFOLIO_URL=https://your-portfolio-host
+export CROWE_PORTFOLIO_TOKEN=<bearer>
+```
+
+The bridge then exposes `search_code` to the agent, so you can ask the AI block portfolio-wide questions like *"find every Stripe webhook handler across my repos"* and get ranked code citations across canonical repos.
+
 ## Build from source
 
 ```bash
