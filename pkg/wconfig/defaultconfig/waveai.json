@@ -34,5 +34,29 @@
         "ai:model": "crowelm-auto",
         "ai:capabilities": ["tools"],
         "ai:switchcompat": ["crowe-logic"]
+    },
+    "waveai@crowelm-grower": {
+        "display:name": "CroweLM Grower",
+        "display:order": 0,
+        "display:icon": "leaf",
+        "display:description": "Cultivation operations specialist.\nSubstrate prep, sterilization, contamination triage, yield.",
+        "ai:provider": "crowe-logic",
+        "ai:apitype": "openai-chat",
+        "ai:baseurl": "http://127.0.0.1:8011/v1",
+        "ai:model": "crowelm-grower",
+        "ai:capabilities": ["tools"],
+        "ai:switchcompat": ["crowe-logic"]
+    },
+    "waveai@crowelm-kernel": {
+        "display:name": "CroweLM Kernel",
+        "display:order": 1,
+        "display:icon": "atom",
+        "display:description": "Cultivation-tuned fast tier.\nLions Mane SOPs + mycology research + grow-room ops.",
+        "ai:provider": "crowe-logic",
+        "ai:apitype": "openai-chat",
+        "ai:baseurl": "http://127.0.0.1:8011/v1",
+        "ai:model": "crowelm-kernel",
+        "ai:capabilities": ["tools"],
+        "ai:switchcompat": ["crowe-logic"]
     }
 }
