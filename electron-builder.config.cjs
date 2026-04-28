@@ -99,8 +99,8 @@ const config = {
         target: ["nsis", "msi", "zip"],
         signtoolOptions: windowsShouldSign && {
             signingHashAlgorithms: ["sha256"],
-            publisherName: "Command Line Inc",
-            certificateSubjectName: "Command Line Inc",
+            publisherName: "Crowe Logic Inc",
+            certificateSubjectName: "Crowe Logic Inc",
             certificateSha1: process.env.SM_CODE_SIGNING_CERT_SHA1_HASH,
         },
     },
@@ -118,8 +118,10 @@ const config = {
         fpm: ["--rpm-rpmbuild-define", "_build_id_links none"],
     },
     publish: {
-        provider: "generic",
-        url: "https://dl.waveterm.dev/releases-w2",
+        provider: "github",
+        owner: "MichaelCrowe11",
+        repo: "crowe-terminal",
+        releaseType: "release",
     },
     afterPack: (context) => {
         // This is a workaround to restore file permissions to the wavesrv binaries on macOS after packaging the universal binary.

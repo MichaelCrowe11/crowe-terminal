@@ -1,117 +1,91 @@
 <p align="center">
-  <a href="https://www.waveterm.dev">
-	<picture>
-		<source media="(prefers-color-scheme: dark)" srcset="./assets/wave-dark.png">
-		<source media="(prefers-color-scheme: light)" srcset="./assets/wave-light.png">
-		<img alt="Wave Terminal Logo" src="./assets/wave-light.png" width="240">
-	</picture>
-  </a>
-  <br/>
+  <picture>
+    <img alt="Crowe Terminal" src="./frontend/app/asset/logo.png" width="180">
+  </picture>
 </p>
 
-# Wave Terminal
+<h1 align="center">Crowe Terminal</h1>
 
-<div align="center">
+<p align="center">
+  <strong>The terminal with Claude Opus 4.7 built in.</strong><br/>
+  An AI-native terminal powered by the Crowe Logic Foundry agent.<br/>
+  macOS · Linux · Windows
+</p>
 
-[English](README.md) | [한국어](README.ko.md) | [繁體中文](README.zh-TW.md)
+<p align="center">
+  <a href="https://github.com/MichaelCrowe11/crowe-terminal/releases/latest"><b>Download for macOS</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://crowelogic.com">crowelogic.com</a>
+</p>
 
-</div>
+---
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fwavetermdev%2Fwaveterm.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fwavetermdev%2Fwaveterm?ref=badge_shield)
+## What is this?
 
-Wave is an open-source, AI-integrated terminal for macOS, Linux, and Windows. It works with any AI model. Bring your own API keys for OpenAI, Claude, or Gemini, or run local models via Ollama and LM Studio. No accounts required.
+Crowe Terminal is a fork of [Wave Terminal](https://www.waveterm.dev) (Apache 2.0) re-skinned with Crowe Logic branding and wired directly to the [Crowe Logic Foundry](https://github.com/MichaelCrowe11/crowe-logic-foundry) agent.
 
-Wave also supports durable SSH sessions that survive network interruptions and restarts, with automatic reconnection. Edit remote files with a built-in graphical editor and preview files inline without leaving the terminal.
+Out of the box you get:
 
-![WaveTerm Screenshot](./assets/wave-screenshot.webp)
+- **Five CroweLM models** in the AI block: Auto (router), Supreme (Claude Opus 4.7), Apex, Titan, Oracle
+- **Local agent bridge** — the Foundry agent runs on your machine via a local OpenAI-compatible API at `127.0.0.1:8011`. Your code stays local; only model calls leave the machine
+- **Wave's terminal foundation** — split panes, browser block, SSH sessions, themes, dynamic layout
 
-## Key Features
+## Install (macOS)
 
-- Wave AI - Context-aware terminal assistant that reads your terminal output, analyzes widgets, and performs file operations
-- Durable SSH Sessions - Remote terminal sessions survive connection interruptions, network changes, and Wave restarts with automatic reconnection
-- Flexible drag & drop interface to organize terminal blocks, editors, web browsers, and AI assistants
-- Built-in editor for editing remote files with syntax highlighting and modern editor features
-- Rich file preview system for remote files (markdown, images, video, PDFs, CSVs, directories)
-- Quick full-screen toggle for any block - expand terminals, editors, and previews for better visibility, then instantly return to multi-block view
-- AI chat widget with support for multiple models (OpenAI, Claude, Azure, Perplexity, Ollama)
-- Command Blocks for isolating and monitoring individual commands
-- One-click remote connections with full terminal and file system access
-- Secure secret storage using native system backends - store API keys and credentials locally, access them across SSH sessions
-- Rich customization including tab themes, terminal styles, and background images
-- Powerful `wsh` command system for managing your workspace from the CLI and sharing data between terminal sessions
-- Connected file management with `wsh file` - seamlessly copy and sync files between local and remote SSH hosts
+> **Beta:** the .dmg is currently signed ad-hoc. Apple notarization in progress. For now:
+> 1. Download the `.dmg` for your CPU (arm64 for M-series, x64 for Intel) from [releases](https://github.com/MichaelCrowe11/crowe-terminal/releases/latest)
+> 2. Open it, drag **Crowe Terminal** to **Applications**
+> 3. **First launch:** right-click `Crowe Terminal.app` in Finder → **Open** → **Open** in the Gatekeeper dialog. Double-click works after the first time.
 
-## Wave AI
+## How the agent works
 
-Wave AI is your context-aware terminal assistant with access to your workspace:
+The terminal expects to find the [Foundry repo](https://github.com/MichaelCrowe11/crowe-logic-foundry) on your machine. On launch it:
 
-- **Terminal Context**: Reads terminal output and scrollback for debugging and analysis
-- **File Operations**: Read, write, and edit files with automatic backups and user approval
-- **CLI Integration**: Use `wsh ai` to pipe output or attach files directly from the command line
-- **BYOK Support**: Bring your own API keys for OpenAI, Claude, Gemini, Azure, and other providers
-- **Local Models**: Run local models with Ollama, LM Studio, and other OpenAI-compatible providers
-- **Free Beta**: Included AI credits while we refine the experience
-- **Coming Soon**: Command execution (with approval)
+1. Probes `127.0.0.1:8011` — if a bridge is already running, reuses it
+2. Else looks for the foundry at `$CROWE_FOUNDRY_PATH` or `~/Projects/crowe-logic-foundry`
+3. Spawns `python -m cli.openai_bridge` with the foundry's venv if found
+4. Skips silently if no foundry is found — Wave's manual AI config still works
 
-Learn more in our [Wave AI documentation](https://docs.waveterm.dev/waveai) and [Wave AI Modes documentation](https://docs.waveterm.dev/waveai-modes).
+Set up the Foundry locally:
 
-## Installation
+```bash
+git clone https://github.com/MichaelCrowe11/crowe-logic-foundry ~/Projects/crowe-logic-foundry
+cd ~/Projects/crowe-logic-foundry
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
 
-Wave Terminal works on macOS, Linux, and Windows.
+Restart Crowe Terminal — the AI block will show CroweLM models.
 
-Platform-specific installation instructions can be found [here](https://docs.waveterm.dev/gettingstarted).
+## Pricing
 
-You can also install Wave Terminal directly from: [www.waveterm.dev/download](https://www.waveterm.dev/download).
+The terminal is free and open-source (Apache 2.0 — fork it, redistribute it, do what you want).
 
-### Minimum requirements
+The **Crowe Logic agent** behind it follows the [Crowe Logic pricing](https://crowelogic.com/pricing):
 
-Wave Terminal runs on the following platforms:
+| Tier | Price | What you get |
+|---|---|---|
+| BYOK | $19/mo | Bring your Anthropic / OpenAI / Azure keys, agent runs locally, full feature set |
+| Personal | $29/mo | Hosted CroweLM Auto/Apex/Titan, 750 credits/mo, no key management |
+| Pro | $99/mo | Adds Supreme/Oracle/Sovereign, unmetered dual-mode, 5h session memory |
+| Team | $49/seat/mo | Pooled credits, shared workspace, admin cost reporting (3+ seats) |
 
-- macOS 11 or later (arm64, x64)
-- Windows 10 1809 or later (x64)
-- Linux based on glibc-2.28 or later (Debian 10, RHEL 8, Ubuntu 20.04, etc.) (arm64, x64)
+## Build from source
 
-The WSH helper runs on the following platforms:
+```bash
+brew install go go-task
+git clone https://github.com/MichaelCrowe11/crowe-terminal
+cd crowe-terminal
+npm install
+task package
+```
 
-- macOS 11 or later (arm64, x64)
-- Windows 10 or later (x64)
-- Linux Kernel 2.6.32 or later (x64), Linux Kernel 3.1 or later (arm64)
+Output: `make/Crowe Terminal-darwin-{arch}-{version}.dmg`
 
-## Roadmap
+## Acknowledgments
 
-Wave is constantly improving! Our roadmap will be continuously updated with our goals for each release. You can find it [here](./ROADMAP.md).
-
-Want to provide input to our future releases? Connect with us on [Discord](https://discord.gg/XfvZ334gwU) or open a [Feature Request](https://github.com/wavetermdev/waveterm/issues/new/choose)!
-
-## Links
-
-- Homepage &mdash; https://www.waveterm.dev
-- Download Page &mdash; https://www.waveterm.dev/download
-- Documentation &mdash; https://docs.waveterm.dev
-- X &mdash; https://x.com/wavetermdev
-- Discord Community &mdash; https://discord.gg/XfvZ334gwU
-
-## Building from Source
-
-See [Building Wave Terminal](BUILD.md).
-
-## Contributing
-
-Wave uses GitHub Issues for issue tracking.
-
-Find more information in our [Contributions Guide](CONTRIBUTING.md), which includes:
-
-- [Ways to contribute](CONTRIBUTING.md#contributing-to-wave-terminal)
-- [Contribution guidelines](CONTRIBUTING.md#before-you-start)
-
-### Sponsoring Wave ❤️
-
-If Wave Terminal is useful to you or your company, consider sponsoring development.
-
-Sponsorship helps support the time spent building and maintaining the project.
-
-- https://github.com/sponsors/wavetermdev
+Crowe Terminal builds on [Wave Terminal](https://github.com/wavetermdev/waveterm) by Command Line Inc. (Apache 2.0). The terminal core, layout system, and SSH/browser blocks are upstream Wave; the Crowe Logic agent integration, branding, and themes are this fork's contribution. See [`NOTICE`](./NOTICE) for full attribution.
 
 ## License
 
-Wave Terminal is licensed under the Apache-2.0 License. For more information on our dependencies, see [here](./ACKNOWLEDGEMENTS.md).
+Apache License 2.0 — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
