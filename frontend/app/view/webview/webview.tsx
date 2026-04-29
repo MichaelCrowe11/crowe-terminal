@@ -7,7 +7,9 @@ import { globalStore } from "@/app/store/jotaiStore";
 import { getSimpleControlShiftAtom } from "@/app/store/keymodel";
 import type { TabModel } from "@/app/store/tab-model";
 import { makeORef } from "@/app/store/wos";
-import { TabRpcClient } from "@/app/store/wshrpcutil";
+import { makeFeBlockRouteId } from "@/app/store/wshrouter";
+import { DefaultRouter, TabRpcClient } from "@/app/store/wshrpcutil";
+import { WebWshClient } from "@/app/view/webview/webview-wsh";
 import {
     BlockHeaderSuggestionControl,
     SuggestionControlNoData,
@@ -76,6 +78,8 @@ export class WebViewModel implements ViewModel {
     env: WebViewEnv;
     ctrlShiftUnsubFn: (() => void) | null = null;
 
+    webWshClient: WebWshClient;
+
     constructor({ blockId, nodeModel, tabModel, waveEnv }: ViewModelInitType) {
         this.nodeModel = nodeModel;
         this.tabModel = tabModel;
@@ -84,6 +88,8 @@ export class WebViewModel implements ViewModel {
         this.env = waveEnv;
         this.noPadding = atom(true);
         this.blockAtom = this.env.wos.getWaveObjectAtom<Block>(`block:${blockId}`);
+        this.webWshClient = new WebWshClient(blockId, this);
+        DefaultRouter.registerRoute(makeFeBlockRouteId(blockId), this.webWshClient);
         this.url = atom();
         const defaultUrlAtom = this.env.getSettingsKeyAtom("web:defaulturl");
         this.homepageUrl = atom((get) => {
@@ -215,6 +221,7 @@ export class WebViewModel implements ViewModel {
     dispose() {
         this.ctrlShiftUnsubFn?.();
         this.ctrlShiftUnsubFn = null;
+        DefaultRouter.unregisterRoute(makeFeBlockRouteId(this.blockId));
     }
 
     get viewComponent(): ViewComponent {

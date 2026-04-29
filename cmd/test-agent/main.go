@@ -22,6 +22,7 @@ import (
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/playwright"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/system"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/terminal"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/web"
 	"github.com/wavetermdev/waveterm/pkg/authkey"
 )
 
