@@ -58,6 +58,25 @@ tasks:
             WCLOUD_WS_ENDPOINT: "wss://wsapi-dev.waveterm.dev/"
             WAVETERM_NOCONFIRMQUIT: "1"
 
+    dev:reset:
+        desc: Kill any lingering wavesrv / openai_bridge / Electron processes and clear stale lockfiles. Run this when "single-instance-lock" or "address already in use" errors block a relaunch.
+        cmds:
+            - pkill -9 -f "wavesrv\\.arm64" 2>/dev/null || true
+            - pkill -9 -f "electron-vite dev" 2>/dev/null || true
+            - pkill -9 -f "openai_bridge" 2>/dev/null || true
+            - pkill -9 -f "Projects/crowe-terminal/node_modules/electron" 2>/dev/null || true
+            - rm -f "$HOME/Library/Application Support/waveterm-dev/wave.lock"
+            - rm -f "$HOME/Library/Application Support/Wave (Dev)/SingletonLock"
+            - rm -f "$HOME/Library/Application Support/Wave (Dev)/SingletonCookie"
+            - rm -f "$HOME/Library/Application Support/Wave (Dev)/SingletonSocket"
+            - 'echo "dev environment reset; run task electron:quickdev to relaunch"'
+
+    dev:fresh:
+        desc: One-shot fresh dev launch — runs dev:reset then electron:quickdev. Safe to re-run after crashes; preferred over `task dev` when you've been hitting lock errors.
+        cmds:
+            - task: dev:reset
+            - task: electron:quickdev
+
     preview:
         desc: Run the standalone component preview server with HMR (no Electron, no backend).
         dir: frontend/preview
