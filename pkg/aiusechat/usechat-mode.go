@@ -47,7 +47,10 @@ func resolveAIMode(requestedMode string, premium bool) (string, *wconfig.AIModeC
 	}
 
 	if config.WaveAICloud && !premium {
-		mode = uctypes.AIModeQuick
+		// Upstream Wave fell back to AIModeQuick ("waveai@quick"), but that
+		// config doesn't ship in this fork — would error on every chat.
+		// Fall back to the always-available local Foundry CroweLM Auto.
+		mode = uctypes.AIModeCroweFallback
 		config, err = getAIModeConfig(mode)
 		if err != nil {
 			return "", nil, err

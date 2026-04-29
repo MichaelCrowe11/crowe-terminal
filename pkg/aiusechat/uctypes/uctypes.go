@@ -168,6 +168,11 @@ const (
 	AIModeDeep           = "waveai@deep"
 	AIModeBuilderDefault = "waveaibuilder@default"
 	AIModeBuilderDeep    = "waveaibuilder@deep"
+
+	// Crowe Terminal fallback when a wavecloud-only mode is unavailable.
+	// Points at the local Foundry-routed CroweLM Auto config which always
+	// resolves in this fork.
+	AIModeCroweFallback = "waveai@crowelm-auto"
 )
 
 const (

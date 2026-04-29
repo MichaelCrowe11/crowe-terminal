@@ -139,27 +139,30 @@ export class WaveAIModel {
         });
 
         this.defaultModeAtom = jotai.atom((get) => {
-            const telemetryEnabled = get(getSettingsKeyAtom("telemetry:enabled")) ?? false;
+            // Crowe Terminal: local Foundry agent is always available, so
+            // we don't gate on telemetry like upstream Wave (which needed
+            // telemetry consent for wavecloud). Builder modes ship their
+            // own waveaibuilder@default which routes through Foundry too.
             if (this.inBuilder) {
-                return telemetryEnabled ? "waveaibuilder@default" : "invalid";
+                return "waveaibuilder@default";
             }
             const aiModeConfigs = get(this.aiModeConfigs);
-            if (!telemetryEnabled) {
-                let mode = get(getSettingsKeyAtom("waveai:defaultmode"));
-                if (mode == null || mode.startsWith("waveai@")) {
-                    return "unknown";
-                }
-                return mode;
-            }
-            const hasPremium = get(this.hasPremiumAtom);
-            const waveFallback = hasPremium ? "waveai@balanced" : "waveai@quick";
-            let mode = get(getSettingsKeyAtom("waveai:defaultmode")) ?? waveFallback;
-            if (!hasPremium && mode.startsWith("waveai@")) {
-                mode = "waveai@quick";
+            // Crowe Terminal fallback: regardless of "premium" status, land
+            // on the local Foundry-routed CroweLM Auto mode. Upstream Wave's
+            // waveai@balanced / waveai@quick names referenced wavecloud
+            // configs that never shipped in this fork — would resolve to
+            // "unknown mode" and 400 the chat call.
+            const croweFallback = "waveai@crowelm-auto";
+            let mode = get(getSettingsKeyAtom("waveai:defaultmode")) ?? croweFallback;
+            // If a saved mode points at a phantom waveai@balanced/quick/deep
+            // (e.g. left behind from a previous Wave install), force it back
+            // to the working default.
+            if (mode === "waveai@balanced" || mode === "waveai@quick" || mode === "waveai@deep") {
+                mode = croweFallback;
             }
             const modeExists = aiModeConfigs != null && mode in aiModeConfigs;
             if (!modeExists) {
-                mode = waveFallback;
+                mode = croweFallback;
             }
             return mode;
         });
