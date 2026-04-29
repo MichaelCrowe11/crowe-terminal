@@ -22,6 +22,7 @@ import (
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
 	"github.com/wavetermdev/waveterm/pkg/waveobj"
+	"github.com/wavetermdev/waveterm/pkg/wcore"
 	"github.com/wavetermdev/waveterm/pkg/wshrpc"
 	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
 	"github.com/wavetermdev/waveterm/pkg/wshutil"
@@ -188,6 +189,9 @@ func handleNavigate(ctx context.Context, raw json.RawMessage) (registry.Result, 
 	if err := wstore.UpdateObjectMeta(ctx, blockORef, map[string]any{"url": args.URL}, false); err != nil {
 		return errResult(fmt.Errorf("set url: %w", err)), nil
 	}
+	// Without this, the frontend's blockAtom doesn't see the meta change
+	// and the webview stays on its current URL even though wstore was updated.
+	wcore.SendWaveObjUpdate(blockORef)
 	body, _ := json.Marshal(map[string]any{
 		"navigated": true,
 		"blockid":   blockID,
