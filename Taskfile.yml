@@ -97,6 +97,23 @@ tasks:
             - 'go build -o /usr/local/bin/crowe-farm-sensorpush ./cmd/crowe-farm-sensorpush'
             - 'echo "installed: $(which crowe-farm-sensorpush)"'
             - 'echo "set SENSORPUSH_EMAIL/PASSWORD + create the mapping JSON before running"'
+            - 'echo "next: cp scripts/sensorpush/sensorpush-map.example.json $HOME/Library/Application\\ Support/crowe-terminal/sensorpush-map.json && edit"'
+
+    install:launchd:sensorpush:
+        desc: Install the SensorPush poller as a LaunchAgent. Substitutes YOUR_USER_HOME, copies the plist to ~/Library/LaunchAgents/, and loads it. Reads credentials from the plist EnvironmentVariables block - edit before running this target.
+        cmds:
+            - 'mkdir -p $HOME/Library/LaunchAgents $HOME/Library/Logs'
+            - 'sed "s|YOUR_USER_HOME|$HOME|g" scripts/launchd/io.crowelogic.farm-sensorpush.plist > $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist'
+            - 'launchctl unload $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist 2>/dev/null || true'
+            - 'launchctl load $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist'
+            - 'echo "loaded. tail logs with: tail -F $HOME/Library/Logs/crowe-farm-sensorpush.log"'
+
+    uninstall:launchd:sensorpush:
+        desc: Stop + remove the SensorPush LaunchAgent.
+        cmds:
+            - 'launchctl unload $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist 2>/dev/null || true'
+            - 'rm -f $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist'
+            - 'echo "removed"'
 
     preview:
         desc: Run the standalone component preview server with HMR (no Electron, no backend).
