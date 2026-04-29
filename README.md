@@ -57,6 +57,36 @@ python3 -m venv .venv
 
 Restart Crowe Terminal — the AI block will show CroweLM models.
 
+## What CroweLM can do — the agent tool surface
+
+Out of the box, CroweLM has 21 native tools that operate inside your Crowe
+Terminal window:
+
+- **`system.*`** — `metrics` (CPU/RAM/processes), `run_applescript`,
+  `tell_app` (macOS UI automation)
+- **`terminal.*`** — `exec_safe` (read-only commands), `propose_command`
+  (mutating commands typed into a visible terminal block, awaits Enter),
+  `list_blocks`
+- **`browser.in_window.*`** — `navigate`, `read`, `click`, `type`,
+  `screenshot`, `eval`, `wait_for`, `scroll`, `hover`, `get_attr`,
+  `select_option`, `list_links` — drive the in-window webview block
+- **`allowlist.*`** — `check`, `list`, `add` patterns that skip the
+  approval gate
+
+Plus four opt-in outbound MCP families (set the env var, restart):
+
+| Env var | Adds |
+|---|---|
+| `CROWE_AGENT_PLAYWRIGHT=1` | Full headless Playwright as `browser.*` |
+| `CROWE_AGENT_FS=1` + `CROWE_AGENT_FS_ROOTS=...` | Filesystem MCP as `fs.*` |
+| `CROWE_AGENT_FETCH=1` | HTTP fetch MCP as `fetch.*` |
+| `CROWE_AGENT_GITHUB=1` + `GITHUB_PERSONAL_ACCESS_TOKEN=...` | GitHub MCP as `github.*` |
+
+The same registry is also exposed via the standalone `crowe-mcp` binary so
+Claude Desktop / Cursor / any MCP-aware client can use the same tools.
+
+Full reference + safety story: **[docs/agent/USER_GUIDE.md](./docs/agent/USER_GUIDE.md)**.
+
 ## Pricing
 
 The terminal is free and open-source (Apache 2.0 — fork it, redistribute it, do what you want).
