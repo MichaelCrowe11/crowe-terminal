@@ -19,6 +19,7 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/agent"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/allowlist"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/applescript"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/farm"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/fetchmcp"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/fsmcp"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/githubmcp"
