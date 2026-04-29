@@ -7,7 +7,7 @@
 // launching the Crowe Terminal GUI.
 //
 // All subcommands are thin wrappers over the handlers in
-// pkg/agent/tools/farm — same validation, same schema, same data.
+// pkg/agent/tools/farm - same validation, same schema, same data.
 package main
 
 import (
@@ -26,7 +26,7 @@ import (
 func main() {
 	root := &cobra.Command{
 		Use:   "crowe-farm",
-		Short: "Cultivation operations log — batches, events, harvests, sensors",
+		Short: "Cultivation operations log - batches, events, harvests, sensors",
 		Long: `crowe-farm is the standalone CLI for the Crowe Terminal cultivation log.
 
 Reads and writes the same SQLite file that the AI agent uses
@@ -62,6 +62,10 @@ Common flows:
 		stateCmd(),
 		syncCmd(),
 		dbPathCmd(),
+		strainCmd(),
+		qrCmd(),
+		sopCmd(),
+		photosCmd(),
 	)
 
 	if err := root.Execute(); err != nil {
@@ -247,7 +251,7 @@ func listCmd() *cobra.Command {
 	c.Flags().String("state", "", "active | culled | finished")
 	c.Flags().String("strain", "", "Filter by strain")
 	c.Flags().String("kind", "", "Filter by kind")
-	c.Flags().String("since", "", "ISO date — only batches started on/after")
+	c.Flags().String("since", "", "ISO date - only batches started on/after")
 	c.Flags().Int("limit", 50, "Max rows")
 	c.Flags().String("format", "table", "table | json")
 	return c
@@ -290,7 +294,7 @@ func renderBatchTable(raw json.RawMessage) {
 func historyCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "history <batch_id>",
-		Short: "Full lineage of a batch — events + harvests in time order",
+		Short: "Full lineage of a batch - events + harvests in time order",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			id, err := parseInt(args[0])
@@ -323,7 +327,7 @@ func renderHistory(raw json.RawMessage) {
 		return
 	}
 	b := resp.Batch
-	fmt.Printf("Batch #%d  %s — %s  (%s)\n", b.ID, b.Kind, b.Strain, b.State)
+	fmt.Printf("Batch #%d  %s - %s  (%s)\n", b.ID, b.Kind, b.Strain, b.State)
 	if b.Substrate != "" {
 		fmt.Printf("  substrate: %s\n", b.Substrate)
 	}
@@ -397,7 +401,7 @@ func yieldCmd() *cobra.Command {
 		},
 	}
 	c.Flags().String("strain", "", "Filter by strain")
-	c.Flags().String("since", "", "ISO date — only count batches started on/after")
+	c.Flags().String("since", "", "ISO date - only count batches started on/after")
 	return c
 }
 
@@ -455,7 +459,7 @@ func exportCmd() *cobra.Command {
 		},
 	}
 	c.Flags().String("out", "", "Output directory (default: ~/Documents/crowe-farm-export-YYYYMMDD/)")
-	c.Flags().String("since", "", "ISO date — only export batches started on/after")
+	c.Flags().String("since", "", "ISO date - only export batches started on/after")
 	return c
 }
 
@@ -526,7 +530,7 @@ func sensorSummaryCmd() *cobra.Command {
 func stateCmd() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "state <batch_id> <new_state>",
-		Short: "Change batch state — active | culled | finished",
+		Short: "Change batch state - active | culled | finished",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			id, err := parseInt(args[0])
@@ -560,9 +564,169 @@ func syncCmd() *cobra.Command {
 			pretty(out)
 		},
 	}
-	c.Flags().String("since", "", "ISO date — only send batches started on/after")
+	c.Flags().String("since", "", "ISO date - only send batches started on/after")
 	c.Flags().String("url", "", "Override destination URL")
 	c.Flags().String("client", "", "Client/farm identifier")
+	return c
+}
+
+// ----- strain -----
+
+func strainCmd() *cobra.Command {
+	c := &cobra.Command{Use: "strain", Short: "Strain reference catalog"}
+
+	info := &cobra.Command{
+		Use:   "info <name>",
+		Short: "Cultivation envelope for a strain (substrate, temp, humidity, FAE, BE)",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			out, err := callTool("farm.strain_info", map[string]any{"name": args[0]})
+			if err != nil {
+				exit("%v", err)
+			}
+			pretty(out)
+		},
+	}
+	list := &cobra.Command{
+		Use:   "list",
+		Short: "List all strains in the catalog",
+		Run: func(cmd *cobra.Command, _ []string) {
+			out, err := callTool("farm.list_strains", map[string]any{})
+			if err != nil {
+				exit("%v", err)
+			}
+			var resp struct {
+				Strains []map[string]any `json:"strains"`
+			}
+			_ = json.Unmarshal(out, &resp)
+			for _, s := range resp.Strains {
+				name := s["name"].(string)
+				sci, _ := s["scientific_name"].(string)
+				fmt.Printf("  %-22s %s\n", name, sci)
+			}
+		},
+	}
+	c.AddCommand(info, list)
+	return c
+}
+
+// ----- qr -----
+
+func qrCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "qr <batch_id>",
+		Short: "Generate a printable QR label PNG for a batch",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			id, err := parseInt(args[0])
+			if err != nil {
+				exit("bad batch_id: %v", err)
+			}
+			req := map[string]any{"batch_id": id}
+			setIntIfFlag(cmd, "size", &req, "size")
+			setIfFlag(cmd, "out", &req, "out_path")
+			out, err := callTool("farm.qr_label", req)
+			if err != nil {
+				exit("%v", err)
+			}
+			var resp struct {
+				PNGPath  string `json:"png_path"`
+				PNGBytes int64  `json:"png_bytes"`
+				DeepLink string `json:"deep_link"`
+				Strain   string `json:"strain"`
+				Kind     string `json:"kind"`
+			}
+			_ = json.Unmarshal(out, &resp)
+			fmt.Printf("  batch:    #%d %s - %s\n", id, resp.Kind, resp.Strain)
+			fmt.Printf("  encoded:  %s\n", resp.DeepLink)
+			fmt.Printf("  written:  %s (%dKB)\n", resp.PNGPath, resp.PNGBytes/1024)
+		},
+	}
+	c.Flags().Int("size", 512, "Pixel size of the square PNG")
+	c.Flags().String("out", "", "Output PNG path (default: ~/Documents/crowe-farm-labels-YYYYMMDD/batch<ID>.png)")
+	return c
+}
+
+// ----- sop -----
+
+func sopCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "sop --strain <name>",
+		Short: "Generate a draft SOP chapter from strain catalog + recent batches",
+		Run: func(cmd *cobra.Command, _ []string) {
+			s, _ := cmd.Flags().GetString("strain")
+			if s == "" {
+				exit("--strain required")
+			}
+			req := map[string]any{"strain": s}
+			setIfFlag(cmd, "out", &req, "out_path")
+			setIfFlag(cmd, "since", &req, "since")
+			out, err := callTool("farm.sop_chapter", req)
+			if err != nil {
+				exit("%v", err)
+			}
+			var resp struct {
+				Markdown   string `json:"markdown"`
+				WrittenTo  string `json:"written_to,omitempty"`
+				BatchesUsed int   `json:"batches_used"`
+			}
+			_ = json.Unmarshal(out, &resp)
+			fmt.Print(resp.Markdown)
+			if resp.WrittenTo != "" {
+				fmt.Fprintf(os.Stderr, "\n[written to %s, %d batches used]\n", resp.WrittenTo, resp.BatchesUsed)
+			}
+		},
+	}
+	c.Flags().String("strain", "", "Strain name (required)")
+	c.Flags().String("out", "", "Write the markdown to this path")
+	c.Flags().String("since", "", "ISO date - only consider batches started on/after (default: 90 days ago)")
+	return c
+}
+
+// ----- photos -----
+
+func photosCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "photos",
+		Short: "List photo events with their archived paths",
+		Run: func(cmd *cobra.Command, _ []string) {
+			req := map[string]any{}
+			setInt64IfFlag(cmd, "batch", &req, "batch_id")
+			setIntIfFlag(cmd, "limit", &req, "limit")
+			out, err := callTool("farm.list_photos", req)
+			if err != nil {
+				exit("%v", err)
+			}
+			var resp struct {
+				Count  int `json:"count"`
+				Photos []struct {
+					EventID int64  `json:"event_id"`
+					BatchID int64  `json:"batch_id"`
+					TS      string `json:"ts"`
+					Path    string `json:"path"`
+					Size    int64  `json:"size"`
+					Notes   string `json:"notes"`
+				} `json:"photos"`
+			}
+			_ = json.Unmarshal(out, &resp)
+			if resp.Count == 0 {
+				fmt.Println("(no photos)")
+				return
+			}
+			for _, p := range resp.Photos {
+				ts := p.TS
+				if len(ts) >= 19 {
+					ts = ts[:19]
+				}
+				fmt.Printf("  %s  batch=#%d  %dKB  %s\n", ts, p.BatchID, p.Size/1024, p.Path)
+				if p.Notes != "" {
+					fmt.Printf("     %s\n", p.Notes)
+				}
+			}
+		},
+	}
+	c.Flags().Int64("batch", 0, "Filter by batch id")
+	c.Flags().Int("limit", 50, "Max rows")
 	return c
 }
 

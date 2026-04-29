@@ -18,6 +18,15 @@ import (
 
 func init() {
 	registry.Register(&registry.Tool{
+		Name: "farm.list_photos",
+		Description: "List photo events with their archived paths. Optional batch_id filter. " +
+			"Returns event_id, batch_id, ts, path, size - useful for building galleries or " +
+			"verifying which batches have photo documentation.",
+		Schema:   json.RawMessage(SchemaListPhotos),
+		Mutating: false,
+		Handler:  handleListPhotos,
+	})
+	registry.Register(&registry.Tool{
 		Name: "farm.attach_photo",
 		Description: "Capture a photo and attach it to a batch as a 'photo' event. " +
 			"On macOS the screen is captured via screencapture; pass mode='selection' for click-and-drag, " +
@@ -44,6 +53,85 @@ func init() {
 		Mutating: false,
 		Handler:  handleSensorSummary,
 	})
+}
+
+const SchemaListPhotos = `{
+  "type": "object",
+  "properties": {
+    "batch_id": {"type":"integer","minimum":1,"description":"Optional - omit to list across all batches"},
+    "limit":    {"type":"integer","minimum":1,"maximum":500,"default":50}
+  },
+  "additionalProperties":false
+}`
+
+type listPhotosArgs struct {
+	BatchID int64 `json:"batch_id"`
+	Limit   int   `json:"limit"`
+}
+
+type photoEntry struct {
+	EventID int64  `json:"event_id"`
+	BatchID int64  `json:"batch_id"`
+	TS      string `json:"ts"`
+	Notes   string `json:"notes,omitempty"`
+	Path    string `json:"path,omitempty"`
+	Size    int64  `json:"size,omitempty"`
+	Mode    string `json:"mode,omitempty"`
+}
+
+func handleListPhotos(ctx context.Context, raw json.RawMessage) (registry.Result, error) {
+	var args listPhotosArgs
+	if len(raw) > 0 {
+		_ = json.Unmarshal(raw, &args)
+	}
+	if args.Limit <= 0 || args.Limit > 500 {
+		args.Limit = 50
+	}
+	conn, err := getDB()
+	if err != nil {
+		return errResult(err), nil
+	}
+	q := `SELECT id, batch_id, ts, COALESCE(notes,''), COALESCE(payload,'')
+	      FROM events WHERE event_type='photo'`
+	var qargs []any
+	if args.BatchID != 0 {
+		q += " AND batch_id = ?"
+		qargs = append(qargs, args.BatchID)
+	}
+	q += " ORDER BY ts DESC LIMIT ?"
+	qargs = append(qargs, args.Limit)
+
+	rows, err := conn.QueryContext(ctx, q, qargs...)
+	if err != nil {
+		return errResult(err), nil
+	}
+	defer rows.Close()
+
+	out := make([]photoEntry, 0, args.Limit)
+	for rows.Next() {
+		var entry photoEntry
+		var payload string
+		if err := rows.Scan(&entry.EventID, &entry.BatchID, &entry.TS, &entry.Notes, &payload); err != nil {
+			return errResult(err), nil
+		}
+		if payload != "" {
+			var p map[string]any
+			if err := json.Unmarshal([]byte(payload), &p); err == nil {
+				if s, ok := p["path"].(string); ok {
+					entry.Path = s
+				}
+				if v, ok := p["size"].(float64); ok {
+					entry.Size = int64(v)
+				}
+				if s, ok := p["mode"].(string); ok {
+					entry.Mode = s
+				}
+			}
+		}
+		out = append(out, entry)
+	}
+	body, _ := json.Marshal(map[string]any{"photos": out, "count": len(out)})
+	return registry.Result{Content: body}, nil
 }
 
 const SchemaAttachPhoto = `{
@@ -79,8 +167,8 @@ const SchemaLogSensor = `{
 const SchemaSensorSummary = `{
   "type": "object",
   "properties": {
-    "batch_id": {"type":"integer","minimum":1,"description":"Optional — omit to summarize across all batches"},
-    "since":    {"type":"string","description":"ISO8601 — only include readings from this date onward"}
+    "batch_id": {"type":"integer","minimum":1,"description":"Optional - omit to summarize across all batches"},
+    "since":    {"type":"string","description":"ISO8601 - only include readings from this date onward"}
   },
   "additionalProperties":false
 }`
@@ -180,7 +268,7 @@ func capturePhoto(ctx context.Context, args attachPhotoArgs) (string, error) {
 	case "window":
 		cmd = exec.CommandContext(ctx, "screencapture", "-iW", dest)
 	case "clipboard":
-		// pull NSPasteboard PNG via osascript+shell — simplest reliable path
+		// pull NSPasteboard PNG via osascript+shell - simplest reliable path
 		cmd = exec.CommandContext(ctx, "osascript", "-e",
 			fmt.Sprintf(`set theFile to POSIX file %q
 do shell script "pngpaste " & quoted form of POSIX path of theFile`, dest))

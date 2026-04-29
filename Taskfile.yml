@@ -91,6 +91,13 @@ tasks:
             - 'echo "installed: $(which crowe-mcp)"'
             - 'echo "wire into Claude Desktop config: see docs/agent/USER_GUIDE.md"'
 
+    install:crowe-farm-sensorpush:
+        desc: Build + install the SensorPush poller daemon to /usr/local/bin.
+        cmds:
+            - 'go build -o /usr/local/bin/crowe-farm-sensorpush ./cmd/crowe-farm-sensorpush'
+            - 'echo "installed: $(which crowe-farm-sensorpush)"'
+            - 'echo "set SENSORPUSH_EMAIL/PASSWORD + create the mapping JSON before running"'
+
     preview:
         desc: Run the standalone component preview server with HMR (no Electron, no backend).
         dir: frontend/preview
