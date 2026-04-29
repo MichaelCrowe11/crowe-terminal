@@ -77,6 +77,20 @@ tasks:
             - task: dev:reset
             - task: electron:quickdev
 
+    install:crowe-farm:
+        desc: Build + install crowe-farm CLI to /usr/local/bin (cultivation log standalone CLI).
+        cmds:
+            - 'go build -o /usr/local/bin/crowe-farm ./cmd/crowe-farm'
+            - 'echo "installed: $(which crowe-farm)"'
+            - 'echo "usage: crowe-farm --help"'
+
+    install:crowe-mcp:
+        desc: Build + install crowe-mcp binary to /usr/local/bin (MCP server for Claude Desktop / Cursor).
+        cmds:
+            - 'go build -o /usr/local/bin/crowe-mcp ./cmd/crowe-mcp'
+            - 'echo "installed: $(which crowe-mcp)"'
+            - 'echo "wire into Claude Desktop config: see docs/agent/USER_GUIDE.md"'
+
     preview:
         desc: Run the standalone component preview server with HMR (no Electron, no backend).
         dir: frontend/preview
