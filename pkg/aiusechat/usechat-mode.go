@@ -247,34 +247,37 @@ func isValidAzureResourceName(name string) bool {
 	return AzureResourceNameRegex.MatchString(name)
 }
 
+// Builder modes back the Crowe App Builder. Upstream Wave pointed these at
+// "gpt-5.4" via Wave's hosted cloud, both of which are unavailable in this
+// fork — the model name is a placeholder, and Crowe Terminal doesn't have
+// access to wavecloud. Re-routed through the local Foundry bridge so the
+// builder works out-of-the-box.
 var builderModeConfigs = map[string]wconfig.AIModeConfigType{
 	uctypes.AIModeBuilderDefault: {
 		DisplayName:        "Builder Default",
 		DisplayOrder:       -2,
 		DisplayIcon:        "sparkles",
-		DisplayDescription: "Good mix of speed and accuracy\n(gpt-5.4 with minimal thinking)",
-		Provider:           uctypes.AIProvider_Wave,
-		APIType:            uctypes.APIType_OpenAIResponses,
-		Model:              "gpt-5.4",
-		ThinkingLevel:      uctypes.ThinkingLevelLow,
-		Verbosity:          uctypes.VerbosityLevelLow,
-		Capabilities:       []string{uctypes.AICapabilityTools, uctypes.AICapabilityImages, uctypes.AICapabilityPdfs},
-		WaveAIPremium:      true,
-		SwitchCompat:       []string{"wavecloud"},
+		DisplayDescription: "Fast, capable code generation\n(CroweLM Auto via local Foundry agent)",
+		Provider:           uctypes.AIProvider_OpenAI,
+		APIType:            uctypes.APIType_OpenAIChat,
+		Model:              "crowelm-auto",
+		Endpoint:           "http://127.0.0.1:8011/v1/chat/completions",
+		APIToken:           "local-bridge-no-auth",
+		Capabilities:       []string{uctypes.AICapabilityTools, uctypes.AICapabilityImages},
+		SwitchCompat:       []string{"openai"},
 	},
 	uctypes.AIModeBuilderDeep: {
 		DisplayName:        "Builder Deep",
 		DisplayOrder:       -1,
 		DisplayIcon:        "lightbulb",
-		DisplayDescription: "Slower but most capable\n(gpt-5.4 with full reasoning)",
-		Provider:           uctypes.AIProvider_Wave,
-		APIType:            uctypes.APIType_OpenAIResponses,
-		Model:              "gpt-5.4",
-		ThinkingLevel:      uctypes.ThinkingLevelMedium,
-		Verbosity:          uctypes.VerbosityLevelLow,
-		Capabilities:       []string{uctypes.AICapabilityTools, uctypes.AICapabilityImages, uctypes.AICapabilityPdfs},
-		WaveAIPremium:      true,
-		SwitchCompat:       []string{"wavecloud"},
+		DisplayDescription: "Maximum reasoning for hard builds\n(CroweLM Supreme via local Foundry agent)",
+		Provider:           uctypes.AIProvider_OpenAI,
+		APIType:            uctypes.APIType_OpenAIChat,
+		Model:              "crowelm-supreme",
+		Endpoint:           "http://127.0.0.1:8011/v1/chat/completions",
+		APIToken:           "local-bridge-no-auth",
+		Capabilities:       []string{uctypes.AICapabilityTools, uctypes.AICapabilityImages},
+		SwitchCompat:       []string{"openai"},
 	},
 }
 
