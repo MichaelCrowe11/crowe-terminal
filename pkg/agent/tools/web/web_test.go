@@ -18,6 +18,12 @@ func TestRegistered(t *testing.T) {
 		"browser.in_window.type",
 		"browser.in_window.screenshot",
 		"browser.in_window.eval",
+		"browser.in_window.wait_for",
+		"browser.in_window.scroll",
+		"browser.in_window.hover",
+		"browser.in_window.get_attr",
+		"browser.in_window.select_option",
+		"browser.in_window.list_links",
 	}
 	for _, n := range want {
 		if _, ok := registry.Default().Get(n); !ok {
