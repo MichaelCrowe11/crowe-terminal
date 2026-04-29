@@ -58,6 +58,63 @@ tasks:
             WCLOUD_WS_ENDPOINT: "wss://wsapi-dev.waveterm.dev/"
             WAVETERM_NOCONFIRMQUIT: "1"
 
+    dev:reset:
+        desc: Kill any lingering wavesrv / openai_bridge / Electron processes and clear stale lockfiles. Run this when "single-instance-lock" or "address already in use" errors block a relaunch.
+        cmds:
+            - pkill -9 -f "wavesrv\\.arm64" 2>/dev/null || true
+            - pkill -9 -f "electron-vite dev" 2>/dev/null || true
+            - pkill -9 -f "openai_bridge" 2>/dev/null || true
+            - pkill -9 -f "Projects/crowe-terminal/node_modules/electron" 2>/dev/null || true
+            - rm -f "$HOME/Library/Application Support/waveterm-dev/wave.lock"
+            - rm -f "$HOME/Library/Application Support/Wave (Dev)/SingletonLock"
+            - rm -f "$HOME/Library/Application Support/Wave (Dev)/SingletonCookie"
+            - rm -f "$HOME/Library/Application Support/Wave (Dev)/SingletonSocket"
+            - 'echo "dev environment reset; run task electron:quickdev to relaunch"'
+
+    dev:fresh:
+        desc: One-shot fresh dev launch — runs dev:reset then electron:quickdev. Safe to re-run after crashes; preferred over `task dev` when you've been hitting lock errors.
+        cmds:
+            - task: dev:reset
+            - task: electron:quickdev
+
+    install:crowe-farm:
+        desc: Build + install crowe-farm CLI to /usr/local/bin (cultivation log standalone CLI).
+        cmds:
+            - 'go build -o /usr/local/bin/crowe-farm ./cmd/crowe-farm'
+            - 'echo "installed: $(which crowe-farm)"'
+            - 'echo "usage: crowe-farm --help"'
+
+    install:crowe-mcp:
+        desc: Build + install crowe-mcp binary to /usr/local/bin (MCP server for Claude Desktop / Cursor).
+        cmds:
+            - 'go build -o /usr/local/bin/crowe-mcp ./cmd/crowe-mcp'
+            - 'echo "installed: $(which crowe-mcp)"'
+            - 'echo "wire into Claude Desktop config: see docs/agent/USER_GUIDE.md"'
+
+    install:crowe-farm-sensorpush:
+        desc: Build + install the SensorPush poller daemon to /usr/local/bin.
+        cmds:
+            - 'go build -o /usr/local/bin/crowe-farm-sensorpush ./cmd/crowe-farm-sensorpush'
+            - 'echo "installed: $(which crowe-farm-sensorpush)"'
+            - 'echo "set SENSORPUSH_EMAIL/PASSWORD + create the mapping JSON before running"'
+            - 'echo "next: cp scripts/sensorpush/sensorpush-map.example.json $HOME/Library/Application\\ Support/crowe-terminal/sensorpush-map.json && edit"'
+
+    install:launchd:sensorpush:
+        desc: Install the SensorPush poller as a LaunchAgent. Substitutes YOUR_USER_HOME, copies the plist to ~/Library/LaunchAgents/, and loads it. Reads credentials from the plist EnvironmentVariables block - edit before running this target.
+        cmds:
+            - 'mkdir -p $HOME/Library/LaunchAgents $HOME/Library/Logs'
+            - 'sed "s|YOUR_USER_HOME|$HOME|g" scripts/launchd/io.crowelogic.farm-sensorpush.plist > $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist'
+            - 'launchctl unload $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist 2>/dev/null || true'
+            - 'launchctl load $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist'
+            - 'echo "loaded. tail logs with: tail -F $HOME/Library/Logs/crowe-farm-sensorpush.log"'
+
+    uninstall:launchd:sensorpush:
+        desc: Stop + remove the SensorPush LaunchAgent.
+        cmds:
+            - 'launchctl unload $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist 2>/dev/null || true'
+            - 'rm -f $HOME/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist'
+            - 'echo "removed"'
+
     preview:
         desc: Run the standalone component preview server with HMR (no Electron, no backend).
         dir: frontend/preview

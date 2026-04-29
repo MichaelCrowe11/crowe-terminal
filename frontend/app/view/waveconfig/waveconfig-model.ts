@@ -146,6 +146,7 @@ export class WaveConfigViewModel implements ViewModel {
     validationErrorAtom: PrimitiveAtom<string>;
     isMenuOpenAtom: PrimitiveAtom<boolean>;
     presetsJsonExistsAtom: PrimitiveAtom<boolean>;
+    aiPresetsJsonExistsAtom: PrimitiveAtom<boolean>;
     activeTabAtom: PrimitiveAtom<"visual" | "json">;
     configErrorFilesAtom: Atom<Set<string>>;
     configDir: string;
@@ -181,6 +182,7 @@ export class WaveConfigViewModel implements ViewModel {
         this.validationErrorAtom = atom(null) as PrimitiveAtom<string>;
         this.isMenuOpenAtom = atom(false);
         this.presetsJsonExistsAtom = atom(false);
+        this.aiPresetsJsonExistsAtom = atom(false);
         this.activeTabAtom = atom<"visual" | "json">("visual");
         this.configErrorFilesAtom = atom((get) => {
             const fullConfig = get(this.env.atoms.fullConfigAtom);
@@ -202,6 +204,7 @@ export class WaveConfigViewModel implements ViewModel {
         this.storageBackendErrorAtom = atom<string | null>(null) as PrimitiveAtom<string | null>;
 
         this.checkPresetsJsonExists();
+        this.checkAiPresetsJsonExists();
         this.initialize();
     }
 
@@ -213,6 +216,20 @@ export class WaveConfigViewModel implements ViewModel {
             });
             if (!fileInfo.notfound) {
                 globalStore.set(this.presetsJsonExistsAtom, true);
+            }
+        } catch {
+            // File doesn't exist
+        }
+    }
+
+    async checkAiPresetsJsonExists() {
+        try {
+            const fullPath = `${this.configDir}/presets/ai.json`;
+            const fileInfo = await this.env.rpc.FileInfoCommand(TabRpcClient, {
+                info: { path: fullPath },
+            });
+            if (!fileInfo.notfound) {
+                globalStore.set(this.aiPresetsJsonExistsAtom, true);
             }
         } catch {
             // File doesn't exist
@@ -251,9 +268,13 @@ export class WaveConfigViewModel implements ViewModel {
 
     getDeprecatedConfigFiles(): ConfigFile[] {
         const presetsJsonExists = globalStore.get(this.presetsJsonExistsAtom);
+        const aiPresetsJsonExists = globalStore.get(this.aiPresetsJsonExistsAtom);
         return deprecatedConfigFiles.filter((f) => {
             if (f.path === "presets.json") {
                 return presetsJsonExists;
+            }
+            if (f.path === "presets/ai.json") {
+                return aiPresetsJsonExists;
             }
             return true;
         });

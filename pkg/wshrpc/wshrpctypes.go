@@ -175,6 +175,10 @@ type WshRpcInterface interface {
 	// terminal
 	TermGetScrollbackLinesCommand(ctx context.Context, data CommandTermGetScrollbackLinesData) (*CommandTermGetScrollbackLinesRtnData, error)
 
+	// web (Crowe Agent — drives the in-window webview block)
+	WebExecuteJSCommand(ctx context.Context, data CommandWebExecuteJSData) (*CommandWebExecuteJSRtnData, error)
+	WebCaptureCommand(ctx context.Context, data CommandWebCaptureData) (*CommandWebCaptureRtnData, error)
+
 	// file
 	WshRpcFileInterface
 	WaveFileReadStreamCommand(ctx context.Context, data CommandWaveFileReadStreamData) (*WaveFileInfo, error)
@@ -665,6 +669,29 @@ type CommandTermGetScrollbackLinesRtnData struct {
 	LineStart   int      `json:"linestart"`
 	Lines       []string `json:"lines"`
 	LastUpdated int64    `json:"lastupdated"`
+}
+
+// Crowe Agent — webview-driving commands routed via MakeFeBlockRouteId.
+type CommandWebExecuteJSData struct {
+	Script     string `json:"script"`
+	TimeoutMs  int    `json:"timeoutms,omitempty"`
+}
+
+type CommandWebExecuteJSRtnData struct {
+	ResultJSON string `json:"resultjson,omitempty"`
+	URL        string `json:"url,omitempty"`
+	Title      string `json:"title,omitempty"`
+	Error      string `json:"error,omitempty"`
+}
+
+type CommandWebCaptureData struct {
+	FullPage bool `json:"fullpage,omitempty"`
+}
+
+type CommandWebCaptureRtnData struct {
+	PNGBase64 string `json:"pngbase64"`
+	URL       string `json:"url,omitempty"`
+	Title     string `json:"title,omitempty"`
 }
 
 type CommandTermUpdateAttachedJobData struct {

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/wavetermdev/waveterm/pkg/agent/transport/waveadapter"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/aiutil"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/uctypes"
 	"github.com/wavetermdev/waveterm/pkg/blockcontroller"
@@ -195,6 +196,14 @@ func GenerateTabStateAndTools(ctx context.Context, tabid string, widgetAccess bo
 		if viewTypes["web"] {
 			tools = append(tools, GetWebNavigateToolDefinition(tabid))
 		}
+	}
+	// Append Crowe Agent tools (system metrics, terminal exec_safe,
+	// terminal propose_command, allowlist, applescript, etc.) so the
+	// Wave AI panel sees them alongside its native tools and can render
+	// approval cards uniformly. Only add when widget access is granted —
+	// the agent tools touch the local machine.
+	if widgetAccess {
+		tools = waveadapter.AppendAgentTools(tools)
 	}
 	return tabState, tools, nil
 }

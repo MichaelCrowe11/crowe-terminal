@@ -5,6 +5,7 @@ import * as child_process from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { AuthKey } from "./authkey";
 
 const BRIDGE_PORT = 8011;
 const BRIDGE_HOST = "127.0.0.1";
@@ -82,6 +83,14 @@ export async function startFoundryBridge(): Promise<boolean> {
             PYTHONPATH: foundryRoot,
             CROWE_PORTFOLIO_URL: process.env.CROWE_PORTFOLIO_URL ?? "",
             CROWE_PORTFOLIO_TOKEN: process.env.CROWE_PORTFOLIO_TOKEN ?? "",
+            // Enable Crowe Terminal's remote-tool registration in the
+            // Foundry bridge. The auth key is the same one wavesrv accepts;
+            // both processes are children of this Electron main, so they
+            // share a token boundary by definition.
+            CROWE_AGENT_TOOLS: "1",
+            CROWE_AGENT_HOST: process.env.CROWE_AGENT_HOST ?? "127.0.0.1",
+            CROWE_AGENT_PORT: process.env.CROWE_AGENT_PORT ?? "8012",
+            WAVETERM_AUTH_KEY: AuthKey,
         },
         stdio: ["ignore", "pipe", "pipe"],
     });

@@ -67,11 +67,16 @@ class WorkspaceLayoutModel {
         this.aiPanelWrapperRef = null;
         this.vtabPanelWrapperRef = null;
         this.inResize = false;
-        this.aiPanelVisible = false;
+        // AI panel defaults to OPEN for Crowe Terminal (unlike upstream Wave) —
+        // the AI agent is the headline feature so first-launch tabs should
+        // surface it. initializeFromMeta() below still respects whatever the
+        // user explicitly set per-tab via waveai:panelopen, so closing the
+        // panel on a tab persists like before.
+        this.aiPanelVisible = true;
         this.aiPanelWidth = null;
         this.vtabWidth = VTabBar_DefaultWidth;
         this.vtabVisible = false;
-        this.panelVisibleAtom = jotai.atom(false);
+        this.panelVisibleAtom = jotai.atom(true);
         this.widgetsSidebarVisibleAtom = jotai.atom(
             (get) =>
                 get(getOrefMetaKeyAtom(WOS.makeORef("workspace", this.getWorkspaceId()), "layout:widgetsvisible")) ??

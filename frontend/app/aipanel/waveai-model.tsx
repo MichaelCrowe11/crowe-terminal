@@ -46,19 +46,17 @@ const BuilderAIModeConfigs: Record<string, AIModeConfigType> = {
         "display:name": "Builder Default",
         "display:order": -2,
         "display:icon": "sparkles",
-        "display:description": "Good mix of speed and accuracy\n(gpt-5.4 with minimal thinking)",
-        "ai:provider": "wave",
-        "ai:switchcompat": ["wavecloud"],
-        "waveai:premium": true,
+        "display:description": "Fast, capable code generation\n(CroweLM Auto via local Foundry agent)",
+        "ai:provider": "openai",
+        "ai:switchcompat": ["openai"],
     },
     "waveaibuilder@deep": {
         "display:name": "Builder Deep",
         "display:order": -1,
         "display:icon": "lightbulb",
-        "display:description": "Slower but most capable\n(gpt-5.4 with full reasoning)",
-        "ai:provider": "wave",
-        "ai:switchcompat": ["wavecloud"],
-        "waveai:premium": true,
+        "display:description": "Maximum reasoning for hard builds\n(CroweLM Supreme via local Foundry agent)",
+        "ai:provider": "openai",
+        "ai:switchcompat": ["openai"],
     },
 };
 
@@ -141,27 +139,30 @@ export class WaveAIModel {
         });
 
         this.defaultModeAtom = jotai.atom((get) => {
-            const telemetryEnabled = get(getSettingsKeyAtom("telemetry:enabled")) ?? false;
+            // Crowe Terminal: local Foundry agent is always available, so
+            // we don't gate on telemetry like upstream Wave (which needed
+            // telemetry consent for wavecloud). Builder modes ship their
+            // own waveaibuilder@default which routes through Foundry too.
             if (this.inBuilder) {
-                return telemetryEnabled ? "waveaibuilder@default" : "invalid";
+                return "waveaibuilder@default";
             }
             const aiModeConfigs = get(this.aiModeConfigs);
-            if (!telemetryEnabled) {
-                let mode = get(getSettingsKeyAtom("waveai:defaultmode"));
-                if (mode == null || mode.startsWith("waveai@")) {
-                    return "unknown";
-                }
-                return mode;
-            }
-            const hasPremium = get(this.hasPremiumAtom);
-            const waveFallback = hasPremium ? "waveai@balanced" : "waveai@quick";
-            let mode = get(getSettingsKeyAtom("waveai:defaultmode")) ?? waveFallback;
-            if (!hasPremium && mode.startsWith("waveai@")) {
-                mode = "waveai@quick";
+            // Crowe Terminal fallback: regardless of "premium" status, land
+            // on the local Foundry-routed CroweLM Auto mode. Upstream Wave's
+            // waveai@balanced / waveai@quick names referenced wavecloud
+            // configs that never shipped in this fork — would resolve to
+            // "unknown mode" and 400 the chat call.
+            const croweFallback = "waveai@crowelm-auto";
+            let mode = get(getSettingsKeyAtom("waveai:defaultmode")) ?? croweFallback;
+            // If a saved mode points at a phantom waveai@balanced/quick/deep
+            // (e.g. left behind from a previous Wave install), force it back
+            // to the working default.
+            if (mode === "waveai@balanced" || mode === "waveai@quick" || mode === "waveai@deep") {
+                mode = croweFallback;
             }
             const modeExists = aiModeConfigs != null && mode in aiModeConfigs;
             if (!modeExists) {
-                mode = waveFallback;
+                mode = croweFallback;
             }
             return mode;
         });

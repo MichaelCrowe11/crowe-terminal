@@ -1,0 +1,20 @@
+{
+  "_comment": "Map SensorPush devices to active batch IDs. The poller authenticates with SENSORPUSH_EMAIL + SENSORPUSH_PASSWORD env vars, queries available sensors, then for each entry below pulls the latest sample every interval_seconds and writes it as a 'sensor' event on the batch.",
+  "_install_path": "Place at ~/Library/Application Support/crowe-terminal/sensorpush-map.json (the daemon reads this path by default).",
+  "_sensor_field": "Match against the SensorPush device display name OR its raw id. The daemon prints both at startup so you can copy the right value.",
+  "_batch_id_field": "Use crowe-farm list to find current batch IDs. Update the mapping when batches finish/cull/move rooms.",
+
+  "interval_seconds": 300,
+  "mappings": [
+    {
+      "sensor": "SensorPush HT.w 12345",
+      "batch_id": 6,
+      "source": "fruiting-room-A"
+    },
+    {
+      "sensor": "SensorPush HT.w 67890",
+      "batch_id": 22,
+      "source": "fruiting-room-B"
+    }
+  ]
+}

@@ -760,6 +760,32 @@ declare global {
         streammeta: StreamMeta;
     };
 
+    // wshrpc.CommandWebCaptureData
+    type CommandWebCaptureData = {
+        fullpage?: boolean;
+    };
+
+    // wshrpc.CommandWebCaptureRtnData
+    type CommandWebCaptureRtnData = {
+        pngbase64: string;
+        url?: string;
+        title?: string;
+    };
+
+    // wshrpc.CommandWebExecuteJSData
+    type CommandWebExecuteJSData = {
+        script: string;
+        timeoutms?: number;
+    };
+
+    // wshrpc.CommandWebExecuteJSRtnData
+    type CommandWebExecuteJSRtnData = {
+        resultjson?: string;
+        url?: string;
+        title?: string;
+        error?: string;
+    };
+
     // wshrpc.CommandWebSelectorData
     type CommandWebSelectorData = {
         workspaceid: string;

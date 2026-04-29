@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+LaunchAgent plist for crowe-farm-sensorpush.
+
+Install:
+  1. Build the binary:        task install:crowe-farm-sensorpush
+  2. Create the mapping:      ~/Library/Application Support/crowe-terminal/sensorpush-map.json
+                              (template: scripts/sensorpush/sensorpush-map.example.json)
+  3. Set credentials:         edit the EnvironmentVariables block below with your
+                              SensorPush email + password OR (preferred) keep them in
+                              ~/.crowe-farm-sensorpush.env and uncomment the
+                              EnvironmentFile line.
+  4. Copy to LaunchAgents:    cp scripts/launchd/io.crowelogic.farm-sensorpush.plist \
+                              ~/Library/LaunchAgents/
+  5. Load:                    launchctl load ~/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist
+
+Unload:                       launchctl unload ~/Library/LaunchAgents/io.crowelogic.farm-sensorpush.plist
+Tail logs:                    tail -F ~/Library/Logs/crowe-farm-sensorpush.log
+
+Replace YOUR_USER_HOME with your actual home (e.g. /Users/crowelogic) since
+launchd does not expand ~ by default. The Taskfile target install:launchd:sensorpush
+does this substitution and copies the file in one shot.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>io.crowelogic.farm-sensorpush</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/crowe-farm-sensorpush</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <!-- Replace with real credentials, or move them to a sourced env file. -->
+    <key>SENSORPUSH_EMAIL</key>
+    <string>REPLACE_WITH_YOUR_EMAIL</string>
+    <key>SENSORPUSH_PASSWORD</key>
+    <string>REPLACE_WITH_YOUR_PASSWORD</string>
+    <!-- Optional: HOME so the daemon finds the SQLite DB + mapping file. -->
+    <key>HOME</key>
+    <string>YOUR_USER_HOME</string>
+    <key>PATH</key>
+    <string>/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+
+  <!-- Restart no more than every 30s if the daemon dies in a tight loop. -->
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+
+  <key>StandardOutPath</key>
+  <string>YOUR_USER_HOME/Library/Logs/crowe-farm-sensorpush.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>YOUR_USER_HOME/Library/Logs/crowe-farm-sensorpush.log</string>
+
+  <!-- LowPriorityIO hints to the kernel that this is background work. -->
+  <key>LowPriorityIO</key>
+  <true/>
+
+  <!-- Nice value: be a good citizen, don't compete with foreground apps. -->
+  <key>Nice</key>
+  <integer>10</integer>
+</dict>
+</plist>
