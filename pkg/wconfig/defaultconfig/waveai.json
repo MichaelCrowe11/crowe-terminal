@@ -6,7 +6,7 @@
         "display:description": "Crowe Logic's flagship model.\nFull tool access via local Foundry agent.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1",
+        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
         "ai:model": "crowelm-supreme",
         "ai:capabilities": [
             "tools",
@@ -24,7 +24,7 @@
         "display:description": "Peak-performance reasoning tier.\nFast, precise, executive-grade.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1",
+        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
         "ai:model": "crowelm-apex",
         "ai:capabilities": [
             "tools"
@@ -41,7 +41,7 @@
         "display:description": "Auto router \u2014 picks the right tier per turn.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1",
+        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
         "ai:model": "crowelm-auto",
         "ai:capabilities": [
             "tools"
@@ -58,7 +58,7 @@
         "display:description": "Cultivation operations specialist.\nSubstrate prep, sterilization, contamination triage, yield.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1",
+        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
         "ai:model": "crowelm-grower",
         "ai:capabilities": [
             "tools"
@@ -75,7 +75,7 @@
         "display:description": "Cultivation-tuned fast tier.\nLions Mane SOPs + mycology research + grow-room ops.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1",
+        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
         "ai:model": "crowelm-kernel",
         "ai:capabilities": [
             "tools"
