@@ -17,6 +17,10 @@ export const CroweCodeView: React.FC<ViewComponentProps<CroweCodeViewModel>> = (
     const isLoading = useAtomValue(model.isLoadingAtom);
 
     useEffect(() => {
+        fireAndForget(model.bootstrapScope.bind(model));
+    }, [model]);
+
+    useEffect(() => {
         if (fileName) {
             fireAndForget(model.loadFromDisk.bind(model));
         }
