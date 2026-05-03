@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { handleWaveAIContextMenu } from "@/app/aipanel/aipanel-contextmenu";
@@ -20,52 +20,48 @@ export const AIPanelHeader = memo(() => {
         handleWaveAIContextMenu(e, false);
     };
 
+    const toggleContext = () => {
+        model.setWidgetAccess(!widgetAccess);
+        setTimeout(() => model.focusInput(), 0);
+    };
+
     return (
         <div
-            className="py-2 pl-3 pr-1 @xs:p-2 @xs:pl-4 border-b border-gray-600 flex items-center justify-between min-w-0"
+            className="py-2 pl-3 pr-2 flex items-center justify-between min-w-0 border-b border-[#bfa669]/15 bg-[#0b0b0c]/60"
             onContextMenu={handleContextMenu}
         >
-            <h2 className="text-white text-sm @xs:text-lg font-semibold flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
-                <img src={croweFace} alt="Crowe Logic" className="h-6 w-6 rounded-full object-cover" />
-                Crowe Logic
-            </h2>
+            <div className="flex items-center gap-2.5 min-w-0">
+                <div className="relative h-6 w-6 flex-shrink-0 rounded-full ring-1 ring-[#bfa669]/40 bg-[#0b0b0c] overflow-hidden">
+                    <img src={croweFace} alt="" className="h-full w-full object-cover" />
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70 whitespace-nowrap">
+                    ai panel
+                </span>
+            </div>
 
-            <div className="flex items-center flex-shrink-0 whitespace-nowrap">
+            <div className="flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
                 {!inBuilder && (
-                    <div className="flex items-center text-sm whitespace-nowrap">
-                        <span className="text-gray-300 @xs:hidden mr-1 text-[12px]">Context</span>
-                        <span className="text-gray-300 hidden @xs:inline mr-2 text-[12px]">Widget Context</span>
-                        <button
-                            onClick={() => {
-                                model.setWidgetAccess(!widgetAccess);
-                                setTimeout(() => {
-                                    model.focusInput();
-                                }, 0);
-                            }}
-                            className={`relative inline-flex h-6 w-14 items-center rounded-full transition-colors cursor-pointer ${
-                                widgetAccess ? "bg-accent-600" : "bg-zinc-600"
+                    <button
+                        onClick={toggleContext}
+                        title={`Widget context is ${widgetAccess ? "ON" : "OFF"} — click to toggle`}
+                        className={`group flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded border transition-colors cursor-pointer ${
+                            widgetAccess
+                                ? "text-[#bfa669] border-[#bfa669]/40 bg-[#bfa669]/[0.08] hover:bg-[#bfa669]/[0.14]"
+                                : "text-zinc-400 border-zinc-700 bg-transparent hover:border-zinc-500"
+                        }`}
+                    >
+                        <span
+                            className={`inline-block h-1.5 w-1.5 rounded-full ${
+                                widgetAccess ? "bg-[#bfa669]" : "bg-zinc-500"
                             }`}
-                            title={`Widget Access ${widgetAccess ? "ON" : "OFF"}`}
-                        >
-                            <span
-                                className={`absolute inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                    widgetAccess ? "translate-x-8" : "translate-x-1"
-                                }`}
-                            />
-                            <span
-                                className={`relative z-10 text-xs text-white transition-all ${
-                                    widgetAccess ? "ml-2.5 mr-6 text-left" : "ml-6 mr-1 text-right"
-                                }`}
-                            >
-                                {widgetAccess ? "ON" : "OFF"}
-                            </span>
-                        </button>
-                    </div>
+                        />
+                        <span>context: {widgetAccess ? "on" : "off"}</span>
+                    </button>
                 )}
 
                 <button
                     onClick={handleKebabClick}
-                    className="text-gray-400 hover:text-white cursor-pointer transition-colors p-1 rounded flex-shrink-0 ml-2 focus:outline-none"
+                    className="text-zinc-400 hover:text-[#bfa669] cursor-pointer transition-colors p-1 rounded flex-shrink-0 focus:outline-none"
                     title="More options"
                 >
                     <i className="fa fa-ellipsis-vertical"></i>

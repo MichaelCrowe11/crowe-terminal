@@ -71,111 +71,63 @@ const AIDragOverlay = memo(() => {
 
 AIDragOverlay.displayName = "AIDragOverlay";
 
-const KeyCap = memo(({ children, className }: { children: React.ReactNode; className?: string }) => {
-    return (
-        <kbd
-            className={cn(
-                "px-1.5 py-0.5 text-xs bg-zinc-700 border border-zinc-600 rounded-sm shadow-sm font-mono",
-                className
-            )}
-        >
-            {children}
-        </kbd>
-    );
-});
-
-KeyCap.displayName = "KeyCap";
+const PROMPT_HINTS: { label: string; insert: string }[] = [
+    { label: "explain this terminal output", insert: "Explain what just happened in this terminal." },
+    { label: "open file as Crowe Code block", insert: "Open the file at <path> as a new Crowe Code block." },
+    { label: "audit the current directory", insert: "Audit the current directory: list project shape, recent edits, anything risky." },
+];
 
 const AIWelcomeMessage = memo(() => {
     const modKey = isMacOS() ? "⌘" : "Alt";
+    const focusKeys = isWindows() ? "Alt 0" : "Ctrl Shift 0";
     const aiModeConfigs = jotai.useAtomValue(atoms.waveaiModeConfigAtom);
     const hasCustomModes = Object.keys(aiModeConfigs).some((key) => !key.startsWith("waveai@"));
+
+    const insertPrompt = (text: string) => {
+        const model = WaveAIModel.getInstance();
+        globalStore.set(model.inputAtom, text);
+        model.focusInput();
+    };
+
     return (
-        <div className="text-secondary py-8">
-            <div className="text-center">
-                <i className="fa fa-sparkles text-4xl text-accent mb-2 block"></i>
-                <p className="text-lg font-bold text-primary">Welcome to Crowe Logic</p>
+        <div className="px-4 py-6 max-w-md mx-auto">
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">
+                crowe logic
             </div>
-            <div className="mt-4 text-left max-w-md mx-auto">
-                <p className="text-sm mb-6">
-                    Crowe Logic is your terminal assistant with context. I can read your terminal output, analyze widgets,
-                    access files, and help you solve problems faster.
-                </p>
-                <div className="bg-accent/10 border border-accent/30 rounded-lg p-4">
-                    <div className="text-sm font-semibold mb-3 text-accent">Getting Started:</div>
-                    <div className="space-y-3 text-sm">
-                        <div className="flex items-start gap-3">
-                            <div className="w-4 text-center flex-shrink-0">
-                                <i className="fa-solid fa-plug text-accent"></i>
-                            </div>
-                            <div>
-                                <span className="font-bold">Widget Context</span>
-                                <div className="">When ON, I can read your terminal and analyze widgets.</div>
-                                <div className="">When OFF, I'm sandboxed with no system access.</div>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                            <div className="w-4 text-center flex-shrink-0">
-                                <i className="fa-solid fa-file-import text-accent"></i>
-                            </div>
-                            <div>Drag & drop files or images for analysis</div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                            <div className="w-4 text-center flex-shrink-0">
-                                <i className="fa-solid fa-keyboard text-accent"></i>
-                            </div>
-                            <div className="space-y-1">
-                                <div>
-                                    <KeyCap>{modKey}</KeyCap>
-                                    <KeyCap className="ml-1">K</KeyCap>
-                                    <span className="ml-1.5">to start a new chat</span>
-                                </div>
-                                <div>
-                                    <KeyCap>{modKey}</KeyCap>
-                                    <KeyCap className="ml-1">Shift</KeyCap>
-                                    <KeyCap className="ml-1">A</KeyCap>
-                                    <span className="ml-1.5">to toggle panel</span>
-                                </div>
-                                <div>
-                                    {isWindows() ? (
-                                        <>
-                                            <KeyCap>Alt</KeyCap>
-                                            <KeyCap className="ml-1">0</KeyCap>
-                                            <span className="ml-1.5">to focus</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <KeyCap>Ctrl</KeyCap>
-                                            <KeyCap className="ml-1">Shift</KeyCap>
-                                            <KeyCap className="ml-1">0</KeyCap>
-                                            <span className="ml-1.5">to focus</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                            <div className="w-4 text-center flex-shrink-0">
-                                <i className="fa-brands fa-discord text-accent"></i>
-                            </div>
-                            <div>
-                                Questions or feedback?{" "}
-                                <a
-                                    target="_blank"
-                                    href="https://discord.gg/XfvZ334gwU"
-                                    rel="noopener"
-                                    className="text-accent hover:underline cursor-pointer"
-                                >
-                                    Join our Discord
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+            <div className="mt-1 font-mono text-[13px] text-foreground/90">
+                <span className="text-[#bfa669]">$</span> ready
+            </div>
+            <p className="mt-4 text-[13px] leading-relaxed text-zinc-400">
+                Type a request below, or pick a starter to drop it into the input.
+            </p>
+
+            <div className="mt-5 border-t border-[#bfa669]/15">
+                {PROMPT_HINTS.map((hint) => (
+                    <button
+                        key={hint.label}
+                        onClick={() => insertPrompt(hint.insert)}
+                        className="group w-full flex items-center justify-between gap-3 py-2.5 border-b border-[#bfa669]/10 text-left cursor-pointer hover:bg-[#bfa669]/[0.06] transition-colors px-1"
+                    >
+                        <span className="font-mono text-[12px] text-[#bfa669] truncate">
+                            {hint.label}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500 group-hover:text-[#bfa669] transition-colors">
+                            insert &rarr;
+                        </span>
+                    </button>
+                ))}
+            </div>
+
+            {!hasCustomModes && (
+                <div className="mt-5">
+                    <BYOKAnnouncement />
                 </div>
-                {!hasCustomModes && <BYOKAnnouncement />}
-                <div className="mt-4 text-center text-[12px] text-muted">
-                    BETA: Free to use. Daily limits keep our costs in check.
-                </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                <span>{modKey} K new</span>
+                <span>{modKey} ⇧ A toggle</span>
+                <span>{focusKeys} focus</span>
             </div>
         </div>
     );
