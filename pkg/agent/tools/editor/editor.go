@@ -64,9 +64,10 @@ func init() {
 			"Use before any edit so you have ground truth, never assume the file's " +
 			"current state. Rejects binary files, files larger than 1 MB, and paths " +
 			"under sensitive system locations.",
-		Schema:   json.RawMessage(schemaReadFile),
-		Mutating: false,
-		Handler:  handleReadFile,
+		Schema:          json.RawMessage(schemaReadFile),
+		Mutating:        false,
+		Handler:         handleReadFile,
+		TargetExtractor: extractPath,
 	})
 	registry.Register(&registry.Tool{
 		Name: "editor.write_file",
@@ -74,9 +75,10 @@ func init() {
 			"Creates parent directories. Use for new files; for existing files prefer " +
 			"editor.apply_edit so you cannot silently lose unrelated changes. Capped " +
 			"at 4 MB.",
-		Schema:   json.RawMessage(schemaWriteFile),
-		Mutating: true,
-		Handler:  handleWriteFile,
+		Schema:          json.RawMessage(schemaWriteFile),
+		Mutating:        true,
+		Handler:         handleWriteFile,
+		TargetExtractor: extractPath,
 	})
 	registry.Register(&registry.Tool{
 		Name: "editor.apply_edit",
@@ -84,9 +86,10 @@ func init() {
 			"file. Fails if old_text is not present, or appears more than once. " +
 			"Safer than write_file because it requires the file to be in a known " +
 			"state. Use this for surgical changes inside existing files.",
-		Schema:   json.RawMessage(schemaApplyEdit),
-		Mutating: true,
-		Handler:  handleApplyEdit,
+		Schema:          json.RawMessage(schemaApplyEdit),
+		Mutating:        true,
+		Handler:         handleApplyEdit,
+		TargetExtractor: extractPath,
 	})
 	registry.Register(&registry.Tool{
 		Name: "editor.list_recent_files",
@@ -97,6 +100,16 @@ func init() {
 		Mutating: false,
 		Handler:  handleListRecent,
 	})
+}
+
+func extractPath(args json.RawMessage) string {
+	var probe struct {
+		Path string `json:"path"`
+	}
+	if err := json.Unmarshal(args, &probe); err != nil {
+		return ""
+	}
+	return probe.Path
 }
 
 const schemaReadFile = `{

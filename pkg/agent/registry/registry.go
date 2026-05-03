@@ -7,8 +7,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 	"sync"
+	"time"
+
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 )
 
 var defaultRegistry = MakeRegistry()
@@ -80,5 +84,43 @@ func (r *Registry) Call(ctx context.Context, req CallRequest) (Result, error) {
 	if len(args) == 0 {
 		args = json.RawMessage("{}")
 	}
+	if blocked, denial := r.scopeCheck(ctx, t, args, req.ToolCallID); blocked {
+		return denial, nil
+	}
 	return t.Handler(ctx, args)
+}
+
+// scopeCheck consults the per-block grant store when a block id is present in
+// the request context. Calls without a block id (legacy in-process callers,
+// startup probes, tests) are passed through unchanged so the rollout of
+// scoping is incremental rather than a flag day.
+//
+// ModeDeny short-circuits the call with an error result. ModeAsk currently
+// allows the call but logs a warning so the audit trail captures what would
+// have prompted; a follow-up change will surface an actual approval UI on
+// the calling block.
+func (r *Registry) scopeCheck(ctx context.Context, t *Tool, args json.RawMessage, toolCallID string) (bool, Result) {
+	blockID, ok := scope.BlockIDFromContext(ctx)
+	if !ok {
+		return false, Result{}
+	}
+	sessionID, _ := scope.AgentSessionIDFromContext(ctx)
+	target := ""
+	if t.TargetExtractor != nil {
+		target = t.TargetExtractor(args)
+	}
+	decision := scope.Check(scope.DefaultStore(), blockID, sessionID, t.Name, target, time.Now())
+	switch decision.Mode {
+	case scope.ModeDeny:
+		log.Printf("[agent-scope] DENY block=%s session=%s tool=%s target=%q reason=%s call=%s\n",
+			blockID, sessionID, t.Name, target, decision.Reason, toolCallID)
+		return true, Result{
+			IsError:   true,
+			ErrorText: fmt.Sprintf("scope: %s denied for this block (%s)", t.Name, decision.Reason),
+		}
+	case scope.ModeAsk:
+		log.Printf("[agent-scope] ASK  block=%s session=%s tool=%s target=%q reason=%s call=%s\n",
+			blockID, sessionID, t.Name, target, decision.Reason, toolCallID)
+	}
+	return false, Result{}
 }

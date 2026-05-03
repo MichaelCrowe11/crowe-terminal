@@ -58,6 +58,7 @@ export class CroweCodeViewModel implements ViewModel {
 
     fileNameAtom: jotai.Atom<string | undefined>;
     languageAtom: jotai.Atom<string | undefined>;
+    scopeAtom: jotai.Atom<string | undefined>;
     dirtyAtom: jotai.Atom<boolean>;
     viewText!: jotai.Atom<HeaderElem[]>;
 
@@ -86,6 +87,12 @@ export class CroweCodeViewModel implements ViewModel {
             return languageFromFileName(get(this.fileNameAtom));
         });
 
+        this.scopeAtom = jotai.atom((get) => {
+            const blockData = get(this.blockAtom);
+            const s = blockData?.meta?.["crowecode:scope"];
+            return typeof s === "string" && s.length > 0 ? s : undefined;
+        });
+
         this.dirtyAtom = jotai.atom((get) => {
             const saved = get(this.savedTextAtom);
             if (saved === null) return false;
@@ -95,6 +102,7 @@ export class CroweCodeViewModel implements ViewModel {
         this.viewText = jotai.atom((get) => {
             const fileName = get(this.fileNameAtom);
             const lang = get(this.languageAtom);
+            const scopeName = get(this.scopeAtom);
             const dirty = get(this.dirtyAtom);
             const isSaving = get(this.isSavingAtom);
             const isLoading = get(this.isLoadingAtom);
@@ -105,6 +113,11 @@ export class CroweCodeViewModel implements ViewModel {
             }
             if (lang) {
                 rtn.push({ elemtype: "text", text: lang, className: "crowecode-lang-pill" });
+            }
+            if (scopeName) {
+                rtn.push({ elemtype: "text", text: `scope: ${scopeName}`, className: `crowecode-scope-pill crowecode-scope-${scopeName}` });
+            } else {
+                rtn.push({ elemtype: "text", text: "ungated", className: "crowecode-scope-pill crowecode-scope-ungated" });
             }
             if (loadError) {
                 rtn.push({ elemtype: "text", text: loadError, className: "crowecode-error-pill" });

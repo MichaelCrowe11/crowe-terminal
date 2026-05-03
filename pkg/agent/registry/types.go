@@ -26,6 +26,12 @@ type Tool struct {
 	Mutating    bool            `json:"mutating"`
 	DefaultBlk  string          `json:"defaultblock,omitempty"`
 	Handler     Handler         `json:"-"`
+
+	// TargetExtractor optionally pulls a "target" string from the call args
+	// (typically a file path, URL, or block id) so per-block grants can
+	// scope by glob. Tools without a meaningful target leave this nil; the
+	// registry then matches against any TargetPatterns the grant declares.
+	TargetExtractor func(args json.RawMessage) string `json:"-"`
 }
 
 type Handler func(ctx context.Context, args json.RawMessage) (Result, error)
