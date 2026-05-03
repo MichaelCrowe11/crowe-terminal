@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tooltip } from "@/app/element/tooltip";
@@ -10,6 +10,16 @@ import { useAtomValue } from "jotai";
 import { memo, useRef, useState } from "react";
 import { getFilteredAIModeConfigs, getModeDisplayName } from "./ai-utils";
 import { WaveAIModel } from "./waveai-model";
+import croweMark from "@/app/asset/crowe-mark.png";
+
+const ModeIcon = memo(({ icon, sizeClass }: { icon: string; sizeClass: string }) => {
+    if (icon === "crowe-mark") {
+        return <img src={croweMark} alt="" className={cn("inline-block object-contain", sizeClass)} />;
+    }
+    return <i className={cn(makeIconClass(icon, false), sizeClass)} />;
+});
+
+ModeIcon.displayName = "ModeIcon";
 
 interface AIModeMenuItemProps {
     config: AIModeConfigWithMode;
@@ -34,7 +44,7 @@ const AIModeMenuItem = memo(({ config, isSelected, isDisabled, isPremiumDisabled
             )}
         >
             <div className="flex items-center gap-2 w-full">
-                <i className={makeIconClass(config["display:icon"] || "sparkles", false)}></i>
+                <ModeIcon icon={config["display:icon"] || "sparkles"} sizeClass="w-3.5 h-3.5 text-[14px]" />
                 <span className={cn("text-sm", isSelected && "font-bold")}>
                     {getModeDisplayName(config)}
                     {isPremiumDisabled && " (premium)"}
@@ -220,7 +230,7 @@ export const AIModeDropdown = memo(({ compatibilityMode = false }: AIModeDropdow
                 )}
                 title={`AI Mode: ${displayName}`}
             >
-                <i className={cn(makeIconClass(displayIcon, false), "text-[10px]")}></i>
+                <ModeIcon icon={displayIcon} sizeClass="w-3 h-3 text-[10px]" />
                 <span className={`text-[11px]`}>{displayName}</span>
                 <i className="fa fa-chevron-down text-[8px]"></i>
             </button>

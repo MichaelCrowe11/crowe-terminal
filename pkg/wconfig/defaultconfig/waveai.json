@@ -2,7 +2,7 @@
     "waveai@crowelm-supreme": {
         "display:name": "CroweLM Supreme",
         "display:order": -3,
-        "display:icon": "sparkles",
+        "display:icon": "crowe-mark",
         "display:description": "Crowe Logic's flagship model.\nFull tool access via local Foundry agent.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",

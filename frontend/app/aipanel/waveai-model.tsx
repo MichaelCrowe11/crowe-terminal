@@ -45,7 +45,7 @@ const BuilderAIModeConfigs: Record<string, AIModeConfigType> = {
     "waveaibuilder@default": {
         "display:name": "Builder Default",
         "display:order": -2,
-        "display:icon": "sparkles",
+        "display:icon": "crowe-mark",
         "display:description": "Fast, capable code generation\n(CroweLM Auto via local Foundry agent)",
         "ai:provider": "openai",
         "ai:switchcompat": ["openai"],

@@ -6,6 +6,7 @@ import { TabRpcClient } from "@/app/store/wshrpcutil";
 import { cn } from "@/util/util";
 import { useState } from "react";
 import { WaveAIModel } from "./waveai-model";
+import croweMark from "@/app/asset/crowe-mark.png";
 
 interface TelemetryRequiredMessageProps {
     className?: string;
@@ -33,7 +34,7 @@ const TelemetryRequiredMessage = ({ className }: TelemetryRequiredMessageProps) 
             <div className="flex items-center justify-center p-8 text-center">
                 <div className="max-w-md space-y-6">
                     <div className="space-y-4">
-                        <i className="fa fa-sparkles text-accent text-5xl"></i>
+                        <img src={croweMark} alt="" className="h-16 w-16 mx-auto object-contain rounded-md ring-1 ring-[#bfa669]/30" />
                         <h2 className="text-2xl font-semibold text-foreground">Crowe Logic</h2>
                         <p className="text-secondary leading-relaxed">
                             Crowe Logic is free to use and provides integrated AI chat that can interact with your widgets,

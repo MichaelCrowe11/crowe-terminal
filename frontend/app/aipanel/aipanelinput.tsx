@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { formatFileSizeError, isAcceptableFile, validateFileSize } from "@/app/aipanel/ai-utils";
@@ -133,7 +133,12 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
     };
 
     return (
-        <div className={cn("border-t", isFocused ? "border-accent/50" : "border-gray-600")}>
+        <div
+            className={cn(
+                "border-t bg-[#0b0b0c]/40 transition-colors",
+                isFocused ? "border-[#bfa669]/40" : "border-[#bfa669]/15"
+            )}
+        >
             <input
                 ref={fileInputRef}
                 type="file"
@@ -143,7 +148,16 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                 className="hidden"
             />
             <form onSubmit={onSubmit}>
-                <div className="relative">
+                <div className="relative pl-3">
+                    <span
+                        aria-hidden="true"
+                        className={cn(
+                            "absolute left-2 top-2 font-mono text-[13px] select-none transition-colors",
+                            isFocused ? "text-[#bfa669]" : "text-[#bfa669]/50"
+                        )}
+                    >
+                        $
+                    </span>
                     <textarea
                         ref={textareaRef}
                         value={input}
@@ -153,48 +167,48 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                         onBlur={handleBlur}
                         placeholder={placeholder}
                         className={cn(
-                            "w-full  text-white px-2 py-2 pr-5 focus:outline-none resize-none overflow-auto bg-zinc-800/50"
+                            "w-full text-foreground/95 placeholder-zinc-500 pl-4 pr-12 py-2 focus:outline-none resize-none overflow-auto bg-transparent"
                         )}
                         style={{ fontSize: "13px" }}
                         rows={2}
                     />
-                    <Tooltip content="Attach files" placement="top" divClassName="absolute bottom-6.5 right-1">
+                    <Tooltip content="Attach files" placement="top" divClassName="absolute bottom-6.5 right-1.5">
                         <button
                             type="button"
                             onClick={handleUploadClick}
                             className={cn(
-                                "w-5 h-5 transition-colors flex items-center justify-center text-gray-400 hover:text-accent cursor-pointer"
+                                "w-6 h-6 rounded transition-colors flex items-center justify-center text-zinc-500 hover:text-[#bfa669] cursor-pointer"
                             )}
                         >
-                            <i className="fa fa-paperclip text-sm"></i>
+                            <i className="fa fa-paperclip text-[12px]"></i>
                         </button>
                     </Tooltip>
                     {status === "streaming" ? (
-                        <Tooltip content="Stop Response" placement="top" divClassName="absolute bottom-1.5 right-1">
+                        <Tooltip content="Stop Response" placement="top" divClassName="absolute bottom-1.5 right-1.5">
                             <button
                                 type="button"
                                 onClick={() => model.stopResponse()}
                                 className={cn(
-                                    "w-5 h-5 transition-colors flex items-center justify-center",
-                                    "text-green-500 hover:text-green-400 cursor-pointer"
+                                    "w-6 h-6 rounded transition-colors flex items-center justify-center cursor-pointer",
+                                    "text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                 )}
                             >
-                                <i className="fa fa-square text-sm"></i>
+                                <i className="fa fa-square text-[12px]"></i>
                             </button>
                         </Tooltip>
                     ) : (
-                        <Tooltip content="Send message (Enter)" placement="top" divClassName="absolute bottom-1.5 right-1">
+                        <Tooltip content="Send (Enter)" placement="top" divClassName="absolute bottom-1.5 right-1.5">
                             <button
                                 type="submit"
                                 disabled={status !== "ready" || !input.trim()}
                                 className={cn(
-                                    "w-5 h-5 transition-colors flex items-center justify-center",
+                                    "w-6 h-6 rounded transition-colors flex items-center justify-center",
                                     status !== "ready" || !input.trim()
-                                        ? "text-gray-400"
-                                        : "text-accent/80 hover:text-accent cursor-pointer"
+                                        ? "text-zinc-600 cursor-default"
+                                        : "text-[#bfa669] hover:text-[#bfa669] hover:bg-[#bfa669]/10 cursor-pointer"
                                 )}
                             >
-                                <i className="fa fa-paper-plane text-sm"></i>
+                                <i className="fa fa-arrow-up text-[12px]"></i>
                             </button>
                         </Tooltip>
                     )}

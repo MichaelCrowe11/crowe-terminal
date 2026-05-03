@@ -29,6 +29,7 @@ import { WaveUIMessage } from "./aitypes";
 import { BYOKAnnouncement } from "./byokannouncement";
 import { TelemetryRequiredMessage } from "./telemetryrequired";
 import { WaveAIModel } from "./waveai-model";
+import croweMark from "@/app/asset/crowe-mark.png";
 
 const AIBlockMask = memo(() => {
     return (
@@ -137,16 +138,17 @@ AIWelcomeMessage.displayName = "AIWelcomeMessage";
 
 const AIBuilderWelcomeMessage = memo(() => {
     return (
-        <div className="text-secondary py-8">
-            <div className="text-center">
-                <i className="fa fa-sparkles text-4xl text-accent mb-4 block"></i>
-                <p className="text-lg font-bold text-primary">Crowe App Builder</p>
+        <div className="px-4 py-8 max-w-md mx-auto">
+            <div className="flex items-center gap-3 mb-4">
+                <img src={croweMark} alt="" className="h-10 w-10 object-contain rounded ring-1 ring-[#bfa669]/30" />
+                <div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">crowe logic</div>
+                    <div className="font-semibold text-foreground text-[15px] -mt-0.5">app builder</div>
+                </div>
             </div>
-            <div className="mt-4 text-left max-w-md mx-auto">
-                <p className="text-sm mb-6">
-                    The Crowe App builder helps create custom widgets that integrate seamlessly into Crowe Terminal.
-                </p>
-            </div>
+            <p className="text-[13px] leading-relaxed text-zinc-400">
+                Build custom widgets that integrate directly into Crowe Terminal. Describe the widget you want and Crowe Logic will scaffold it.
+            </p>
         </div>
     );
 });
