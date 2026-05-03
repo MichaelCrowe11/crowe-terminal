@@ -31,6 +31,7 @@ import (
 	"sync"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 )
 
 const (
@@ -136,16 +137,22 @@ func (s *Server) listTools() []map[string]any {
 
 func (s *Server) handleCall(ctx context.Context, req rpcRequest) {
 	var params struct {
-		Name      string          `json:"name"`
-		Arguments json.RawMessage `json:"arguments"`
+		Name           string          `json:"name"`
+		Arguments      json.RawMessage `json:"arguments"`
+		BlockID        string          `json:"blockid,omitempty"`
+		AgentSessionID string          `json:"agentsessionid,omitempty"`
 	}
 	if err := json.Unmarshal(req.Params, &params); err != nil {
 		s.writeErrorWithID(req.ID, -32602, "invalid params")
 		return
 	}
+	ctx = scope.WithBlockID(ctx, params.BlockID)
+	ctx = scope.WithAgentSessionID(ctx, params.AgentSessionID)
 	res, err := registry.Default().Call(ctx, registry.CallRequest{
-		Name:      params.Name,
-		Arguments: params.Arguments,
+		Name:           params.Name,
+		Arguments:      params.Arguments,
+		BlockID:        params.BlockID,
+		AgentSessionID: params.AgentSessionID,
 	})
 	if err != nil && !res.IsError {
 		s.writeErrorWithID(req.ID, -32000, err.Error())

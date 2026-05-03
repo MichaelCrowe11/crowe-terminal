@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/wavetermdev/waveterm/pkg/agent"
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/allowlist"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/system"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/terminal"
@@ -88,6 +89,27 @@ func TestEndToEnd(t *testing.T) {
 	// 7) loopback-only protection: server rejects non-loopback origin
 	// (we can't easily simulate a non-loopback request from within the
 	// test process without spoofing, so this is exercised by inspection.)
+
+	// 8) scope: deny grant on a tool blocks the call when the request
+	// carries the matching block id, proving Phase 4 transport wiring.
+	scope.DefaultStore().Promote("scoped-block-1", "sess-test", "system.metrics", scope.ModeDeny)
+	defer scope.DefaultStore().Revoke("scoped-block-1", "sess-test")
+
+	body = authedPost(t, base+"/v1/call",
+		`{"name":"system.metrics","arguments":{"topn":1},"blockid":"scoped-block-1","agentsessionid":"sess-test"}`)
+	if !strings.Contains(body, `"iserror":true`) {
+		t.Errorf("expected scope deny on system.metrics with block id: %s", truncate(body))
+	}
+	if !strings.Contains(body, "denied") {
+		t.Errorf("expected denial reason in error text: %s", truncate(body))
+	}
+
+	// 9) same call without block id passes through (legacy passthrough).
+	body = authedPost(t, base+"/v1/call",
+		`{"name":"system.metrics","arguments":{"topn":1}}`)
+	if !strings.Contains(body, "cpu_percent") {
+		t.Errorf("expected unscoped call to succeed: %s", truncate(body))
+	}
 }
 
 func authedGet(t *testing.T, url string) string {

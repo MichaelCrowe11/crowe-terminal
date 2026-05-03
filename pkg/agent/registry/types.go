@@ -48,6 +48,12 @@ type CallRequest struct {
 	Name       string          `json:"name"`
 	Arguments  json.RawMessage `json:"arguments"`
 	ToolCallID string          `json:"toolcallid,omitempty"`
+
+	// BlockID and AgentSessionID identify the calling agent context so
+	// per-block grants (pkg/agent/scope) can be applied. Both are optional;
+	// requests that omit them bypass scope checks (legacy passthrough).
+	BlockID        string `json:"blockid,omitempty"`
+	AgentSessionID string `json:"agentsessionid,omitempty"`
 }
 
 type CatalogEntry struct {

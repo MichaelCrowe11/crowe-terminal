@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/wavetermdev/waveterm/pkg/agent/events"
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	"github.com/wavetermdev/waveterm/pkg/authkey"
 )
 
@@ -122,6 +123,8 @@ func (s *Server) handleCall(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
 	defer cancel()
+	ctx = scope.WithBlockID(ctx, req.BlockID)
+	ctx = scope.WithAgentSessionID(ctx, req.AgentSessionID)
 	if s.hub != nil {
 		s.hub.Publish(events.Event{Kind: events.KindCallStarted, ToolName: req.Name, ToolCallID: req.ToolCallID})
 	}
