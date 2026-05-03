@@ -191,6 +191,12 @@ func CreateSubBlockCommand(w *wshutil.WshRpc, data wshrpc.CommandCreateSubBlockD
 	return resp, err
 }
 
+// command "crowecodebootstrapscope", wshserver.CroweCodeBootstrapScopeCommand
+func CroweCodeBootstrapScopeCommand(w *wshutil.WshRpc, data wshrpc.CommandCroweCodeBootstrapScopeData, opts *wshrpc.RpcOpts) (*wshrpc.CommandCroweCodeBootstrapScopeRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandCroweCodeBootstrapScopeRtnData](w, "crowecodebootstrapscope", data, opts)
+	return resp, err
+}
+
 // command "debugterm", wshserver.DebugTermCommand
 func DebugTermCommand(w *wshutil.WshRpc, data wshrpc.CommandDebugTermData, opts *wshrpc.RpcOpts) (*wshrpc.CommandDebugTermRtnData, error) {
 	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandDebugTermRtnData](w, "debugterm", data, opts)

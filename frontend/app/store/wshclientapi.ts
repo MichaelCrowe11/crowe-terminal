@@ -192,6 +192,12 @@ export class RpcApiType {
         return client.wshRpcCall("createsubblock", data, opts);
     }
 
+    // command "crowecodebootstrapscope" [call]
+    CroweCodeBootstrapScopeCommand(client: WshClient, data: CommandCroweCodeBootstrapScopeData, opts?: RpcOpts): Promise<CommandCroweCodeBootstrapScopeRtnData> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "crowecodebootstrapscope", data, opts);
+        return client.wshRpcCall("crowecodebootstrapscope", data, opts);
+    }
+
     // command "debugterm" [call]
     DebugTermCommand(client: WshClient, data: CommandDebugTermData, opts?: RpcOpts): Promise<CommandDebugTermRtnData> {
         if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "debugterm", data, opts);

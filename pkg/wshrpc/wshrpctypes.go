@@ -215,6 +215,9 @@ type WshRpcInterface interface {
 	JobControllerDetachJobCommand(ctx context.Context, jobId string) error
 	JobControllerGetAllJobManagerStatusCommand(ctx context.Context) ([]*JobManagerStatusUpdate, error)
 	BlockJobStatusCommand(ctx context.Context, blockId string) (*BlockJobStatusData, error)
+
+	// crowecode scope
+	CroweCodeBootstrapScopeCommand(ctx context.Context, data CommandCroweCodeBootstrapScopeData) (*CommandCroweCodeBootstrapScopeRtnData, error)
 }
 
 // for frontend
@@ -275,6 +278,22 @@ type CommandGetMetaData struct {
 type CommandSetMetaData struct {
 	ORef waveobj.ORef        `json:"oref"`
 	Meta waveobj.MetaMapType `json:"meta"`
+}
+
+type CommandCroweCodeBootstrapScopeData struct {
+	BlockId        string   `json:"blockid"`
+	AgentSessionId string   `json:"agentsessionid"`
+	ScopeName      string   `json:"scopename"`
+	PathGlobs      []string `json:"pathglobs,omitempty"`
+}
+
+type CommandCroweCodeBootstrapScopeRtnData struct {
+	Granted        bool              `json:"granted"`
+	ScopeName      string            `json:"scopename"`
+	BlockId        string            `json:"blockid"`
+	AgentSessionId string            `json:"agentsessionid"`
+	Tools          map[string]string `json:"tools"`
+	TargetPatterns map[string][]string `json:"targetpatterns,omitempty"`
 }
 
 type CommandResolveIdsData struct {

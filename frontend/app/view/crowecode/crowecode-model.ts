@@ -202,23 +202,30 @@ export class CroweCodeViewModel implements ViewModel {
         globalStore.set(this.textAtom, saved);
     }
 
-    // bootstrapScope writes a default scope meta on first mount so the header
-    // badge surfaces the intended posture immediately. Idempotent: if the
-    // user (or a future settings-driven default) has already set the meta,
-    // we leave it alone. This is *advisory* in the current build - real
-    // enforcement requires a backend grant put into scope.DefaultStore via
-    // a wshrpc round-trip, which lands in a follow-up change.
+    // bootstrapScope installs a real backend capability grant for this block
+    // (via wshrpc CroweCodeBootstrapScopeCommand) and then mirrors the
+    // resolved scope name into block meta so the header badge reflects what
+    // the registry will actually enforce. Idempotent: if the meta is already
+    // set we skip both calls so user/settings overrides take precedence.
     async bootstrapScope() {
         const existing = globalStore.get(this.scopeAtom);
         if (existing) return;
         try {
-            await RpcApi.SetMetaCommand(TabRpcClient, {
-                oref: WOS.makeORef("block", this.blockId),
-                meta: { "crowecode:scope": "sandbox" },
+            const rtn = await RpcApi.CroweCodeBootstrapScopeCommand(TabRpcClient, {
+                blockid: this.blockId,
+                agentsessionid: "",
+                scopename: "sandbox",
+                pathglobs: [],
             });
+            if (rtn?.granted) {
+                await RpcApi.SetMetaCommand(TabRpcClient, {
+                    oref: WOS.makeORef("block", this.blockId),
+                    meta: { "crowecode:scope": rtn.scopename || "sandbox" },
+                });
+            }
         } catch (e) {
-            // Meta write failures are non-fatal: the block still works,
-            // the badge just falls back to "ungated" until next attempt.
+            // Bootstrap failures are non-fatal: the block still works,
+            // the badge falls back to "ungated" until next attempt.
         }
     }
 

@@ -315,6 +315,24 @@ declare global {
         blockdef: BlockDef;
     };
 
+    // wshrpc.CommandCroweCodeBootstrapScopeData
+    type CommandCroweCodeBootstrapScopeData = {
+        blockid: string;
+        agentsessionid: string;
+        scopename: string;
+        pathglobs?: string[];
+    };
+
+    // wshrpc.CommandCroweCodeBootstrapScopeRtnData
+    type CommandCroweCodeBootstrapScopeRtnData = {
+        granted: boolean;
+        scopename: string;
+        blockid: string;
+        agentsessionid: string;
+        tools: {[key: string]: string};
+        targetpatterns?: {[key: string]: string[]};
+    };
+
     // wshrpc.CommandDebugTermData
     type CommandDebugTermData = {
         blockid: string;

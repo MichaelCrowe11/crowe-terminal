@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/skratchdot/open-golang/open"
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/chatstore"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/uctypes"
@@ -1573,4 +1574,56 @@ func (ws *WshServer) JobControllerDetachJobCommand(ctx context.Context, jobId st
 
 func (ws *WshServer) BlockJobStatusCommand(ctx context.Context, blockId string) (*wshrpc.BlockJobStatusData, error) {
 	return jobcontroller.GetBlockJobStatus(ctx, blockId)
+}
+
+// CroweCodeBootstrapScopeCommand installs a default capability grant for a
+// Crowe Code block on the process-wide scope.DefaultStore. Called by the
+// frontend bootstrapScope path so the badge "scope: sandbox" reflects an
+// actual enforced grant rather than a meta-only declaration.
+//
+// Default behavior: scopename "sandbox" with PathGlobs populated from the
+// caller's Projects directory. Other scopenames map to GrantPermissive
+// (trusted) and GrantReadOnly (audit-only). Empty AgentSessionId falls
+// back to "default" so blocks get a grant before the AI panel attaches a
+// real session.
+func (ws *WshServer) CroweCodeBootstrapScopeCommand(ctx context.Context, data wshrpc.CommandCroweCodeBootstrapScopeData) (*wshrpc.CommandCroweCodeBootstrapScopeRtnData, error) {
+	if data.BlockId == "" {
+		return nil, fmt.Errorf("blockid is required")
+	}
+	sessionID := data.AgentSessionId
+	if sessionID == "" {
+		sessionID = "default"
+	}
+	scopeName := data.ScopeName
+	if scopeName == "" {
+		scopeName = "sandbox"
+	}
+	pathGlobs := data.PathGlobs
+	if len(pathGlobs) == 0 {
+		if home, err := os.UserHomeDir(); err == nil {
+			pathGlobs = []string{filepath.Join(home, "Projects/*"), filepath.Join(home, "Projects/*/*")}
+		}
+	}
+	store := scope.DefaultStore()
+	switch scopeName {
+	case "permissive":
+		scope.GrantPermissive(store, data.BlockId, sessionID)
+	case "readonly":
+		scope.GrantReadOnly(store, data.BlockId, sessionID, pathGlobs)
+	default:
+		scope.GrantSandbox(store, data.BlockId, sessionID, pathGlobs)
+		scopeName = "sandbox"
+	}
+	g, _ := store.Get(data.BlockId, sessionID)
+	rtn := &wshrpc.CommandCroweCodeBootstrapScopeRtnData{
+		Granted:        g != nil,
+		ScopeName:      scopeName,
+		BlockId:        data.BlockId,
+		AgentSessionId: sessionID,
+	}
+	if g != nil {
+		rtn.Tools = g.Tools
+		rtn.TargetPatterns = g.TargetPatterns
+	}
+	return rtn, nil
 }
