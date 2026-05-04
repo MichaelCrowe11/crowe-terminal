@@ -82,7 +82,18 @@ type PromptHint = {
     placeholder?: string;
 };
 
-const PROMPT_HINTS: PromptHint[] = [
+// Sandbox prompts work without widget context (text-only conversational tasks).
+// Shown when widgetAccess is OFF so users never click a prompt that the AI
+// can't actually fulfill in the current configuration.
+const SANDBOX_PROMPT_HINTS: PromptHint[] = [
+    { label: "rephrase this for clarity", insert: "Rephrase the following for clarity:\n\n" },
+    { label: "explain a concept", insert: "Explain the concept of " , placeholder: "<concept>" },
+    { label: "name this well", insert: "Suggest 5 short, memorable names for: " , placeholder: "<thing being named>" },
+];
+
+// Tool-needing prompts require widgetAccess so the AI has access to editor.*,
+// terminal, and filesystem tools. Shown when widgetAccess is ON.
+const TOOLS_PROMPT_HINTS: PromptHint[] = [
     { label: "explain this terminal output", insert: "Explain what just happened in this terminal." },
     {
         label: "open a file as a Crowe Code block",
@@ -95,11 +106,17 @@ const PROMPT_HINTS: PromptHint[] = [
 const AIWelcomeMessage = memo(() => {
     const modKey = isMacOS() ? "⌘" : "Alt";
     const focusKeys = isWindows() ? "Alt 0" : "Ctrl Shift 0";
+    const model = WaveAIModel.getInstance();
     const aiModeConfigs = jotai.useAtomValue(atoms.waveaiModeConfigAtom);
+    const widgetAccess = jotai.useAtomValue(model.widgetAccessAtom);
     const hasCustomModes = Object.keys(aiModeConfigs).some((key) => !key.startsWith("waveai@"));
 
+    const promptHints = widgetAccess ? TOOLS_PROMPT_HINTS : SANDBOX_PROMPT_HINTS;
+    const stateLine = widgetAccess
+        ? { dollar: "text-[#bfa669]", text: "text-foreground/90", label: "ready · tools on" }
+        : { dollar: "text-zinc-500", text: "text-zinc-400", label: "ready · sandboxed" };
+
     const insertPrompt = (hint: PromptHint) => {
-        const model = WaveAIModel.getInstance();
         globalStore.set(model.inputAtom, hint.insert);
         model.focusInput();
         if (hint.placeholder) {
@@ -117,15 +134,17 @@ const AIWelcomeMessage = memo(() => {
             <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">
                 crowe logic
             </div>
-            <div className="mt-1 font-mono text-[13px] text-foreground/90">
-                <span className="text-[#bfa669]">$</span> ready
+            <div className={`mt-1 font-mono text-[13px] ${stateLine.text}`}>
+                <span className={stateLine.dollar}>$</span> {stateLine.label}
             </div>
             <p className="mt-4 text-[13px] leading-relaxed text-zinc-400">
-                Type a request below, or pick a starter to drop it into the input.
+                {widgetAccess
+                    ? "Type a request below, or pick a starter to drop it into the input. The AI can read your terminal, files, and use tools."
+                    : "Type a request below, or pick a starter. The AI is sandboxed - text only. Toggle tools on (header pill, top right) to give it file and terminal access."}
             </p>
 
             <div className="mt-5 border-t border-[#bfa669]/15">
-                {PROMPT_HINTS.map((hint) => (
+                {promptHints.map((hint) => (
                     <button
                         key={hint.label}
                         onClick={() => insertPrompt(hint)}

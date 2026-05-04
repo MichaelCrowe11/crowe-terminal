@@ -26,6 +26,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
     const [input, setInput] = useAtom(model.inputAtom);
     const isFocused = useAtomValue(model.isWaveAIFocusedAtom);
     const isChatEmpty = useAtomValue(model.isChatEmptyAtom);
+    const widgetAccess = useAtomValue(model.widgetAccessAtom);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isPanelOpen = useAtomValue(model.getPanelVisibleAtom());
@@ -158,9 +159,14 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                 <div className="relative pl-3">
                     <span
                         aria-hidden="true"
+                        title={widgetAccess ? "tools on" : "tools off (sandboxed)"}
                         className={cn(
                             "absolute left-2 top-2 font-mono text-[13px] select-none transition-colors",
-                            isFocused ? "text-[#bfa669]" : "text-[#bfa669]/50"
+                            !widgetAccess
+                                ? "text-zinc-500"
+                                : isFocused
+                                  ? "text-[#bfa669]"
+                                  : "text-[#bfa669]/50"
                         )}
                     >
                         $

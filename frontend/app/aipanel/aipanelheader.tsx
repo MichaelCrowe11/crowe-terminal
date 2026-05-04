@@ -43,11 +43,15 @@ export const AIPanelHeader = memo(() => {
                 {!inBuilder && (
                     <button
                         onClick={toggleContext}
-                        title={`Widget context is ${widgetAccess ? "ON" : "OFF"} — click to toggle`}
+                        title={
+                            widgetAccess
+                                ? "Tools are ON. The AI can read your terminal, files, and use editor.* tools. Click to sandbox."
+                                : "Tools are OFF (sandboxed). The AI is text-only and cannot reach files or the terminal. Click to enable."
+                        }
                         className={`group flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded border transition-colors cursor-pointer ${
                             widgetAccess
                                 ? "text-[#bfa669] border-[#bfa669]/40 bg-[#bfa669]/[0.08] hover:bg-[#bfa669]/[0.14]"
-                                : "text-zinc-400 border-zinc-700 bg-transparent hover:border-zinc-500"
+                                : "text-zinc-400 border-zinc-700 bg-transparent hover:border-zinc-500 hover:text-zinc-300"
                         }`}
                     >
                         <span
@@ -55,7 +59,7 @@ export const AIPanelHeader = memo(() => {
                                 widgetAccess ? "bg-[#bfa669]" : "bg-zinc-500"
                             }`}
                         />
-                        <span>context: {widgetAccess ? "on" : "off"}</span>
+                        <span>tools: {widgetAccess ? "on" : "off"}</span>
                     </button>
                 )}
 
