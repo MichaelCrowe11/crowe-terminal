@@ -19,6 +19,7 @@ export interface AIPanelInputRef {
     focus: () => void;
     resize: () => void;
     scrollToBottom: () => void;
+    selectRange: (start: number, end: number) => void;
 }
 
 export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps) => {
@@ -60,6 +61,12 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                     if (textarea) {
                         textarea.scrollTop = textarea.scrollHeight;
                     }
+                },
+                selectRange: (start: number, end: number) => {
+                    const textarea = textareaRef.current;
+                    if (!textarea) return;
+                    textarea.focus();
+                    textarea.setSelectionRange(start, end);
                 },
             },
         };

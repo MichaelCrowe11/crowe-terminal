@@ -72,9 +72,23 @@ const AIDragOverlay = memo(() => {
 
 AIDragOverlay.displayName = "AIDragOverlay";
 
-const PROMPT_HINTS: { label: string; insert: string }[] = [
+type PromptHint = {
+    label: string;
+    insert: string;
+    // placeholder, if set, is a substring inside `insert` that gets selected
+    // after the prompt drops into the input. The user's first keystroke then
+    // overwrites the placeholder. Use for prompts that need a fill-in like a
+    // file path or strain name.
+    placeholder?: string;
+};
+
+const PROMPT_HINTS: PromptHint[] = [
     { label: "explain this terminal output", insert: "Explain what just happened in this terminal." },
-    { label: "open file as Crowe Code block", insert: "Open the file at <path> as a new Crowe Code block." },
+    {
+        label: "open a file as a Crowe Code block",
+        insert: "Open the file at /Users/crowelogic/Projects/crowe-terminal/README.md as a new Crowe Code block.",
+        placeholder: "/Users/crowelogic/Projects/crowe-terminal/README.md",
+    },
     { label: "audit the current directory", insert: "Audit the current directory: list project shape, recent edits, anything risky." },
 ];
 
@@ -84,10 +98,18 @@ const AIWelcomeMessage = memo(() => {
     const aiModeConfigs = jotai.useAtomValue(atoms.waveaiModeConfigAtom);
     const hasCustomModes = Object.keys(aiModeConfigs).some((key) => !key.startsWith("waveai@"));
 
-    const insertPrompt = (text: string) => {
+    const insertPrompt = (hint: PromptHint) => {
         const model = WaveAIModel.getInstance();
-        globalStore.set(model.inputAtom, text);
+        globalStore.set(model.inputAtom, hint.insert);
         model.focusInput();
+        if (hint.placeholder) {
+            const start = hint.insert.indexOf(hint.placeholder);
+            if (start >= 0) {
+                // Defer one tick so the textarea has the new value rendered
+                // before we ask it to select inside that value.
+                setTimeout(() => model.selectInputRange(start, start + hint.placeholder!.length), 0);
+            }
+        }
     };
 
     return (
@@ -106,7 +128,7 @@ const AIWelcomeMessage = memo(() => {
                 {PROMPT_HINTS.map((hint) => (
                     <button
                         key={hint.label}
-                        onClick={() => insertPrompt(hint.insert)}
+                        onClick={() => insertPrompt(hint)}
                         className="group w-full flex items-center justify-between gap-3 py-2.5 border-b border-[#bfa669]/10 text-left cursor-pointer hover:bg-[#bfa669]/[0.06] transition-colors px-1"
                     >
                         <span className="font-mono text-[12px] text-[#bfa669] truncate">

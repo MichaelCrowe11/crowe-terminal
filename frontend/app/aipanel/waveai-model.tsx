@@ -349,6 +349,12 @@ export class WaveAIModel {
         }
     }
 
+    selectInputRange(start: number, end: number) {
+        if (this.inputRef?.current) {
+            this.inputRef.current.selectRange(start, end);
+        }
+    }
+
     async reloadChatFromBackend(chatIdValue: string): Promise<WaveUIMessage[]> {
         const chatData = await RpcApi.GetWaveAIChatCommand(TabRpcClient, { chatid: chatIdValue });
         const messages: UIMessage[] = chatData?.messages ?? [];
