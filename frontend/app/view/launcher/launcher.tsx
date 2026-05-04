@@ -1,7 +1,6 @@
 // Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import logoUrl from "@/app/asset/logo.svg?url";
 import croweMarkUrl from "@/app/asset/crowe-mark.png?url";
 import type { BlockNodeModel } from "@/app/block/blocktypes";
 import { atoms, globalStore, replaceBlock } from "@/app/store/global";
@@ -20,6 +19,38 @@ function sortByDisplayOrder(wmap: { [key: string]: WidgetConfigType } | null | u
 }
 
 type GridLayoutType = { columns: number; tileWidth: number; tileHeight: number; showLabel: boolean };
+
+type FeaturedProduct = {
+    id: string;
+    eyebrow: string;
+    name: string;
+    tagline: string;
+    blockdef: BlockDef;
+};
+
+const FEATURED_PRODUCTS: FeaturedProduct[] = [
+    {
+        id: "code",
+        eyebrow: "Workstation",
+        name: "Crowe Code",
+        tagline: "AI-native IDE on the CroweLM model chain",
+        blockdef: { meta: { view: "crowecode" } },
+    },
+    {
+        id: "voice",
+        eyebrow: "Phone Agents",
+        name: "Crowe Logic Voice",
+        tagline: "24/7 operators for franchise + multi-location",
+        blockdef: { meta: { view: "webview", url: "https://www.crowelogic.com" } },
+    },
+    {
+        id: "ai",
+        eyebrow: "Cultivation",
+        name: "Crowe Logic AI",
+        tagline: "Mycology + biotech intelligence platform",
+        blockdef: { meta: { view: "webview", url: "https://ai.southwestmushrooms.com" } },
+    },
+];
 
 export class LauncherViewModel implements ViewModel {
     blockId: string;
@@ -136,6 +167,14 @@ export class LauncherViewModel implements ViewModel {
             console.error("Error replacing block:", error);
         }
     }
+
+    async handleProductSelect(blockdef: BlockDef) {
+        try {
+            await replaceBlock(this.blockId, blockdef, true);
+        } catch (error) {
+            console.error("Error replacing block (product):", error);
+        }
+    }
 }
 
 function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>) {
@@ -211,33 +250,73 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
     }, [searchTerm]);
 
     return (
-        <div ref={containerRef} className="w-full h-full p-4 box-border flex flex-col items-center justify-center">
-            <input
-                ref={model.inputRef}
-                type="text"
-                value={searchTerm}
-                onKeyDown={keydownWrapper(model.keyDownHandler.bind(model))}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="sr-only dummy"
-                aria-label="Search widgets"
-            />
+        <div ref={containerRef} className="relative w-full h-full p-4 box-border flex flex-col items-center justify-center overflow-auto">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute left-1/2 top-1/3 h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#bfa669]/[0.07] blur-[140px]" />
+                <div className="absolute right-[15%] top-2/3 h-[280px] w-[280px] rounded-full bg-[#bfa669]/[0.04] blur-[100px]" />
+            </div>
 
             {showLogo && (
-                <div className="mb-6 flex flex-col items-center gap-3" style={{ width: logoWidth, maxWidth: 300 }}>
+                <div className="relative mb-5 flex flex-col items-center gap-3" style={{ width: logoWidth, maxWidth: 300 }}>
                     <div className="inline-flex items-center gap-2 rounded-full border border-[#bfa669]/30 bg-[#bfa669]/[0.04] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]">
                         <span className="h-1 w-1 animate-pulse rounded-full bg-[#bfa669]" />
                         Crowe Logic Inc.
                     </div>
-                    <img src={croweMarkUrl} className="h-auto w-full max-w-[200px] drop-shadow-[0_0_30px_rgba(191,166,105,0.18)]" alt="Crowe Logic" />
+                    <img src={croweMarkUrl} className="h-auto w-full max-w-[180px] drop-shadow-[0_0_30px_rgba(191,166,105,0.18)]" alt="Crowe Logic" />
                     <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/60">
                         Code · Voice · AI
                     </div>
                 </div>
             )}
 
-            {/* Grid of widgets */}
+            <div className="relative mb-6 w-full max-w-md">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs text-[#bfa669]/70">
+                    {">"}
+                </span>
+                <input
+                    ref={model.inputRef}
+                    type="text"
+                    value={searchTerm}
+                    onKeyDown={keydownWrapper(model.keyDownHandler.bind(model))}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="SEARCH OR PRESS ↵ TO LAUNCH"
+                    aria-label="Search widgets"
+                    className="w-full rounded-md border border-[#bfa669]/20 bg-[#0b0b0c]/70 py-2.5 pl-8 pr-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[#e8e2cf] placeholder:text-[#e8e2cf]/35 focus:border-[#bfa669]/55 focus:outline-none focus:ring-2 focus:ring-[#bfa669]/15 transition-colors"
+                />
+            </div>
+
+            <div className="relative mb-8 grid w-full max-w-3xl gap-3 grid-cols-1 md:grid-cols-3">
+                {FEATURED_PRODUCTS.map((p) => (
+                    <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => model.handleProductSelect(p.blockdef)}
+                        className="group flex cursor-pointer flex-col items-start gap-2 rounded-lg border border-[#bfa669]/15 bg-[#bfa669]/[0.025] p-4 text-left transition-colors hover:border-[#bfa669]/45 hover:bg-[#bfa669]/[0.06]"
+                    >
+                        <span className="font-mono text-[10px] uppercase tracking-[0.20em] text-[#bfa669]">
+                            {p.eyebrow}
+                        </span>
+                        <span className="text-[14px] font-bold text-[#e8e2cf]">{p.name}</span>
+                        <span className="text-[12px] leading-relaxed text-[#e8e2cf]/55">{p.tagline}</span>
+                        <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/0 transition-colors group-hover:text-[#bfa669]/80">
+                            open →
+                        </span>
+                    </button>
+                ))}
+            </div>
+
+            {filteredWidgets.length > 0 && (
+                <div className="relative mb-3 flex items-center gap-3">
+                    <span className="h-px w-12 bg-[#bfa669]/20" />
+                    <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/55">
+                        Or jump to a tool
+                    </span>
+                    <span className="h-px w-12 bg-[#bfa669]/20" />
+                </div>
+            )}
+
             <div
-                className="grid gap-4 justify-center"
+                className="relative grid gap-4 justify-center"
                 style={{
                     gridTemplateColumns: `repeat(${gridLayout.columns}, ${finalTileWidth}px)`,
                 }}
@@ -275,14 +354,11 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                 ))}
             </div>
 
-            <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-[#e8e2cf]/40">
+            <div className="relative mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-[#e8e2cf]/40">
                 {filteredWidgets.length === 0 ? (
                     <span>no widgets found · esc to clear</span>
                 ) : (
-                    <span>
-                        {searchTerm == "" ? "type to filter" : 'searching "' + searchTerm + '"'} · enter to launch
-                        {searchTerm == "" ? " · arrows to navigate" : ""}
-                    </span>
+                    <span>↵ launch · ← ↑ → ↓ navigate{searchTerm ? ` · matched "${searchTerm}"` : ""}</span>
                 )}
             </div>
         </div>
