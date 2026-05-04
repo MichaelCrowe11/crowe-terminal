@@ -1,7 +1,8 @@
-// Copyright 2026, Command Line Inc.
+// Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import logoUrl from "@/app/asset/logo.svg?url";
+import croweMarkUrl from "@/app/asset/crowe-mark.png?url";
 import type { BlockNodeModel } from "@/app/block/blocktypes";
 import { atoms, globalStore, replaceBlock } from "@/app/store/global";
 import type { TabModel } from "@/app/store/tab-model";
@@ -211,7 +212,6 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
 
     return (
         <div ref={containerRef} className="w-full h-full p-4 box-border flex flex-col items-center justify-center">
-            {/* Hidden input for search */}
             <input
                 ref={model.inputRef}
                 type="text"
@@ -222,10 +222,16 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                 aria-label="Search widgets"
             />
 
-            {/* Logo */}
             {showLogo && (
-                <div className="mb-6" style={{ width: logoWidth, maxWidth: 300 }}>
-                    <img src={logoUrl} className="w-full h-auto filter grayscale brightness-70 opacity-70" alt="Logo" />
+                <div className="mb-6 flex flex-col items-center gap-3" style={{ width: logoWidth, maxWidth: 300 }}>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[#bfa669]/30 bg-[#bfa669]/[0.04] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]">
+                        <span className="h-1 w-1 animate-pulse rounded-full bg-[#bfa669]" />
+                        Crowe Logic Inc.
+                    </div>
+                    <img src={croweMarkUrl} className="h-auto w-full max-w-[200px] drop-shadow-[0_0_30px_rgba(191,166,105,0.18)]" alt="Crowe Logic" />
+                    <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/60">
+                        Code · Voice · AI
+                    </div>
                 </div>
             )}
 
@@ -243,10 +249,10 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                         title={widget.description || widget.label}
                         className={clsx(
                             "flex flex-col items-center justify-center cursor-pointer rounded-md p-2 text-center",
-                            "transition-colors duration-150",
+                            "border transition-colors duration-150",
                             index === selectedIndex
-                                ? "bg-white/20 text-white"
-                                : "bg-white/5 hover:bg-white/10 text-secondary hover:text-white"
+                                ? "border-[#bfa669]/60 bg-[#bfa669]/[0.12] text-[#e8e2cf]"
+                                : "border-[#bfa669]/15 bg-[#bfa669]/[0.03] text-[#e8e2cf]/70 hover:border-[#bfa669]/40 hover:bg-[#bfa669]/[0.07] hover:text-[#e8e2cf]"
                         )}
                         style={{
                             width: finalTileWidth,
@@ -269,14 +275,13 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                 ))}
             </div>
 
-            {/* Search instructions */}
-            <div className="mt-4 text-secondary text-xs">
+            <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-[#e8e2cf]/40">
                 {filteredWidgets.length === 0 ? (
-                    <span>No widgets found. Press Escape to clear search.</span>
+                    <span>no widgets found · esc to clear</span>
                 ) : (
                     <span>
-                        {searchTerm == "" ? "Type to Filter" : "Searching " + '"' + searchTerm + '"'}, Enter to Launch,
-                        {searchTerm == "" ? "Arrow Keys to Navigate" : null}
+                        {searchTerm == "" ? "type to filter" : 'searching "' + searchTerm + '"'} · enter to launch
+                        {searchTerm == "" ? " · arrows to navigate" : ""}
                     </span>
                 )}
             </div>
