@@ -63,6 +63,25 @@ func TestGrantWithExpiry(t *testing.T) {
 	}
 }
 
+func TestGrantReadOnlyAllowsWidgetOpenInsidePath(t *testing.T) {
+	s := MakeMemoryStore()
+	GrantReadOnly(s, "block-1", "sess-1", []string{"/Users/me/Projects/*"})
+	if d := Check(s, "block-1", "sess-1", ToolWidgetOpenInCroweCode, "/Users/me/Projects/foo.go", time.Now()); d.Mode != ModeAllow {
+		t.Fatalf("widget open should be allowed inside read-only target: %+v", d)
+	}
+	if d := Check(s, "block-1", "sess-1", ToolWidgetOpenInCroweCode, "/etc/passwd", time.Now()); d.Mode != ModeAsk {
+		t.Fatalf("widget open outside target should fall to ask: %+v", d)
+	}
+}
+
+func TestGrantPermissiveCoversWidget(t *testing.T) {
+	s := MakeMemoryStore()
+	GrantPermissive(s, "block-1", "sess-1")
+	if d := Check(s, "block-1", "sess-1", ToolWidgetOpenInCroweCode, "/anything", time.Now()); d.Mode != ModeAllow {
+		t.Fatalf("permissive grant should cover widget: %+v", d)
+	}
+}
+
 func TestSnapshotGrantNoGrant(t *testing.T) {
 	s := MakeMemoryStore()
 	snap := SnapshotGrant(s, "missing", "sess")

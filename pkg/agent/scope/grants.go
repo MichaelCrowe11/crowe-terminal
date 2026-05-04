@@ -14,11 +14,14 @@ const (
 	PrefixWeb      = "web."
 	PrefixSystem   = "system."
 	PrefixFarm     = "farm."
+	PrefixWidget   = "widget."
 
 	ToolEditorRead     = "editor.read_file"
 	ToolEditorWrite    = "editor.write_file"
 	ToolEditorEdit     = "editor.apply_edit"
 	ToolEditorListRecent = "editor.list_recent_files"
+
+	ToolWidgetOpenInCroweCode = "widget.open_in_crowecode"
 )
 
 // GrantPermissive installs an "allow everything" grant for a block. Use only
@@ -37,7 +40,10 @@ func GrantPermissive(store Store, blockID, sessionID string) {
 
 // GrantReadOnly grants the block read-only file access scoped to a list of
 // path globs (e.g., []string{"/Users/me/Projects/*", "/Users/me/Documents/*"}).
-// Mutating editor tools are explicitly denied.
+// Mutating editor tools are explicitly denied. widget.open_in_crowecode is
+// allowed under the same path globs because opening a file as a UI tile is a
+// read-shaped intent from the user's perspective even though it mutates
+// workspace state.
 func GrantReadOnly(store Store, blockID, sessionID string, pathGlobs []string) {
 	if store == nil || blockID == "" || sessionID == "" {
 		return
@@ -46,13 +52,15 @@ func GrantReadOnly(store Store, blockID, sessionID string, pathGlobs []string) {
 		BlockID:        blockID,
 		AgentSessionID: sessionID,
 		Tools: map[string]string{
-			ToolEditorRead:       ModeAllow,
-			ToolEditorListRecent: ModeAllow,
-			ToolEditorWrite:      ModeDeny,
-			ToolEditorEdit:       ModeDeny,
+			ToolEditorRead:            ModeAllow,
+			ToolEditorListRecent:      ModeAllow,
+			ToolEditorWrite:           ModeDeny,
+			ToolEditorEdit:            ModeDeny,
+			ToolWidgetOpenInCroweCode: ModeAllow,
 		},
 		TargetPatterns: map[string][]string{
-			ToolEditorRead: append([]string(nil), pathGlobs...),
+			ToolEditorRead:            append([]string(nil), pathGlobs...),
+			ToolWidgetOpenInCroweCode: append([]string(nil), pathGlobs...),
 		},
 	})
 }
@@ -69,15 +77,17 @@ func GrantSandbox(store Store, blockID, sessionID string, pathGlobs []string) {
 		BlockID:        blockID,
 		AgentSessionID: sessionID,
 		Tools: map[string]string{
-			ToolEditorRead:       ModeAllow,
-			ToolEditorWrite:      ModeAllow,
-			ToolEditorEdit:       ModeAllow,
-			ToolEditorListRecent: ModeAllow,
+			ToolEditorRead:            ModeAllow,
+			ToolEditorWrite:           ModeAllow,
+			ToolEditorEdit:            ModeAllow,
+			ToolEditorListRecent:      ModeAllow,
+			ToolWidgetOpenInCroweCode: ModeAllow,
 		},
 		TargetPatterns: map[string][]string{
-			ToolEditorRead:  patterns,
-			ToolEditorWrite: patterns,
-			ToolEditorEdit:  patterns,
+			ToolEditorRead:            patterns,
+			ToolEditorWrite:           patterns,
+			ToolEditorEdit:            patterns,
+			ToolWidgetOpenInCroweCode: patterns,
 		},
 	})
 }
@@ -121,9 +131,10 @@ func SnapshotGrant(store Store, blockID, sessionID string) map[string]any {
 
 func permissiveTools() map[string]string {
 	return map[string]string{
-		ToolEditorRead:       ModeAllow,
-		ToolEditorWrite:      ModeAllow,
-		ToolEditorEdit:       ModeAllow,
-		ToolEditorListRecent: ModeAllow,
+		ToolEditorRead:            ModeAllow,
+		ToolEditorWrite:           ModeAllow,
+		ToolEditorEdit:            ModeAllow,
+		ToolEditorListRecent:      ModeAllow,
+		ToolWidgetOpenInCroweCode: ModeAllow,
 	}
 }

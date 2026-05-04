@@ -35,6 +35,7 @@ import (
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/system"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/terminal"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/web"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/widget"
 	"github.com/wavetermdev/waveterm/pkg/agent/transport/agentmcp"
 )
 
