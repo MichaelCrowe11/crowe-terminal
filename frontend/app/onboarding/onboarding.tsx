@@ -144,7 +144,7 @@ const InitPage = ({
                                     rel="noopener"
                                     className="text-accent"
                                 >
-                                    Join the Wave&nbsp;Discord&nbsp;Channel
+                                    Join the Crowe Logic Discord
                                 </a>
                             </div>
                         </div>
@@ -244,7 +244,7 @@ const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
                     <div className="text-center text-secondary leading-relaxed max-w-md">
                         <p className="mb-4">No problem, we respect your privacy.</p>
                         <p className="mb-4">
-                            But, without usage data, we're flying blind. A GitHub star helps us know Wave is useful and
+                            But, without usage data, we're flying blind. A GitHub star helps us know Crowe Terminal is useful and
                             worth maintaining.
                         </p>
                     </div>

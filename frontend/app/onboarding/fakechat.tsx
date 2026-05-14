@@ -13,7 +13,7 @@ interface ChatConfig {
 
 const chatConfigs: ChatConfig[] = [
     {
-        userPrompt: "Check out ~/waveterm and summarize the project — what it does and how it's organized.",
+        userPrompt: "Check out ~/waveterm and summarize the project, including what it does and how it's organized.",
         toolName: "read_dir",
         toolDescription: 'reading directory "~/waveterm"',
         markdownResponse: `Here's a quick, file-structure–driven overview of this repo (Crowe Terminal):
@@ -50,10 +50,10 @@ const chatConfigs: ChatConfig[] = [
         markdownResponse: `Here's what your log shows:
 
 - Normal startup/init at 18:06:51 (router/register, DBGetAllObjsByType, Stat/Read).
-- Many FocusWindow events — normal UI activity.
-- 18:08:28.558 WebSocket ReadPump error: close 1001 (going away) — usually a tab/app reload, sleep, or brief network hiccup.
-- 18:08:29 re-init + new WebSocket connection — successful auto-reconnect.
-- SetMetaCommand and periodic filestore flushes with err: — normal; no failures.
+- Many FocusWindow events: normal UI activity.
+- 18:08:28.558 WebSocket ReadPump error: close 1001 (going away): usually a tab/app reload, sleep, or brief network hiccup.
+- 18:08:29 re-init + new WebSocket connection: successful auto-reconnect.
+- SetMetaCommand and periodic filestore flushes with err: normal; no failures.
 - No panics/fatal errors; just the transient disconnect.
 
 If that disconnect was unexpected, check for a tab reload/sleep at 18:08:28, and watch for repeats.
