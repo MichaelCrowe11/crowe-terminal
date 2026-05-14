@@ -170,7 +170,7 @@ jobs:
             # S3 staging bucket). GitHub-native artifact upload below handles
             # the downstream create-release job regardless.
             - name: Upload to S3 staging
-              if: github.event_name != 'workflow_dispatch' && secrets.ARTIFACTS_KEY_ID != ''
+              if: github.event_name != 'workflow_dispatch' && vars.ENABLE_S3_STAGING == 'true'
               run: task artifacts:upload
               env:
                   AWS_ACCESS_KEY_ID: "${{ secrets.ARTIFACTS_KEY_ID }}"
