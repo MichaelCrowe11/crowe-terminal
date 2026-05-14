@@ -3,7 +3,7 @@
     "ai:model": "crowelm-auto",
     "ai:maxtokens": 4000,
     "ai:timeoutms": 60000,
-    "app:defaultnewblock": "term",
+    "app:defaultnewblock": "launcher",
     "app:tabbar": "top",
     "app:confirmquit": true,
     "app:hideaibutton": false,

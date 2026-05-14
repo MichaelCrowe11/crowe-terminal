@@ -1,4 +1,5 @@
-// Copyright 2026, Command Line Inc.
+// Copyright 2026, Crowe Logic Inc. (modifications)
+// Copyright 2025, Command Line Inc. (original work)
 // SPDX-License-Identifier: Apache-2.0
 
 import Logo from "@/app/asset/logo.svg";
@@ -30,9 +31,9 @@ const AboutModalV = ({ versionString, updaterChannel, onClose }: AboutModalVProp
                     <Logo />
                     <div className="text-[25px]">Crowe Terminal</div>
                     <div className="leading-5">
-                        AI-Native Terminal Powered by Crowe Logic
+                        The AI-native terminal for builders.
                         <br />
-                        Built on Wave Terminal (Apache 2.0)
+                        Powered by Crowe Logic.
                     </div>
                 </div>
                 <div className="items-center gap-4 self-stretch w-full text-center">
@@ -75,9 +76,9 @@ const AboutModalV = ({ versionString, updaterChannel, onClose }: AboutModalVProp
                     </a>
                 </div>
                 <div className="items-center gap-4 self-stretch w-full text-center text-[11px] opacity-70">
-                    &copy; {currentDate.getFullYear()} Crowe Logic Inc.
+                    &copy; {currentDate.getFullYear()} Crowe Logic Inc. · Apache 2.0
                     <br />
-                    Wave Terminal &copy; Command Line Inc. (Apache 2.0)
+                    See Acknowledgments for upstream credits.
                 </div>
             </div>
         </Modal>

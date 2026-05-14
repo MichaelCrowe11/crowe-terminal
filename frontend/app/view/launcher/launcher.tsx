@@ -25,6 +25,7 @@ type FeaturedProduct = {
     eyebrow: string;
     name: string;
     tagline: string;
+    status: "live" | "preview";
     blockdef: BlockDef;
 };
 
@@ -34,6 +35,7 @@ const FEATURED_PRODUCTS: FeaturedProduct[] = [
         eyebrow: "Workstation",
         name: "Crowe Code",
         tagline: "AI-native IDE on the CroweLM model chain",
+        status: "live",
         blockdef: { meta: { view: "crowecode" } },
     },
     {
@@ -41,6 +43,7 @@ const FEATURED_PRODUCTS: FeaturedProduct[] = [
         eyebrow: "Phone Agents",
         name: "Crowe Logic Voice",
         tagline: "24/7 operators for franchise + multi-location",
+        status: "live",
         blockdef: { meta: { view: "webview", url: "https://www.crowelogic.com" } },
     },
     {
@@ -48,9 +51,28 @@ const FEATURED_PRODUCTS: FeaturedProduct[] = [
         eyebrow: "Cultivation",
         name: "Crowe Logic AI",
         tagline: "Mycology + biotech intelligence platform",
+        status: "live",
         blockdef: { meta: { view: "webview", url: "https://ai.southwestmushrooms.com" } },
     },
 ];
+
+type Stat = { value: string; label: string };
+
+const STATS: Stat[] = [
+    { value: "18+", label: "Years operations data" },
+    { value: "52", label: "Routed CroweLM models" },
+    { value: "9", label: "Live franchise locations" },
+    { value: "145k", label: "Curated training samples" },
+];
+
+function getGreeting(): string {
+    const h = new Date().getHours();
+    if (h < 5) return "Late night";
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    if (h < 21) return "Good evening";
+    return "Late night";
+}
 
 export class LauncherViewModel implements ViewModel {
     blockId: string;
@@ -264,7 +286,7 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                     </div>
                     <img src={croweMarkUrl} className="h-auto w-full max-w-[180px] drop-shadow-[0_0_30px_rgba(191,166,105,0.18)]" alt="Crowe Logic" />
                     <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/60">
-                        Code · Voice · AI
+                        {getGreeting()} · Code · Voice · AI
                     </div>
                 </div>
             )}
@@ -293,9 +315,25 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                         onClick={() => model.handleProductSelect(p.blockdef)}
                         className="group flex cursor-pointer flex-col items-start gap-2 rounded-lg border border-[#bfa669]/15 bg-[#bfa669]/[0.025] p-4 text-left transition-colors hover:border-[#bfa669]/45 hover:bg-[#bfa669]/[0.06]"
                     >
-                        <span className="font-mono text-[10px] uppercase tracking-[0.20em] text-[#bfa669]">
-                            {p.eyebrow}
-                        </span>
+                        <div className="flex w-full items-center justify-between">
+                            <span className="font-mono text-[10px] uppercase tracking-[0.20em] text-[#bfa669]">
+                                {p.eyebrow}
+                            </span>
+                            <span
+                                className={clsx(
+                                    "inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-[0.18em]",
+                                    p.status === "live" ? "text-[#bfa669]/70" : "text-[#e8e2cf]/35"
+                                )}
+                            >
+                                <span
+                                    className={clsx(
+                                        "h-1 w-1 rounded-full",
+                                        p.status === "live" ? "bg-[#bfa669] animate-pulse" : "bg-[#e8e2cf]/35"
+                                    )}
+                                />
+                                {p.status}
+                            </span>
+                        </div>
                         <span className="text-[14px] font-bold text-[#e8e2cf]">{p.name}</span>
                         <span className="text-[12px] leading-relaxed text-[#e8e2cf]/55">{p.tagline}</span>
                         <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/0 transition-colors group-hover:text-[#bfa669]/80">
@@ -350,6 +388,17 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                                 {widget.label}
                             </div>
                         )}
+                    </div>
+                ))}
+            </div>
+
+            <div className="relative mt-8 grid w-full max-w-2xl grid-cols-2 gap-4 border-t border-[#bfa669]/10 pt-5 md:grid-cols-4">
+                {STATS.map((s) => (
+                    <div key={s.label} className="flex flex-col items-center gap-0.5 text-center">
+                        <span className="font-mono text-[16px] font-bold tracking-tight text-[#bfa669]">{s.value}</span>
+                        <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#e8e2cf]/40">
+                            {s.label}
+                        </span>
                     </div>
                 ))}
             </div>

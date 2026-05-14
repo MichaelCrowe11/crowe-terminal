@@ -20,7 +20,7 @@ import (
 var jobManagerCmd = &cobra.Command{
 	Use:    "jobmanager",
 	Hidden: true,
-	Short:  "job manager for wave terminal",
+	Short:  "job manager for Crowe Terminal",
 	Args:   cobra.NoArgs,
 	RunE:   jobManagerRun,
 }
