@@ -32,10 +32,13 @@
 
      ## Install (macOS)
 
-     > **Beta:** the .dmg is currently signed ad-hoc. Apple notarization in progress. For now:
-     > 1. Download the `.dmg` for your CPU (arm64 for M-series, x64 for Intel) from [releases](https://github.com/MichaelCrowe11/crowe-terminal/releases/latest)
-     > 2. Open it, drag **Crowe Terminal** to **Applications**
-     > 3. **First launch:** right-click `Crowe Terminal.app` in Finder → **Open** → **Open** in the Gatekeeper dialog. Double-click works after the first time.
+     > Releases are signed with `Developer ID Application: Michael Crowe (6QLMV9UCPP)` and notarized by Apple. The DMG opens cleanly on macOS 10.15 and later.
+     >
+     > 1. Download the `.dmg` for your CPU from [releases](https://github.com/MichaelCrowe11/crowe-terminal/releases/latest):
+     >    - `Crowe.Terminal-darwin-arm64-*.dmg` for Apple Silicon (M1, M2, M3, M4)
+     >    - `Crowe.Terminal-darwin-x64-*.dmg` for Intel Macs
+     > 2. Open the `.dmg`, drag **Crowe Terminal** to **Applications**.
+     > 3. Double-click **Crowe Terminal** in Applications. No Gatekeeper bypass required.
 
      ## How the agent works
 

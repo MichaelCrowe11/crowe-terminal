@@ -5,6 +5,60 @@ to unlock signed + notarized macOS distribution. The same Apple Developer
 identity covers both **Crowe Terminal** (this repo) and **Crowe Cortex**
 (`~/Projects/crowe-cortex`).
 
+## Current pipeline (post v0.14.7)
+
+`electron-builder.config.cjs` reads the standard electron-builder env vars
+and decides at build time:
+
+| Env vars present                                                                                                | Behavior                                              |
+| --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| (none)                                                                                                          | Ad-hoc signed `.app`. No notarization. Local dev only. |
+| `CSC_LINK` + `CSC_KEY_PASSWORD`                                                                                 | Developer ID signed + hardened runtime. No notarize.   |
+| `CSC_LINK` + `CSC_KEY_PASSWORD` + `APPLE_ID` + `APPLE_APP_SPECIFIC_PASSWORD` + `APPLE_TEAM_ID`                   | Full release: signed, hardened, notarized, stapled.    |
+
+CI passes the full release set via the 5 secrets documented below.
+`.github/workflows/build-helper.yml` then runs
+`scripts/verify-mac-release.sh` as a tripwire so a silently unsigned build
+(the v0.14.6 / v0.14.7 regression that prompted this doc) fails the run
+instead of shipping.
+
+### Producing a local signed release without CI
+
+```bash
+cd ~/Projects/crowe-terminal
+scripts/sign-and-notarize-local.sh             # arm64 + x64
+scripts/sign-and-notarize-local.sh --arm64     # just M-series
+```
+
+The script pulls `CroweDeveloperID.p12` + the app-specific password
+straight from `~/.crowe-developer-id/`. Signed DMGs land in `./make/`.
+
+### Verifying any DMG (release or local)
+
+```bash
+codesign -dv --verbose=2 /Applications/Crowe\ Terminal.app
+spctl   -a -vv -t install ./make/Crowe.Terminal-darwin-arm64-*.dmg
+xcrun   stapler validate  ./make/Crowe.Terminal-darwin-arm64-*.dmg
+```
+
+A passing release shows `Authority=Developer ID Application: Michael
+Crowe (6QLMV9UCPP)`, the `flags=…runtime` bit on the signature, and
+`The validate action worked!` from stapler.
+
+### Historical note: v0.14.6 / v0.14.7 came out unsigned
+
+The 5 GitHub secrets were uploaded 2026-05-14 and the workflow was
+already exporting `CSC_LINK` / `APPLE_*` env vars, but the mac block in
+`electron-builder.config.cjs` had no `hardenedRuntime`, no `notarize`,
+and no `identity`. electron-builder 26.x treats `notarize` as
+explicitly-opt-in, so the build silently shipped unsigned. The fix
+(this commit) adds those three fields plus the verify-mac-release
+tripwire. Anything tagged after v0.14.7 should land notarized.
+
+---
+
+
+
 ## What we're publishing
 
 **Channel:** Developer ID notarized DMG, direct download from

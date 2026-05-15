@@ -5,6 +5,10 @@ const path = require("path");
 
 const windowsShouldSign = !!process.env.SM_CODE_SIGNING_CERT_SHA1_HASH;
 
+const hasMacSigningCert = !!process.env.CSC_LINK || !!process.env.CSC_NAME;
+const hasMacNotarizeCreds =
+    !!process.env.APPLE_TEAM_ID && !!process.env.APPLE_ID && !!process.env.APPLE_APP_SPECIFIC_PASSWORD;
+
 /**
  * @type {import('electron-builder').Configuration}
  * @see https://www.electron.build/configuration/configuration
@@ -61,6 +65,12 @@ const config = {
         singleArchFiles: "**/dist/bin/wavesrv.*",
         entitlements: "build/entitlements.mac.plist",
         entitlementsInherit: "build/entitlements.mac.plist",
+        // hardenedRuntime is required for notarization. Force ad-hoc (`null`) when no cert is
+        // available so local `task package` runs still produce a runnable .app without a Dev ID.
+        identity: hasMacSigningCert ? process.env.CSC_NAME || undefined : null,
+        hardenedRuntime: hasMacSigningCert,
+        gatekeeperAssess: false,
+        notarize: hasMacNotarizeCreds ? { teamId: process.env.APPLE_TEAM_ID } : false,
         extendInfo: {
             NSContactsUsageDescription: "A CLI application running in Crowe Terminal wants to use your contacts.",
             NSRemindersUsageDescription: "A CLI application running in Crowe Terminal wants to use your reminders.",

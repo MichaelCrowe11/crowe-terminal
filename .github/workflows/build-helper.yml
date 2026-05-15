@@ -154,6 +154,10 @@ jobs:
                   APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_NOTARIZATION_PWD_2 }}
                   APPLE_TEAM_ID: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_NOTARIZATION_TEAM_ID_2 }}
                   STATIC_DOCSITE_PATH: ${{env.STATIC_DOCSITE_PATH}}
+            - name: Verify macOS signing + notarization
+              if: matrix.platform == 'darwin'
+              run: bash scripts/verify-mac-release.sh make
+              shell: bash
             - name: Build (Windows)
               if: matrix.platform == 'windows'
               run: task package
