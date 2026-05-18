@@ -5,7 +5,7 @@
         "ai:*": true
     },
     "ai@crowelm-supreme": {
-        "display:name": "CroweLM Supreme",
+        "display:name": "CroweLM Deep Work",
         "display:order": 0,
         "ai:*": true,
         "ai:apitype": "openai-chat",
@@ -18,7 +18,7 @@
         "ai:timeoutms": 120000
     },
     "ai@crowelm-apex": {
-        "display:name": "CroweLM Apex",
+        "display:name": "CroweLM Code",
         "display:order": 1,
         "ai:*": true,
         "ai:apitype": "openai-chat",
@@ -31,7 +31,7 @@
         "ai:timeoutms": 60000
     },
     "ai@crowelm-auto": {
-        "display:name": "CroweLM Auto (Router)",
+        "display:name": "CroweLM Workspace",
         "display:order": 2,
         "ai:*": true,
         "ai:apitype": "openai-chat",

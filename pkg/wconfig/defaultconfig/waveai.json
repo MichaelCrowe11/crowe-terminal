@@ -1,9 +1,9 @@
 {
     "waveai@crowelm-supreme": {
-        "display:name": "CroweLM Supreme",
+        "display:name": "CroweLM Deep Work",
         "display:order": -3,
         "display:icon": "crowe-mark",
-        "display:description": "Crowe Logic's flagship model.\nFull tool access via local Foundry agent.",
+        "display:description": "Long-context research, source analysis, and hard reasoning.\nManaged by Crowe Logic.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
@@ -18,10 +18,10 @@
         "ai:apitoken": "local-bridge-no-auth"
     },
     "waveai@crowelm-apex": {
-        "display:name": "CroweLM Apex",
+        "display:name": "CroweLM Code",
         "display:order": -2,
         "display:icon": "bolt",
-        "display:description": "Peak-performance reasoning tier.\nFast, precise, executive-grade.",
+        "display:description": "Implementation, refactors, tests, reviews, and terminal-side decisions.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
@@ -35,10 +35,10 @@
         "ai:apitoken": "local-bridge-no-auth"
     },
     "waveai@crowelm-auto": {
-        "display:name": "CroweLM Auto",
+        "display:name": "CroweLM Workspace",
         "display:order": -1,
         "display:icon": "lightbulb",
-        "display:description": "Auto router \u2014 picks the right tier per turn.",
+        "display:description": "Default signed-in channel. Crowe Logic routes the right model per turn.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
@@ -52,10 +52,10 @@
         "ai:apitoken": "local-bridge-no-auth"
     },
     "waveai@crowelm-grower": {
-        "display:name": "CroweLM Grower",
+        "display:name": "CroweLM Grow Ops",
         "display:order": 0,
         "display:icon": "leaf",
-        "display:description": "Cultivation operations specialist.\nSubstrate prep, sterilization, contamination triage, yield.",
+        "display:description": "Cultivation operations, SOPs, contamination triage, and yield decisions.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
@@ -69,10 +69,10 @@
         "ai:apitoken": "local-bridge-no-auth"
     },
     "waveai@crowelm-kernel": {
-        "display:name": "CroweLM Kernel",
+        "display:name": "CroweLM Cultivation Research",
         "display:order": 1,
         "display:icon": "atom",
-        "display:description": "Cultivation-tuned fast tier.\nLions Mane SOPs + mycology research + grow-room ops.",
+        "display:description": "Mycology research, Lions Mane SOPs, and grow-room analysis.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
