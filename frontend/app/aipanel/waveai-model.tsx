@@ -54,7 +54,7 @@ const BuilderAIModeConfigs: Record<string, AIModeConfigType> = {
         "display:name": "Builder Deep",
         "display:order": -1,
         "display:icon": "lightbulb",
-        "display:description": "Maximum reasoning for hard builds\n(CroweLM Supreme via local Foundry agent)",
+        "display:description": "Maximum reasoning for hard builds\n(CroweLM Deep Work through managed workspace)",
         "ai:provider": "openai",
         "ai:switchcompat": ["openai"],
     },
@@ -426,11 +426,6 @@ export class WaveAIModel {
     }
 
     isValidMode(mode: string): boolean {
-        const telemetryEnabled = globalStore.get(getSettingsKeyAtom("telemetry:enabled")) ?? false;
-        if (mode.startsWith("waveai@") && !telemetryEnabled) {
-            return false;
-        }
-
         const aiModeConfigs = globalStore.get(this.aiModeConfigs);
         if (aiModeConfigs == null || !(mode in aiModeConfigs)) {
             return false;
@@ -663,11 +658,11 @@ export class WaveAIModel {
         await createBlock(blockDef, false, true);
     }
 
-    async openWaveAIConfig() {
+    async openCroweAccount() {
         const blockDef: BlockDef = {
             meta: {
-                view: "waveconfig",
-                file: "waveai.json",
+                view: "webview",
+                url: "https://www.crowelogic.com/account",
             },
         };
         await createBlock(blockDef, false, true);

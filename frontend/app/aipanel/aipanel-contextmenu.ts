@@ -4,7 +4,6 @@
 import { waveAIHasSelection } from "@/app/aipanel/waveai-focus-utils";
 import { ContextMenuModel } from "@/app/store/contextmenu";
 import { isDev } from "@/app/store/global";
-import { globalStore } from "@/app/store/jotaiStore";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
 import { WaveAIModel } from "./waveai-model";
@@ -58,7 +57,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
                 },
             },
             {
-                label: "64k (Pro)",
+                label: "64k",
                 type: "checkbox",
                 checked: currentMaxTokens === 65536,
                 click: () => {
@@ -96,7 +95,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
                 },
             },
             {
-                label: "16k (Pro)",
+                label: "16k",
                 type: "checkbox",
                 checked: currentMaxTokens === 16384,
                 click: () => {
@@ -107,7 +106,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
                 },
             },
             {
-                label: "64k (Pro)",
+                label: "64k",
                 type: "checkbox",
                 checked: currentMaxTokens === 65536,
                 click: () => {
@@ -121,26 +120,26 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
     }
 
     menu.push({
-        label: "Max Output Tokens",
+        label: "Response Length",
         submenu: maxTokensSubmenu,
     });
 
     menu.push({ type: "separator" });
 
     menu.push({
-        label: "Configure Modes",
+        label: "Crowe Account",
         click: () => {
             RpcApi.RecordTEventCommand(
                 TabRpcClient,
                 {
                     event: "action:other",
                     props: {
-                        "action:type": "waveai:configuremodes:contextmenu",
+                        "action:type": "crowe:account:contextmenu",
                     },
                 },
                 { noresponse: true }
             );
-            model.openWaveAIConfig();
+            model.openCroweAccount();
         },
     });
 

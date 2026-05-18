@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { handleWaveAIContextMenu } from "@/app/aipanel/aipanel-contextmenu";
+import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo } from "react";
 import { WaveAIModel } from "./waveai-model";
@@ -10,6 +11,7 @@ import croweFace from "@/app/asset/crowe-face.png";
 export const AIPanelHeader = memo(() => {
     const model = WaveAIModel.getInstance();
     const widgetAccess = useAtomValue(model.widgetAccessAtom);
+    const isStreaming = useAtomValue(model.isAIStreaming);
     const inBuilder = model.inBuilder;
 
     const handleKebabClick = (e: React.MouseEvent) => {
@@ -27,19 +29,40 @@ export const AIPanelHeader = memo(() => {
 
     return (
         <div
-            className="py-2 pl-3 pr-2 flex items-center justify-between min-w-0 border-b border-[#bfa669]/15 bg-[#0b0b0c]/60"
+            className="py-2 pl-3 pr-2 flex items-center justify-between min-w-0 border-b border-[#bfa669]/18 bg-[#0b0b0c]/90"
             onContextMenu={handleContextMenu}
         >
             <div className="flex items-center gap-2.5 min-w-0">
-                <div className="relative h-6 w-6 flex-shrink-0 rounded-full ring-1 ring-[#bfa669]/40 bg-[#0b0b0c] overflow-hidden">
-                    <img src={croweFace} alt="" className="h-full w-full object-cover" />
+                <div className="relative h-8 w-8 flex-shrink-0 bg-[#0b0b0c]">
+                    <span
+                        className={cn(
+                            "absolute inset-[-3px] border border-[#bfa669]/25",
+                            isStreaming && "animate-spin border-t-[#bfa669] border-r-[#bfa669]/60"
+                        )}
+                    />
+                    <img src={croweFace} alt="" className="relative h-full w-full object-cover" />
                 </div>
-                <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70 whitespace-nowrap">
-                    ai panel
-                </span>
+                <div className="min-w-0">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/75 whitespace-nowrap">
+                        CroweLM
+                    </div>
+                    <div className="truncate text-[11px] text-[#e8e2cf]/48">
+                        Managed workspace
+                    </div>
+                </div>
             </div>
 
             <div className="flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
+                {!inBuilder && (
+                    <button
+                        type="button"
+                        onClick={() => model.openCroweAccount()}
+                        className="border border-[#bfa669]/28 bg-[#bfa669]/[0.04] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/85 transition-colors hover:border-[#bfa669]/60 hover:bg-[#bfa669]/[0.10]"
+                        title="Sign in to your Crowe Logic account"
+                    >
+                        Sign in
+                    </button>
+                )}
                 {!inBuilder && (
                     <button
                         onClick={toggleContext}
@@ -48,14 +71,14 @@ export const AIPanelHeader = memo(() => {
                                 ? "Tools are ON. The AI can read your terminal, files, and use editor.* tools. Click to sandbox."
                                 : "Tools are OFF (sandboxed). The AI is text-only and cannot reach files or the terminal. Click to enable."
                         }
-                        className={`group flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 rounded border transition-colors cursor-pointer ${
+                        className={`group flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 border transition-colors cursor-pointer ${
                             widgetAccess
                                 ? "text-[#bfa669] border-[#bfa669]/40 bg-[#bfa669]/[0.08] hover:bg-[#bfa669]/[0.14]"
                                 : "text-zinc-400 border-zinc-700 bg-transparent hover:border-zinc-500 hover:text-zinc-300"
                         }`}
                     >
                         <span
-                            className={`inline-block h-1.5 w-1.5 rounded-full ${
+                            className={`inline-block h-1.5 w-1.5 rounded-[1px] ${
                                 widgetAccess ? "bg-[#bfa669]" : "bg-zinc-500"
                             }`}
                         />
@@ -65,7 +88,7 @@ export const AIPanelHeader = memo(() => {
 
                 <button
                     onClick={handleKebabClick}
-                    className="text-zinc-400 hover:text-[#bfa669] cursor-pointer transition-colors p-1 rounded flex-shrink-0 focus:outline-none"
+                    className="text-zinc-400 hover:text-[#bfa669] cursor-pointer transition-colors p-1 flex-shrink-0 focus:outline-none"
                     title="More options"
                 >
                     <i className="fa fa-ellipsis-vertical"></i>

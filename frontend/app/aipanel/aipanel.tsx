@@ -20,14 +20,12 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import { formatFileSizeError, isAcceptableFile, validateFileSize } from "./ai-utils";
 import { AIDroppedFiles } from "./aidroppedfiles";
-import { AIModeDropdown } from "./aimode";
 import { AIPanelHeader } from "./aipanelheader";
 import { AIPanelInput } from "./aipanelinput";
 import { AIPanelMessages } from "./aipanelmessages";
 import { AIRateLimitStrip } from "./airatelimitstrip";
 import { WaveUIMessage } from "./aitypes";
-import { BYOKAnnouncement } from "./byokannouncement";
-import { TelemetryRequiredMessage } from "./telemetryrequired";
+import { CroweChannelPanel } from "./crowechannelpanel";
 import { WaveAIModel } from "./waveai-model";
 import croweMark from "@/app/asset/crowe-mark.png";
 
@@ -59,7 +57,7 @@ const AIDragOverlay = memo(() => {
     return (
         <div
             key="drag-overlay"
-            className="absolute inset-0 bg-accent/20 border-2 border-dashed border-accent rounded-lg flex items-center justify-center z-10 p-4"
+            className="absolute inset-0 bg-accent/20 border-2 border-dashed border-accent rounded-[2px] flex items-center justify-center z-10 p-4"
         >
             <div className="text-accent text-center">
                 <i className="fa fa-upload text-3xl mb-2"></i>
@@ -86,30 +84,28 @@ type PromptHint = {
 // Shown when widgetAccess is OFF so users never click a prompt that the AI
 // can't actually fulfill in the current configuration.
 const SANDBOX_PROMPT_HINTS: PromptHint[] = [
-    { label: "rephrase this for clarity", insert: "Rephrase the following for clarity:\n\n" },
-    { label: "explain a concept", insert: "Explain the concept of " , placeholder: "<concept>" },
-    { label: "name this well", insert: "Suggest 5 short, memorable names for: " , placeholder: "<thing being named>" },
+    { label: "tighten this note", insert: "Tighten the following into a clear operator note:\n\n" },
+    { label: "explain a concept", insert: "Explain the concept of ", placeholder: "<concept>" },
+    { label: "draft a plan", insert: "Draft a concise execution plan for ", placeholder: "<work to plan>" },
 ];
 
 // Tool-needing prompts require widgetAccess so the AI has access to editor.*,
 // terminal, and filesystem tools. Shown when widgetAccess is ON.
 const TOOLS_PROMPT_HINTS: PromptHint[] = [
-    { label: "explain this terminal output", insert: "Explain what just happened in this terminal." },
+    { label: "read current terminal", insert: "Explain what just happened in this terminal and what I should do next." },
     {
-        label: "open a file as a Crowe Code block",
+        label: "open file in Crowe Code",
         insert: "Open the file at /Users/crowelogic/Projects/crowe-terminal/README.md as a new Crowe Code block.",
         placeholder: "/Users/crowelogic/Projects/crowe-terminal/README.md",
     },
-    { label: "audit the current directory", insert: "Audit the current directory: list project shape, recent edits, anything risky." },
+    { label: "audit current directory", insert: "Audit the current directory. Focus on project shape, recent edits, and risky drift." },
 ];
 
 const AIWelcomeMessage = memo(() => {
     const modKey = isMacOS() ? "⌘" : "Alt";
     const focusKeys = isWindows() ? "Alt 0" : "Ctrl Shift 0";
     const model = WaveAIModel.getInstance();
-    const aiModeConfigs = jotai.useAtomValue(atoms.waveaiModeConfigAtom);
     const widgetAccess = jotai.useAtomValue(model.widgetAccessAtom);
-    const hasCustomModes = Object.keys(aiModeConfigs).some((key) => !key.startsWith("waveai@"));
 
     const promptHints = widgetAccess ? TOOLS_PROMPT_HINTS : SANDBOX_PROMPT_HINTS;
     const stateLine = widgetAccess
@@ -130,17 +126,19 @@ const AIWelcomeMessage = memo(() => {
     };
 
     return (
-        <div className="px-4 py-6 max-w-md mx-auto">
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">
-                crowe logic
+        <div className="px-4 py-6 max-w-xl mx-auto">
+            <CroweChannelPanel />
+
+            <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">
+                operator prompt
             </div>
             <div className={`mt-1 font-mono text-[13px] ${stateLine.text}`}>
                 <span className={stateLine.dollar}>$</span> {stateLine.label}
             </div>
-            <p className="mt-4 text-[13px] leading-relaxed text-zinc-400">
+            <p className="mt-3 text-[13px] leading-relaxed text-zinc-400">
                 {widgetAccess
-                    ? "Type a request below, or pick a starter to drop it into the input. The AI can read your terminal, files, and use tools."
-                    : "Type a request below, or pick a starter. The AI is sandboxed - text only. Toggle tools on (header pill, top right) to give it file and terminal access."}
+                    ? "Ask for the next concrete action. CroweLM can use terminal context, files, browser blocks, and editor tools."
+                    : "Ask a text-only question, or turn tools on in the header when this workspace should use files and terminal context."}
             </p>
 
             <div className="mt-5 border-t border-[#bfa669]/15">
@@ -160,12 +158,6 @@ const AIWelcomeMessage = memo(() => {
                 ))}
             </div>
 
-            {!hasCustomModes && (
-                <div className="mt-5">
-                    <BYOKAnnouncement />
-                </div>
-            )}
-
             <div className="mt-6 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
                 <span>{modKey} K new</span>
                 <span>{modKey} ⇧ A toggle</span>
@@ -181,7 +173,7 @@ const AIBuilderWelcomeMessage = memo(() => {
     return (
         <div className="px-4 py-8 max-w-md mx-auto">
             <div className="flex items-center gap-3 mb-4">
-                <img src={croweMark} alt="" className="h-10 w-10 object-contain rounded ring-1 ring-[#bfa669]/30" />
+                <img src={croweMark} alt="" className="h-10 w-10 object-contain rounded-[2px] ring-1 ring-[#bfa669]/30" />
                 <div>
                     <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">crowe logic</div>
                     <div className="font-semibold text-foreground text-[15px] -mt-0.5">app builder</div>
@@ -230,12 +222,11 @@ AIErrorMessage.displayName = "AIErrorMessage";
 
 const ConfigChangeModeFixer = memo(() => {
     const model = WaveAIModel.getInstance();
-    const telemetryEnabled = jotai.useAtomValue(getSettingsKeyAtom("telemetry:enabled")) ?? false;
     const aiModeConfigs = jotai.useAtomValue(model.aiModeConfigs);
 
     useEffect(() => {
         model.fixModeAfterConfigChange();
-    }, [telemetryEnabled, aiModeConfigs, model]);
+    }, [aiModeConfigs, model]);
 
     return null;
 });
@@ -257,16 +248,10 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
     const showOverlayBlockNums = jotai.useAtomValue(getSettingsKeyAtom("app:showoverlayblocknums")) ?? true;
     const isFocused = jotai.useAtomValue(model.isWaveAIFocusedAtom);
     const focusFollowsCursorMode = jotai.useAtomValue(getSettingsKeyAtom("app:focusfollowscursor")) ?? "off";
-    const telemetryEnabled = jotai.useAtomValue(getSettingsKeyAtom("telemetry:enabled")) ?? false;
     const isPanelVisible = jotai.useAtomValue(model.getPanelVisibleAtom());
     const tabModel = useTabModelMaybe();
     const [tabBorderColor, tabActiveBorderColor] = useTabBackground(waveEnv, tabModel?.tabId);
-    const defaultMode = jotai.useAtomValue(getSettingsKeyAtom("waveai:defaultmode")) ?? "waveai@crowelm-auto";
-    const aiModeConfigs = jotai.useAtomValue(model.aiModeConfigs);
-
-    const hasCustomModes = Object.keys(aiModeConfigs).some((key) => !key.startsWith("waveai@"));
-    const isUsingCustomMode = !defaultMode.startsWith("waveai@");
-    const allowAccess = telemetryEnabled || (hasCustomModes && isUsingCustomMode);
+    const allowAccess = true;
 
     const { messages, sendMessage, status, setMessages, error, stop } = useChat<WaveUIMessage>({
         transport: new DefaultChatTransport({
@@ -552,16 +537,16 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
             ref={containerRef}
             data-waveai-panel="true"
             className={cn(
-                "@container bg-zinc-900/70 flex flex-col relative",
+                "@container bg-[#0b0b0c]/92 flex flex-col relative",
                 model.inBuilder ? "mt-0 h-full" : "mt-1 h-[calc(100%-4px)]",
-                (isDragOver || isReactDndDragOver) && "bg-zinc-800 border-accent",
+                (isDragOver || isReactDndDragOver) && "bg-[#15151a] border-[#bfa669]",
                 isFocused && !borderColor ? "border-2 border-accent" : "border-2 border-transparent"
             )}
             style={{
-                borderTopLeftRadius: roundTopLeft ? 10 : 0,
-                borderTopRightRadius: model.inBuilder ? 0 : 10,
-                borderBottomRightRadius: model.inBuilder ? 0 : 10,
-                borderBottomLeftRadius: 10,
+                borderTopLeftRadius: roundTopLeft ? 2 : 0,
+                borderTopRightRadius: model.inBuilder ? 0 : 2,
+                borderBottomRightRadius: model.inBuilder ? 0 : 2,
+                borderBottomLeftRadius: 2,
                 borderColor: borderColor ?? undefined,
             }}
             onFocusCapture={handleFocusCapture}
@@ -581,32 +566,23 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
             <AIRateLimitStrip />
 
             <div key="main-content" className="flex-1 flex flex-col min-h-0">
-                {!allowAccess ? (
-                    <TelemetryRequiredMessage />
+                {messages.length === 0 && initialLoadDone ? (
+                    <div
+                        className="flex-1 overflow-y-auto p-2 relative"
+                        onContextMenu={(e) => handleWaveAIContextMenu(e, true)}
+                    >
+                        {model.inBuilder ? <AIBuilderWelcomeMessage /> : <AIWelcomeMessage />}
+                    </div>
                 ) : (
-                    <>
-                        {messages.length === 0 && initialLoadDone ? (
-                            <div
-                                className="flex-1 overflow-y-auto p-2 relative"
-                                onContextMenu={(e) => handleWaveAIContextMenu(e, true)}
-                            >
-                                <div className="absolute top-2 left-2 z-10">
-                                    <AIModeDropdown />
-                                </div>
-                                {model.inBuilder ? <AIBuilderWelcomeMessage /> : <AIWelcomeMessage />}
-                            </div>
-                        ) : (
-                            <AIPanelMessages
-                                messages={messages}
-                                status={status}
-                                onContextMenu={(e) => handleWaveAIContextMenu(e, true)}
-                            />
-                        )}
-                        <AIErrorMessage />
-                        <AIDroppedFiles model={model} />
-                        <AIPanelInput onSubmit={handleSubmit} status={status} model={model} />
-                    </>
+                    <AIPanelMessages
+                        messages={messages}
+                        status={status}
+                        onContextMenu={(e) => handleWaveAIContextMenu(e, true)}
+                    />
                 )}
+                <AIErrorMessage />
+                <AIDroppedFiles model={model} />
+                <AIPanelInput onSubmit={handleSubmit} status={status} model={model} />
             </div>
         </div>
     );
