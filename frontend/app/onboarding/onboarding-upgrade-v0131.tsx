@@ -53,8 +53,8 @@ const UpgradeOnboardingModal_v0_13_1_Content = () => {
                                 support for custom backgrounds
                             </li>
                             <li>
-                                <strong>BYOK Without Telemetry</strong> - Crowe Logic now works with bring-your-own-key and
-                                local models without requiring telemetry
+                                <strong>Managed Workspace</strong> - Crowe Logic now opens directly into signed-in
+                                CroweLM tools without requiring provider setup
                             </li>
                         </ul>
                     </div>

@@ -76,7 +76,7 @@ const UpgradeOnboardingModal_v0_14_0_Content = () => {
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>
-                                <strong>Image Support</strong> - Vision capabilities for BYOK providers
+                                <strong>Image Support</strong> - Vision support in managed CroweLM conversations
                             </li>
                             <li>
                                 <strong>Stop Generation</strong> - Ability to stop AI responses mid-generation

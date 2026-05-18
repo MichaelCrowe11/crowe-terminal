@@ -6,8 +6,8 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Crowe Terminal v0.13 brings local AI support, bring-your-own-key (BYOK), a redesigned configuration system,
-                    and improved terminal functionality.
+                    Crowe Terminal v0.13 brings the managed CroweLM workspace, a redesigned account flow, and improved
+                    terminal functionality.
                 </p>
             </div>
 
@@ -16,22 +16,22 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
                     <i className="text-[24px] text-accent fa-solid fa-sparkles"></i>
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
-                    <div className="text-foreground text-base font-semibold leading-[18px]">Local AI & BYOK</div>
+                    <div className="text-foreground text-base font-semibold leading-[18px]">
+                        Managed CroweLM Workspace
+                    </div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>
-                                <strong>OpenAI-Compatible API</strong> - Connect to Ollama, LM Studio, vLLM, OpenRouter,
-                                and other local or hosted models
+                                <strong>Signed Account</strong> - Sign in once and work from the Crowe Logic workspace
                             </li>
                             <li>
-                                <strong>Google Gemini</strong> - Native support for Gemini models
+                                <strong>Workspace Tools</strong> - Terminal, files, browser blocks, and editor tools
                             </li>
                             <li>
-                                <strong>Provider Presets</strong> - Built-in configs for OpenAI, OpenRouter, Google,
-                                Azure, and custom endpoints
+                                <strong>CroweLM Channels</strong> - Code, research, workspace, and grow operations
                             </li>
                             <li>
-                                <strong>Multiple AI Modes</strong> - Easily switch between models and providers
+                                <strong>No Provider Setup</strong> - Crowe Logic handles routing and model access
                             </li>
                         </ul>
                     </div>
@@ -43,7 +43,7 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
                     <i className="text-[24px] text-accent fa-solid fa-sliders"></i>
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
-                    <div className="text-foreground text-base font-semibold leading-[18px]">Configuration Widget</div>
+                    <div className="text-foreground text-base font-semibold leading-[18px]">Workspace Settings</div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>
@@ -54,8 +54,7 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
                                 and error handling
                             </li>
                             <li>
-                                <strong>Integrated Secrets</strong> - Manage API keys and credentials from the config
-                                widget
+                                <strong>Integrated Secrets</strong> - Manage connection credentials from the config widget
                             </li>
                         </ul>
                     </div>
