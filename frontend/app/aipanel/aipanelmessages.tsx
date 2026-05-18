@@ -4,7 +4,6 @@
 import { useAtomValue } from "jotai";
 import { memo, useEffect, useRef, useState } from "react";
 import { AIMessage } from "./aimessage";
-import { AIModeDropdown } from "./aimode";
 import { type WaveUIMessage } from "./aitypes";
 import { WaveAIModel } from "./waveai-model";
 
@@ -84,8 +83,8 @@ export const AIPanelMessages = memo(({ messages, status, onContextMenu }: AIPane
 
     return (
         <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-2 space-y-4" onContextMenu={onContextMenu}>
-            <div className="mb-2">
-                <AIModeDropdown compatibilityMode={true} />
+            <div className="mb-2 border border-[#bfa669]/14 bg-[#bfa669]/[0.025] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/70">
+                CroweLM managed workspace
             </div>
             {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;

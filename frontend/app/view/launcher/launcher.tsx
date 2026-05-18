@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import croweMarkUrl from "@/app/asset/crowe-mark.png?url";
+import croweWordmarkUrl from "@/app/asset/crowe-wordmark.svg?url";
 import type { BlockNodeModel } from "@/app/block/blocktypes";
 import { atoms, globalStore, replaceBlock } from "@/app/store/global";
 import type { TabModel } from "@/app/store/tab-model";
@@ -20,49 +21,49 @@ function sortByDisplayOrder(wmap: { [key: string]: WidgetConfigType } | null | u
 
 type GridLayoutType = { columns: number; tileWidth: number; tileHeight: number; showLabel: boolean };
 
-type FeaturedProduct = {
+type WorkspaceAction = {
     id: string;
     eyebrow: string;
     name: string;
     tagline: string;
-    status: "live" | "preview";
+    status: string;
     blockdef: BlockDef;
 };
 
-const FEATURED_PRODUCTS: FeaturedProduct[] = [
+const WORKSPACE_ACTIONS: WorkspaceAction[] = [
+    {
+        id: "account",
+        eyebrow: "Account",
+        name: "Sign in",
+        tagline: "Use the managed Crowe Logic workspace. No API keys or model setup.",
+        status: "secure",
+        blockdef: { meta: { view: "webview", url: "https://www.crowelogic.com/account" } },
+    },
     {
         id: "code",
-        eyebrow: "Workstation",
+        eyebrow: "Editor",
         name: "Crowe Code",
-        tagline: "AI-native IDE on the CroweLM model chain",
-        status: "live",
+        tagline: "Open files, diffs, and implementation tools inside the terminal.",
+        status: "local",
         blockdef: { meta: { view: "crowecode" } },
     },
     {
-        id: "voice",
-        eyebrow: "Phone Agents",
-        name: "Crowe Logic Voice",
-        tagline: "24/7 operators for franchise + multi-location",
-        status: "live",
-        blockdef: { meta: { view: "webview", url: "https://www.crowelogic.com" } },
-    },
-    {
-        id: "ai",
-        eyebrow: "Cultivation",
-        name: "Crowe Logic AI",
-        tagline: "Mycology + biotech intelligence platform",
-        status: "live",
-        blockdef: { meta: { view: "webview", url: "https://ai.southwestmushrooms.com" } },
+        id: "crowelm",
+        eyebrow: "Operator",
+        name: "CroweLM panel",
+        tagline: "Work through code, research, files, terminal context, and grow ops channels.",
+        status: "managed",
+        blockdef: { meta: { view: "waveai" } },
     },
 ];
 
 type Stat = { value: string; label: string };
 
 const STATS: Stat[] = [
-    { value: "18+", label: "Years operations data" },
-    { value: "52", label: "Routed CroweLM models" },
-    { value: "9", label: "Live franchise locations" },
-    { value: "145k", label: "Curated training samples" },
+    { value: "signed", label: "Account workspace" },
+    { value: "managed", label: "CroweLM routing" },
+    { value: "local", label: "Terminal tools" },
+    { value: "no keys", label: "Provider setup" },
 ];
 
 function getGreeting(): string {
@@ -80,7 +81,7 @@ export class LauncherViewModel implements ViewModel {
     tabModel: TabModel;
     viewType = "launcher";
     viewIcon = atom("shapes");
-    viewName = atom("Widget Launcher");
+    viewName = atom("Crowe Terminal");
     viewComponent = LauncherView;
     noHeader = atom(true);
     inputRef = { current: null } as React.RefObject<HTMLInputElement>;
@@ -272,21 +273,17 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
     }, [searchTerm]);
 
     return (
-        <div ref={containerRef} className="relative w-full h-full p-4 box-border flex flex-col items-center justify-center overflow-auto">
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute left-1/2 top-1/3 h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#bfa669]/[0.07] blur-[140px]" />
-                <div className="absolute right-[15%] top-2/3 h-[280px] w-[280px] rounded-full bg-[#bfa669]/[0.04] blur-[100px]" />
-            </div>
-
+        <div ref={containerRef} className="relative w-full h-full p-5 box-border flex flex-col items-center justify-center overflow-auto bg-[#0b0b0c]">
             {showLogo && (
-                <div className="relative mb-5 flex flex-col items-center gap-3" style={{ width: logoWidth, maxWidth: 300 }}>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-[#bfa669]/30 bg-[#bfa669]/[0.04] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]">
-                        <span className="h-1 w-1 animate-pulse rounded-full bg-[#bfa669]" />
-                        Crowe Logic Inc.
+                <div className="relative mb-5 flex flex-col items-center gap-3" style={{ width: logoWidth, maxWidth: 360 }}>
+                    <div className="inline-flex items-center gap-2 border border-[#bfa669]/30 bg-[#bfa669]/[0.04] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]">
+                        <span className="h-1 w-1 animate-pulse bg-[#bfa669]" />
+                        Signed workspace
                     </div>
-                    <img src={croweMarkUrl} className="h-auto w-full max-w-[180px] drop-shadow-[0_0_30px_rgba(191,166,105,0.18)]" alt="Crowe Logic" />
+                    <img src={croweWordmarkUrl} className="h-auto w-full max-w-[260px]" alt="Crowe Logic" />
+                    <img src={croweMarkUrl} className="h-auto w-full max-w-[58px]" alt="" />
                     <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/60">
-                        {getGreeting()} · Code · Voice · AI
+                        {getGreeting()} · terminal · code · CroweLM
                     </div>
                 </div>
             )}
@@ -301,19 +298,19 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                     value={searchTerm}
                     onKeyDown={keydownWrapper(model.keyDownHandler.bind(model))}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="SEARCH OR PRESS ↵ TO LAUNCH"
+                    placeholder="SEARCH TOOLS AND WORKSPACES"
                     aria-label="Search widgets"
-                    className="w-full rounded-md border border-[#bfa669]/20 bg-[#0b0b0c]/70 py-2.5 pl-8 pr-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[#e8e2cf] placeholder:text-[#e8e2cf]/35 focus:border-[#bfa669]/55 focus:outline-none focus:ring-2 focus:ring-[#bfa669]/15 transition-colors"
+                    className="w-full border border-[#bfa669]/20 bg-[#0b0b0c]/70 py-2.5 pl-8 pr-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[#e8e2cf] placeholder:text-[#e8e2cf]/35 focus:border-[#bfa669]/55 focus:outline-none focus:ring-2 focus:ring-[#bfa669]/15 transition-colors"
                 />
             </div>
 
             <div className="relative mb-8 grid w-full max-w-3xl gap-3 grid-cols-1 md:grid-cols-3">
-                {FEATURED_PRODUCTS.map((p) => (
+                {WORKSPACE_ACTIONS.map((p) => (
                     <button
                         key={p.id}
                         type="button"
                         onClick={() => model.handleProductSelect(p.blockdef)}
-                        className="group flex cursor-pointer flex-col items-start gap-2 rounded-lg border border-[#bfa669]/15 bg-[#bfa669]/[0.025] p-4 text-left transition-colors hover:border-[#bfa669]/45 hover:bg-[#bfa669]/[0.06]"
+                        className="group flex cursor-pointer flex-col items-start gap-2 border border-[#bfa669]/15 bg-[#bfa669]/[0.025] p-4 text-left transition-colors hover:border-[#bfa669]/45 hover:bg-[#bfa669]/[0.06]"
                     >
                         <div className="flex w-full items-center justify-between">
                             <span className="font-mono text-[10px] uppercase tracking-[0.20em] text-[#bfa669]">
@@ -322,13 +319,13 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                             <span
                                 className={clsx(
                                     "inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-[0.18em]",
-                                    p.status === "live" ? "text-[#bfa669]/70" : "text-[#e8e2cf]/35"
+                                    "text-[#bfa669]/70"
                                 )}
                             >
                                 <span
                                     className={clsx(
-                                        "h-1 w-1 rounded-full",
-                                        p.status === "live" ? "bg-[#bfa669] animate-pulse" : "bg-[#e8e2cf]/35"
+                                        "h-1 w-1",
+                                        p.status === "secure" ? "bg-[#e8e2cf]/65" : "bg-[#bfa669] animate-pulse"
                                     )}
                                 />
                                 {p.status}
@@ -365,7 +362,7 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                         onClick={() => model.handleWidgetSelect(widget)}
                         title={widget.description || widget.label}
                         className={clsx(
-                            "flex flex-col items-center justify-center cursor-pointer rounded-md p-2 text-center",
+                            "flex flex-col items-center justify-center cursor-pointer p-2 text-center",
                             "border transition-colors duration-150",
                             index === selectedIndex
                                 ? "border-[#bfa669]/60 bg-[#bfa669]/[0.12] text-[#e8e2cf]"

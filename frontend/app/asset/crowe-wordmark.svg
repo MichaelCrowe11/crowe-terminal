@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" fill="none" role="img" aria-label="Crowe Logic">
+  <!-- Proposed canonical wordmark: open-arc-C-with-chevron mark
+       (the same glyph used by the chat avatar and IDE activity-bar icon)
+       paired with "Crowe Logic" typeset in Inter. Replaces the legacy
+       diamond/compass mark in wordmark-legacy.svg. Pick one and delete
+       the other so the brand has a single mark identity. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E9C872"/>
+      <stop offset="0.45" stop-color="#D4AF37"/>
+      <stop offset="1" stop-color="#9A7A23"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(20 20) scale(5)"
+     stroke="url(#g)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M17.25 6.25A7.75 7.75 0 1 0 17.25 17.75" stroke-width="2.4"/>
+    <path d="M10.75 9.25 14 12 10.75 14.75" stroke-width="1.95"/>
+  </g>
+  <text x="170" y="105" font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+        font-weight="500" font-size="62" letter-spacing="2" fill="#bfa669">Crowe Logic</text>
+</svg>
