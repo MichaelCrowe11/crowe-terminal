@@ -60,7 +60,7 @@ export const RestoreBackupModal = memo(({ part }: RestoreBackupModalProps) => {
                     <div className="text-sm text-gray-300 leading-relaxed">
                         An error occurred while restoring the backup:
                     </div>
-                    <div className="text-sm text-red-400 font-mono bg-zinc-800 p-3 rounded break-all">{error}</div>
+                    <div className="text-sm text-red-400 font-mono bg-zinc-800 p-3 rounded-[2px] break-all">{error}</div>
                 </div>
             </Modal>
         );

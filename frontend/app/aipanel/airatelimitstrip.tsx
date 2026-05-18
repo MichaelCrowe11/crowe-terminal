@@ -27,7 +27,7 @@ const GetMoreButton = memo(({ variant, showClose = true }: { variant: "yellow" |
     return (
         <div className="pl-2 pb-1.5">
             <button
-                className={`flex items-center gap-1.5 ${showClose ? "pl-1" : "pl-2"} pr-2 py-1 ${bgColor} ${iconHoverBg} ${hoverBg} rounded-b border border-t-0 ${borderColor} text-[11px] ${textColor} cursor-pointer transition-colors`}
+                className={`flex items-center gap-1.5 ${showClose ? "pl-1" : "pl-2"} pr-2 py-1 ${bgColor} ${iconHoverBg} ${hoverBg} rounded-[2px] border border-t-0 ${borderColor} text-[11px] ${textColor} cursor-pointer transition-colors`}
             >
                 {showClose && (
                     <i className={`close fa fa-xmark ${iconColor}/60 hover:${iconColor} transition-colors`}></i>

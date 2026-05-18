@@ -45,7 +45,7 @@ export const AIFeedbackButtons = memo(({ messageText }: AIFeedbackButtonsProps) 
             <button
                 onClick={handleThumbsUp}
                 className={cn(
-                    "p-1.5 rounded cursor-pointer transition-colors",
+                    "p-1.5 rounded-[2px] cursor-pointer transition-colors",
                     thumbsUpClicked
                         ? "text-accent"
                         : "text-secondary hover:bg-zinc-700 hover:text-primary"
@@ -57,7 +57,7 @@ export const AIFeedbackButtons = memo(({ messageText }: AIFeedbackButtonsProps) 
             <button
                 onClick={handleThumbsDown}
                 className={cn(
-                    "p-1.5 rounded cursor-pointer transition-colors",
+                    "p-1.5 rounded-[2px] cursor-pointer transition-colors",
                     thumbsDownClicked
                         ? "text-accent"
                         : "text-secondary hover:bg-zinc-700 hover:text-primary"
@@ -70,7 +70,7 @@ export const AIFeedbackButtons = memo(({ messageText }: AIFeedbackButtonsProps) 
                 <button
                     onClick={handleCopy}
                     className={cn(
-                        "p-1.5 rounded cursor-pointer transition-colors",
+                        "p-1.5 rounded-[2px] cursor-pointer transition-colors",
                         copied
                             ? "text-success"
                             : "text-secondary hover:bg-zinc-700 hover:text-primary"

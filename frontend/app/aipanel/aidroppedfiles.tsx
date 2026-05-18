@@ -22,10 +22,10 @@ export const AIDroppedFiles = memo(({ model }: AIDroppedFilesProps) => {
         <div className="p-2 border-b border-gray-600">
             <div className="flex gap-2 overflow-x-auto pb-1">
                 {droppedFiles.map((file) => (
-                    <div key={file.id} className="relative bg-zinc-700 rounded-lg p-2 min-w-20 flex-shrink-0 group">
+                    <div key={file.id} className="relative bg-zinc-700 rounded-[2px] p-2 min-w-20 flex-shrink-0 group">
                         <button
                             onClick={() => model.removeFile(file.id)}
-                            className="absolute top-1 right-1 w-4 h-4 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            className="absolute top-1 right-1 w-4 h-4 bg-red-500 hover:bg-red-600 rounded-[2px] flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                         >
                             <i className="fa fa-times text-xs"></i>
                         </button>
@@ -36,11 +36,11 @@ export const AIDroppedFiles = memo(({ model }: AIDroppedFilesProps) => {
                                     <img
                                         src={file.previewUrl}
                                         alt={file.name}
-                                        className="w-full h-full object-cover rounded"
+                                        className="w-full h-full object-cover rounded-[2px]"
                                     />
                                 </div>
                             ) : (
-                                <div className="w-12 h-12 mb-1 flex items-center justify-center bg-zinc-600 rounded">
+                                <div className="w-12 h-12 mb-1 flex items-center justify-center bg-zinc-600 rounded-[2px]">
                                     <i
                                         className={cn("fa text-lg text-gray-300", getFileIcon(file.name, file.type))}
                                     ></i>

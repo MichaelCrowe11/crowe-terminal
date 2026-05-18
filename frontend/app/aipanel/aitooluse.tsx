@@ -95,13 +95,13 @@ const AIToolApprovalButtons = memo(({ count, onApprove, onDeny }: AIToolApproval
         <div className="mt-2 flex gap-2">
             <button
                 onClick={onApprove}
-                className="px-3 py-1 border border-gray-600 text-gray-300 hover:border-gray-500 hover:text-white text-sm rounded cursor-pointer transition-colors"
+                className="px-3 py-1 border border-gray-600 text-gray-300 hover:border-gray-500 hover:text-white text-sm rounded-[2px] cursor-pointer transition-colors"
             >
                 {approveText}
             </button>
             <button
                 onClick={onDeny}
-                className="px-3 py-1 border border-gray-600 text-gray-300 hover:border-gray-500 hover:text-white text-sm rounded cursor-pointer transition-colors"
+                className="px-3 py-1 border border-gray-600 text-gray-300 hover:border-gray-500 hover:text-white text-sm rounded-[2px] cursor-pointer transition-colors"
             >
                 {denyText}
             </button>
@@ -166,7 +166,7 @@ const AIToolUseBatch = memo(({ parts, isStreaming }: AIToolUseBatchProps) => {
     };
 
     return (
-        <div className="flex items-start gap-2 p-2 rounded bg-zinc-800/60 border border-zinc-700">
+        <div className="flex items-start gap-2 p-2 rounded-[2px] bg-zinc-800/60 border border-zinc-700">
             <div className="flex-1">
                 <div className="font-semibold">Reading Files</div>
                 <div className="mt-1 space-y-0.5">
@@ -267,7 +267,7 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
 
     return (
         <div
-            className={cn("flex flex-col gap-1 p-2 rounded bg-zinc-800/60 border border-zinc-700", statusColor)}
+            className={cn("flex flex-col gap-1 p-2 rounded-[2px] bg-zinc-800/60 border border-zinc-700", statusColor)}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
@@ -285,7 +285,7 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
                                 recordTEvent("waveai:revertfile", { "waveai:action": "revertfile:open" });
                                 model.openRestoreBackupModal(toolData.toolcallid);
                             }}
-                            className="flex-shrink-0 px-1.5 py-0.5 border border-zinc-600 hover:border-zinc-500 hover:bg-zinc-700 rounded cursor-pointer transition-colors flex items-center gap-1 text-zinc-400"
+                            className="flex-shrink-0 px-1.5 py-0.5 border border-zinc-600 hover:border-zinc-500 hover:bg-zinc-700 rounded-[2px] cursor-pointer transition-colors flex items-center gap-1 text-zinc-400"
                             title="Restore backup file"
                         >
                             <span className="text-xs">Revert File</span>
@@ -295,7 +295,7 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
                 {isFileWriteTool && toolData.inputfilename && (
                     <button
                         onClick={handleOpenDiff}
-                        className="flex-shrink-0 px-1.5 py-0.5 border border-zinc-600 hover:border-zinc-500 hover:bg-zinc-700 rounded cursor-pointer transition-colors flex items-center gap-1 text-zinc-400"
+                        className="flex-shrink-0 px-1.5 py-0.5 border border-zinc-600 hover:border-zinc-500 hover:bg-zinc-700 rounded-[2px] cursor-pointer transition-colors flex items-center gap-1 text-zinc-400"
                         title="Open in diff viewer"
                     >
                         <span className="text-xs">Show Diff</span>
@@ -327,7 +327,7 @@ const AIToolProgress = memo(({ part }: AIToolProgressProps) => {
     const progressData = part.data;
 
     return (
-        <div className="flex flex-col gap-1 p-2 rounded bg-zinc-800/60 border border-zinc-700">
+        <div className="flex flex-col gap-1 p-2 rounded-[2px] bg-zinc-800/60 border border-zinc-700">
             <div className="flex items-center gap-2">
                 <i className="fa fa-spinner fa-spin text-gray-400"></i>
                 <div className="font-semibold">{progressData.toolname}</div>

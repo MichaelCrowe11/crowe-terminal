@@ -190,7 +190,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                             type="button"
                             onClick={handleUploadClick}
                             className={cn(
-                                "w-6 h-6 rounded transition-colors flex items-center justify-center text-zinc-500 hover:text-[#bfa669] cursor-pointer"
+                                "w-6 h-6 rounded-[2px] transition-colors flex items-center justify-center text-zinc-500 hover:text-[#bfa669] cursor-pointer"
                             )}
                         >
                             <i className="fa fa-paperclip text-[12px]"></i>
@@ -202,7 +202,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                                 type="button"
                                 onClick={() => model.stopResponse()}
                                 className={cn(
-                                    "w-6 h-6 rounded transition-colors flex items-center justify-center cursor-pointer",
+                                    "w-6 h-6 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer",
                                     "text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                 )}
                             >
@@ -215,7 +215,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                                 type="submit"
                                 disabled={status !== "ready" || !input.trim()}
                                 className={cn(
-                                    "w-6 h-6 rounded transition-colors flex items-center justify-center",
+                                    "w-6 h-6 rounded-[2px] transition-colors flex items-center justify-center",
                                     status !== "ready" || !input.trim()
                                         ? "text-zinc-600 cursor-default"
                                         : "text-[#bfa669] hover:text-[#bfa669] hover:bg-[#bfa669]/10 cursor-pointer"
