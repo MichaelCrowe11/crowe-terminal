@@ -42,6 +42,12 @@ window.MonacoEnvironment = {
 export function loadMonaco(): Promise<void> {
     if (monacoInitPromise) return monacoInitPromise;
     monacoInitPromise = (async () => {
+        // initialize signature: (overrides, container, configuration, env).
+        // The 2-arg pattern in older docs collapsed container; v32 makes it
+        // explicit and CSS injection fails (target.getRootNode is not a
+        // function) if you pass config in the container slot. We use the
+        // default container (document.body) and supply config in slot 3.
+        //
         // productConfiguration wires the gallery service to Open VSX, the
         // Eclipse-hosted marketplace used by every non-Microsoft VS Code
         // distribution. That's where users install Prettier, ESLint, Rust
@@ -54,6 +60,7 @@ export function loadMonaco(): Promise<void> {
                 ...getLanguagesServiceOverride(),
                 ...getExtensionGalleryServiceOverride({ webOnly: false }),
             },
+            document.body,
             {
                 productConfiguration: {
                     extensionsGallery: {
