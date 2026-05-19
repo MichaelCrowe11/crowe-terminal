@@ -16,10 +16,11 @@ const (
 	PrefixFarm     = "farm."
 	PrefixWidget   = "widget."
 
-	ToolEditorRead     = "editor.read_file"
-	ToolEditorWrite    = "editor.write_file"
-	ToolEditorEdit     = "editor.apply_edit"
-	ToolEditorListRecent = "editor.list_recent_files"
+	ToolEditorRead               = "editor.read_file"
+	ToolEditorWrite              = "editor.write_file"
+	ToolEditorEdit               = "editor.apply_edit"
+	ToolEditorListRecent         = "editor.list_recent_files"
+	ToolEditorGetActiveContext   = "editor.get_active_context"
 
 	ToolWidgetOpenInCroweCode = "widget.open_in_crowecode"
 )
@@ -52,11 +53,12 @@ func GrantReadOnly(store Store, blockID, sessionID string, pathGlobs []string) {
 		BlockID:        blockID,
 		AgentSessionID: sessionID,
 		Tools: map[string]string{
-			ToolEditorRead:            ModeAllow,
-			ToolEditorListRecent:      ModeAllow,
-			ToolEditorWrite:           ModeDeny,
-			ToolEditorEdit:            ModeDeny,
-			ToolWidgetOpenInCroweCode: ModeAllow,
+			ToolEditorRead:             ModeAllow,
+			ToolEditorListRecent:       ModeAllow,
+			ToolEditorGetActiveContext: ModeAllow,
+			ToolEditorWrite:            ModeDeny,
+			ToolEditorEdit:             ModeDeny,
+			ToolWidgetOpenInCroweCode:  ModeAllow,
 		},
 		TargetPatterns: map[string][]string{
 			ToolEditorRead:            append([]string(nil), pathGlobs...),
@@ -77,11 +79,12 @@ func GrantSandbox(store Store, blockID, sessionID string, pathGlobs []string) {
 		BlockID:        blockID,
 		AgentSessionID: sessionID,
 		Tools: map[string]string{
-			ToolEditorRead:            ModeAllow,
-			ToolEditorWrite:           ModeAllow,
-			ToolEditorEdit:            ModeAllow,
-			ToolEditorListRecent:      ModeAllow,
-			ToolWidgetOpenInCroweCode: ModeAllow,
+			ToolEditorRead:             ModeAllow,
+			ToolEditorWrite:            ModeAllow,
+			ToolEditorEdit:             ModeAllow,
+			ToolEditorListRecent:       ModeAllow,
+			ToolEditorGetActiveContext: ModeAllow,
+			ToolWidgetOpenInCroweCode:  ModeAllow,
 		},
 		TargetPatterns: map[string][]string{
 			ToolEditorRead:            patterns,
@@ -131,10 +134,11 @@ func SnapshotGrant(store Store, blockID, sessionID string) map[string]any {
 
 func permissiveTools() map[string]string {
 	return map[string]string{
-		ToolEditorRead:            ModeAllow,
-		ToolEditorWrite:           ModeAllow,
-		ToolEditorEdit:            ModeAllow,
-		ToolEditorListRecent:      ModeAllow,
-		ToolWidgetOpenInCroweCode: ModeAllow,
+		ToolEditorRead:             ModeAllow,
+		ToolEditorWrite:            ModeAllow,
+		ToolEditorEdit:             ModeAllow,
+		ToolEditorListRecent:       ModeAllow,
+		ToolEditorGetActiveContext: ModeAllow,
+		ToolWidgetOpenInCroweCode:  ModeAllow,
 	}
 }

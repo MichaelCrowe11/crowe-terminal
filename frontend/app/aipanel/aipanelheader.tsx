@@ -3,8 +3,9 @@
 
 import { handleWaveAIContextMenu } from "@/app/aipanel/aipanel-contextmenu";
 import { cn } from "@/util/util";
+import { CroweCodeWorkspaceModel } from "@/app/view/crowecode/crowecode-workspace-model";
 import { useAtomValue } from "jotai";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { WaveAIModel } from "./waveai-model";
 import croweFace from "@/app/asset/crowe-face.png";
 
@@ -13,6 +14,12 @@ export const AIPanelHeader = memo(() => {
     const widgetAccess = useAtomValue(model.widgetAccessAtom);
     const isStreaming = useAtomValue(model.isAIStreaming);
     const inBuilder = model.inBuilder;
+    const activeEditor = useAtomValue(CroweCodeWorkspaceModel.getInstance().activeEditorAtom);
+    const activeLabel = useMemo(() => {
+        if (!activeEditor) return null;
+        const base = activeEditor.filePath.split("/").pop() || activeEditor.filePath;
+        return `${base} · L${activeEditor.cursorLine}`;
+    }, [activeEditor]);
 
     const handleKebabClick = (e: React.MouseEvent) => {
         handleWaveAIContextMenu(e, false);
@@ -50,8 +57,14 @@ export const AIPanelHeader = memo(() => {
                     <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/75 whitespace-nowrap">
                         CroweLM
                     </div>
-                    <div className="truncate text-[11px] text-[#e8e2cf]/48">
-                        Managed workspace
+                    <div
+                        className={cn(
+                            "truncate text-[11px]",
+                            activeLabel ? "font-mono text-[#bfa669]/85" : "text-[#e8e2cf]/48"
+                        )}
+                        title={activeEditor?.filePath ?? "Managed workspace"}
+                    >
+                        {activeLabel ?? "Managed workspace"}
                     </div>
                 </div>
             </div>

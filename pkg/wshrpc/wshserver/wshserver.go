@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/skratchdot/open-golang/open"
+	"github.com/wavetermdev/waveterm/pkg/agent/editorctx"
 	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/chatstore"
@@ -1574,6 +1575,59 @@ func (ws *WshServer) JobControllerDetachJobCommand(ctx context.Context, jobId st
 
 func (ws *WshServer) BlockJobStatusCommand(ctx context.Context, blockId string) (*wshrpc.BlockJobStatusData, error) {
 	return jobcontroller.GetBlockJobStatus(ctx, blockId)
+}
+
+// CroweCodeReportActiveEditorCommand stores the renderer's snapshot of the
+// focused Crowe Code editor for a tab. Passing Empty=true clears the slot,
+// signalling that no Crowe Code block currently owns focus on that tab.
+func (ws *WshServer) CroweCodeReportActiveEditorCommand(ctx context.Context, data wshrpc.CommandCroweCodeActiveEditorData) error {
+	if data.TabId == "" {
+		return fmt.Errorf("tabid is required")
+	}
+	if data.Empty {
+		editorctx.Clear(data.TabId)
+		return nil
+	}
+	editorctx.Set(data.TabId, &editorctx.ActiveEditor{
+		BlockId:              data.BlockId,
+		FilePath:             data.FilePath,
+		LanguageId:           data.LanguageId,
+		CursorLine:           data.CursorLine,
+		CursorColumn:         data.CursorColumn,
+		SelectionStartLine:   data.SelectionStartLine,
+		SelectionStartColumn: data.SelectionStartColumn,
+		SelectionEndLine:     data.SelectionEndLine,
+		SelectionEndColumn:   data.SelectionEndColumn,
+		HasSelection:         data.HasSelection,
+	})
+	return nil
+}
+
+// CroweCodeGetActiveEditorCommand returns the most recently reported active
+// editor for a tab, or a payload with Empty=true if nothing is focused. The
+// agent's editor.get_active_context tool calls into editorctx directly in
+// the same process; this RPC entry is for renderer-side diagnostics.
+func (ws *WshServer) CroweCodeGetActiveEditorCommand(ctx context.Context, tabId string) (*wshrpc.CommandCroweCodeActiveEditorData, error) {
+	if tabId == "" {
+		return nil, fmt.Errorf("tabid is required")
+	}
+	ae := editorctx.Get(tabId)
+	if ae == nil {
+		return &wshrpc.CommandCroweCodeActiveEditorData{TabId: tabId, Empty: true}, nil
+	}
+	return &wshrpc.CommandCroweCodeActiveEditorData{
+		TabId:                tabId,
+		BlockId:              ae.BlockId,
+		FilePath:             ae.FilePath,
+		LanguageId:           ae.LanguageId,
+		CursorLine:           ae.CursorLine,
+		CursorColumn:         ae.CursorColumn,
+		SelectionStartLine:   ae.SelectionStartLine,
+		SelectionStartColumn: ae.SelectionStartColumn,
+		SelectionEndLine:     ae.SelectionEndLine,
+		SelectionEndColumn:   ae.SelectionEndColumn,
+		HasSelection:         ae.HasSelection,
+	}, nil
 }
 
 // CroweCodeBootstrapScopeCommand installs a default capability grant for a
