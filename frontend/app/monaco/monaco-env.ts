@@ -7,6 +7,7 @@ import "@codingame/monaco-vscode-typescript-basics-default-extension";
 import "@codingame/monaco-vscode-json-default-extension";
 
 import { initialize as initializeVscodeServices } from "@codingame/monaco-vscode-api";
+import getExtensionGalleryServiceOverride from "@codingame/monaco-vscode-extension-gallery-service-override";
 import getFilesServiceOverride from "@codingame/monaco-vscode-files-service-override";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
 import getTextmateServiceOverride from "@codingame/monaco-vscode-textmate-service-override";
@@ -41,12 +42,28 @@ window.MonacoEnvironment = {
 export function loadMonaco(): Promise<void> {
     if (monacoInitPromise) return monacoInitPromise;
     monacoInitPromise = (async () => {
-        await initializeVscodeServices({
-            ...getFilesServiceOverride(),
-            ...getThemeServiceOverride(),
-            ...getTextmateServiceOverride(),
-            ...getLanguagesServiceOverride(),
-        });
+        // productConfiguration wires the gallery service to Open VSX, the
+        // Eclipse-hosted marketplace used by every non-Microsoft VS Code
+        // distribution. That's where users install Prettier, ESLint, Rust
+        // Analyzer, Vim, etc. from inside Crowe Terminal.
+        await initializeVscodeServices(
+            {
+                ...getFilesServiceOverride(),
+                ...getThemeServiceOverride(),
+                ...getTextmateServiceOverride(),
+                ...getLanguagesServiceOverride(),
+                ...getExtensionGalleryServiceOverride({ webOnly: false }),
+            },
+            {
+                productConfiguration: {
+                    extensionsGallery: {
+                        serviceUrl: "https://open-vsx.org/vscode/gallery",
+                        resourceUrlTemplate:
+                            "https://open-vsx.org/vscode/unpkg/{publisher}/{name}/{version}/{path}",
+                    },
+                },
+            } as any,
+        );
 
         monaco.editor.defineTheme("wave-theme-dark", {
             base: "vs-dark",
