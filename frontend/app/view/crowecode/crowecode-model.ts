@@ -12,6 +12,7 @@ import { checkKeyPressed } from "@/util/keyutil";
 import { base64ToString, fireAndForget, stringToBase64 } from "@/util/util";
 import * as jotai from "jotai";
 import { CroweCodeView } from "./crowecode";
+import { CroweCodeWorkspaceModel } from "./crowecode-workspace-model";
 
 const PLACEHOLDER_TEXT = `// Crowe Code: editor block
 
@@ -59,6 +60,7 @@ export class CroweCodeViewModel implements ViewModel {
     fileNameAtom: jotai.Atom<string | undefined>;
     languageAtom: jotai.Atom<string | undefined>;
     scopeAtom: jotai.Atom<string | undefined>;
+    workspaceAtom: jotai.Atom<string | undefined>;
     dirtyAtom: jotai.Atom<boolean>;
     viewText!: jotai.Atom<HeaderElem[]>;
 
@@ -91,6 +93,12 @@ export class CroweCodeViewModel implements ViewModel {
             const blockData = get(this.blockAtom);
             const s = blockData?.meta?.["crowecode:scope"];
             return typeof s === "string" && s.length > 0 ? s : undefined;
+        });
+
+        this.workspaceAtom = jotai.atom((get) => {
+            const blockData = get(this.blockAtom);
+            const w = blockData?.meta?.["crowecode:workspace"];
+            return typeof w === "string" && w.length > 0 ? w : undefined;
         });
 
         this.dirtyAtom = jotai.atom((get) => {
@@ -168,11 +176,24 @@ export class CroweCodeViewModel implements ViewModel {
             const text = file?.data64 ? base64ToString(file.data64) : "";
             globalStore.set(this.textAtom, text);
             globalStore.set(this.savedTextAtom, text);
+            // Make the file URI discoverable to VS Code services so language
+            // servers, search, and diagnostics can operate on it. Fire-and-
+            // forget: registration failure doesn't affect the in-memory edit.
+            this.registerWithWorkspace(fileName).catch(() => {});
         } catch (e: any) {
             globalStore.set(this.loadErrorAtom, `load failed: ${e?.message ?? e}`);
         } finally {
             globalStore.set(this.isLoadingAtom, false);
         }
+    }
+
+    private async registerWithWorkspace(fileName: string): Promise<void> {
+        const workspaceModel = CroweCodeWorkspaceModel.getInstance();
+        const workspace = globalStore.get(this.workspaceAtom);
+        if (workspace && !workspaceModel.getWorkspaceFolder()) {
+            workspaceModel.setWorkspaceFolder(workspace);
+        }
+        await workspaceModel.ensureFileRegistered(fileName);
     }
 
     async saveToDisk() {

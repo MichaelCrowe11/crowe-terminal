@@ -7,6 +7,7 @@ import "@codingame/monaco-vscode-typescript-basics-default-extension";
 import "@codingame/monaco-vscode-json-default-extension";
 
 import { initialize as initializeVscodeServices } from "@codingame/monaco-vscode-api";
+import getFilesServiceOverride from "@codingame/monaco-vscode-files-service-override";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
 import getTextmateServiceOverride from "@codingame/monaco-vscode-textmate-service-override";
 import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-override";
@@ -41,6 +42,7 @@ export function loadMonaco(): Promise<void> {
     if (monacoInitPromise) return monacoInitPromise;
     monacoInitPromise = (async () => {
         await initializeVscodeServices({
+            ...getFilesServiceOverride(),
             ...getThemeServiceOverride(),
             ...getTextmateServiceOverride(),
             ...getLanguagesServiceOverride(),
