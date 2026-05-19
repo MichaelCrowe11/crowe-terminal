@@ -33,14 +33,18 @@ export const AIPanelHeader = memo(() => {
             onContextMenu={handleContextMenu}
         >
             <div className="flex items-center gap-2.5 min-w-0">
-                <div className="relative h-8 w-8 flex-shrink-0 bg-[#0b0b0c]">
+                <div className="relative h-8 w-8 flex-shrink-0 rounded-full bg-[#0b0b0c] overflow-hidden">
                     <span
                         className={cn(
-                            "absolute inset-[-3px] border border-[#bfa669]/25",
+                            "absolute inset-[-3px] rounded-full border border-[#bfa669]/25",
                             isStreaming && "animate-spin border-t-[#bfa669] border-r-[#bfa669]/60"
                         )}
                     />
-                    <img src={croweFace} alt="" className="relative h-full w-full object-cover" />
+                    <img
+                        src={croweFace}
+                        alt=""
+                        className="relative h-full w-full rounded-full object-cover"
+                    />
                 </div>
                 <div className="min-w-0">
                     <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/75 whitespace-nowrap">
