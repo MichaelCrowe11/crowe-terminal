@@ -48,6 +48,14 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
         blockdef: { meta: { view: "crowecode" } },
     },
     {
+        id: "files",
+        eyebrow: "Workspace",
+        name: "Files",
+        tagline: "Browse a folder. Click a file to open it in Crowe Code.",
+        status: "local",
+        blockdef: { meta: { view: "crowecode-explorer" } },
+    },
+    {
         id: "crowelm",
         eyebrow: "Operator",
         name: "CroweLM panel",
