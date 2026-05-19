@@ -6,6 +6,7 @@ import type { TabModel } from "@/app/store/tab-model";
 import { AiFileDiffViewModel } from "@/app/view/aifilediff/aifilediff";
 import { CroweCodeViewModel } from "@/app/view/crowecode/crowecode-model";
 import { CroweCodeExplorerViewModel } from "@/app/view/crowecode/explorer/crowecode-explorer-model";
+import { CroweCodeProblemsViewModel } from "@/app/view/crowecode/problems/crowecode-problems-model";
 import { LauncherViewModel } from "@/app/view/launcher/launcher";
 import { PreviewModel } from "@/app/view/preview/preview-model";
 import { ProcessViewerViewModel } from "@/app/view/processviewer/processviewer";
@@ -39,6 +40,7 @@ BlockRegistry.set("waveconfig", WaveConfigViewModel);
 BlockRegistry.set("processviewer", ProcessViewerViewModel);
 BlockRegistry.set("crowecode", CroweCodeViewModel);
 BlockRegistry.set("crowecode-explorer", CroweCodeExplorerViewModel);
+BlockRegistry.set("crowecode-problems", CroweCodeProblemsViewModel);
 
 function makeDefaultViewModel(viewType: string): ViewModel {
     const viewModel: ViewModel = {

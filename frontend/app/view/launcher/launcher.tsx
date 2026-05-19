@@ -56,6 +56,14 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
         blockdef: { meta: { view: "crowecode-explorer" } },
     },
     {
+        id: "problems",
+        eyebrow: "Diagnostics",
+        name: "Problems",
+        tagline: "Live errors, warnings, and hints across every open file.",
+        status: "live",
+        blockdef: { meta: { view: "crowecode-problems" } },
+    },
+    {
         id: "crowelm",
         eyebrow: "Operator",
         name: "CroweLM panel",
