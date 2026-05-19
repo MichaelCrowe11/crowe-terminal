@@ -12,6 +12,27 @@ import tsconfigPaths from "vite-tsconfig-paths";
 const CHROME = "chrome140";
 const NODE = "node22";
 
+// monaco-vscode-api ships CSS files that Vite would otherwise try to inject as
+// <style> tags. The library expects them resolved as inline strings so it can
+// own injection through its theme service.
+function loadVscodeCssAsString() {
+    return {
+        name: "load-vscode-css-as-string",
+        enforce: "pre" as const,
+        async resolveId(source: string, importer: string | undefined, options: any) {
+            const resolved = await (this as any).resolve(source, importer, options);
+            if (
+                resolved?.id?.match(
+                    /node_modules\/(@codingame\/monaco-vscode|vscode|monaco-editor).*\.css$/
+                )
+            ) {
+                return { ...resolved, id: resolved.id + "?inline" };
+            }
+            return undefined;
+        },
+    };
+}
+
 // for debugging
 // target is like -- path.resolve(__dirname, "frontend/app/workspace/workspace-layout-model.ts");
 function whoImportsTarget(target: string) {
@@ -134,7 +155,12 @@ export default defineConfig({
                 output: {
                     manualChunks(id) {
                         const p = id.replace(/\\/g, "/");
-                        if (p.includes("node_modules/monaco") || p.includes("node_modules/@monaco")) return "monaco";
+                        if (
+                            p.includes("node_modules/monaco") ||
+                            p.includes("node_modules/@monaco") ||
+                            p.includes("node_modules/@codingame/monaco-vscode")
+                        )
+                            return "monaco";
                         if (p.includes("node_modules/mermaid") || p.includes("node_modules/@mermaid")) return "mermaid";
                         if (p.includes("node_modules/katex") || p.includes("node_modules/@katex")) return "katex";
                         if (p.includes("node_modules/shiki") || p.includes("node_modules/@shiki")) {
@@ -175,6 +201,7 @@ export default defineConfig({
             },
         },
         plugins: [
+            loadVscodeCssAsString(),
             tsconfigPaths(),
             { ...ViteImageOptimizer(), apply: "build" },
             svgr({

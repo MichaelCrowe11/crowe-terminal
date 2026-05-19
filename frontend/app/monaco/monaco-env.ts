@@ -1,14 +1,20 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import "@codingame/monaco-vscode-theme-defaults-default-extension";
+import "@codingame/monaco-vscode-javascript-default-extension";
+import "@codingame/monaco-vscode-typescript-basics-default-extension";
+import "@codingame/monaco-vscode-json-default-extension";
+
+import { initialize as initializeVscodeServices } from "@codingame/monaco-vscode-api";
+import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
+import getTextmateServiceOverride from "@codingame/monaco-vscode-textmate-service-override";
+import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-override";
 import * as monaco from "monaco-editor";
-import "monaco-editor/esm/vs/language/css/monaco.contribution";
-import "monaco-editor/esm/vs/language/html/monaco.contribution";
-import "monaco-editor/esm/vs/language/json/monaco.contribution";
-import "monaco-editor/esm/vs/language/typescript/monaco.contribution";
 import { configureMonacoYaml } from "monaco-yaml";
 
 import { MonacoSchemas } from "@/app/monaco/schemaendpoints";
+import TextMateWorker from "@codingame/monaco-vscode-textmate-service-override/worker?worker";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
@@ -16,67 +22,68 @@ import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import ymlWorker from "./yamlworker?worker";
 
-let monacoConfigured = false;
+let monacoInitPromise: Promise<void> | null = null;
 
 window.MonacoEnvironment = {
     getWorker(_, label) {
-        if (label === "json") {
-            return new jsonWorker();
-        }
-        if (label === "css" || label === "scss" || label === "less") {
-            return new cssWorker();
-        }
-        if (label === "yaml" || label === "yml") {
-            return new ymlWorker();
-        }
-        if (label === "html" || label === "handlebars" || label === "razor") {
-            return new htmlWorker();
-        }
-        if (label === "typescript" || label === "javascript") {
-            return new tsWorker();
-        }
+        if (label === "TextEditorWorker") return new editorWorker();
+        if (label === "TextMateWorker") return new TextMateWorker();
+        if (label === "json") return new jsonWorker();
+        if (label === "css" || label === "scss" || label === "less") return new cssWorker();
+        if (label === "yaml" || label === "yml") return new ymlWorker();
+        if (label === "html" || label === "handlebars" || label === "razor") return new htmlWorker();
+        if (label === "typescript" || label === "javascript") return new tsWorker();
         return new editorWorker();
     },
 };
 
-export function loadMonaco() {
-    if (monacoConfigured) {
-        return;
-    }
-    monacoConfigured = true;
-    monaco.editor.defineTheme("wave-theme-dark", {
-        base: "vs-dark",
-        inherit: true,
-        rules: [],
-        colors: {
-            "editor.background": "#00000000",
-            "editorStickyScroll.background": "#00000055",
-            "minimap.background": "#00000077",
-            focusBorder: "#00000000",
-        },
-    });
-    monaco.editor.defineTheme("wave-theme-light", {
-        base: "vs",
-        inherit: true,
-        rules: [],
-        colors: {
-            "editor.background": "#fefefe",
-            focusBorder: "#00000000",
-        },
-    });
-    configureMonacoYaml(monaco, {
-        validate: true,
-        schemas: [],
-    });
-    monaco.editor.setTheme("wave-theme-dark");
-    // Disable default validation errors for typescript and javascript
-    monaco.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-    });
-    monaco.json.jsonDefaults.setDiagnosticsOptions({
-        validate: true,
-        allowComments: false,
-        enableSchemaRequest: true,
-        schemas: MonacoSchemas,
-    });
+export function loadMonaco(): Promise<void> {
+    if (monacoInitPromise) return monacoInitPromise;
+    monacoInitPromise = (async () => {
+        await initializeVscodeServices({
+            ...getThemeServiceOverride(),
+            ...getTextmateServiceOverride(),
+            ...getLanguagesServiceOverride(),
+        });
+
+        monaco.editor.defineTheme("wave-theme-dark", {
+            base: "vs-dark",
+            inherit: true,
+            rules: [],
+            colors: {
+                "editor.background": "#00000000",
+                "editorStickyScroll.background": "#00000055",
+                "minimap.background": "#00000077",
+                focusBorder: "#00000000",
+            },
+        });
+        monaco.editor.defineTheme("wave-theme-light", {
+            base: "vs",
+            inherit: true,
+            rules: [],
+            colors: {
+                "editor.background": "#fefefe",
+                focusBorder: "#00000000",
+            },
+        });
+        monaco.editor.setTheme("wave-theme-dark");
+
+        // monaco-yaml registers a YAML language client over Monaco's language API.
+        // With the VS Code languages-service-override owning the registry, the
+        // call may no-op or throw. We still attempt it for Phase 0 since the
+        // existing waveconfig YAML editor depends on it; if it fails, swap to
+        // redhat.vscode-yaml extension in Phase 2.
+        try {
+            configureMonacoYaml(monaco, { validate: true, schemas: [] });
+        } catch (e) {
+            console.warn("[monaco] monaco-yaml deferred until LSP/extension path lands:", e);
+        }
+
+        // JSON/TS diagnostic options used `monaco.json` / `monaco.typescript`
+        // namespaces that don't exist alongside the languages-service-override.
+        // They come back through real LSP wiring in Phase 1+; for now we retain
+        // the schemas reference so the import isn't shaken out.
+        void MonacoSchemas;
+    })();
+    return monacoInitPromise;
 }

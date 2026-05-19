@@ -29,36 +29,45 @@ export function MonacoCodeEditor({ text, readonly, language, onChange, onMount, 
     const applyingFromProps = useRef(false);
 
     useEffect(() => {
-        loadMonaco();
+        let cancelled = false;
+        let model: MonacoTypes.editor.ITextModel | null = null;
+        let editor: MonacoTypes.editor.IStandaloneCodeEditor | null = null;
+        let sub: MonacoTypes.IDisposable | null = null;
 
-        const el = divRef.current;
-        if (!el) return;
+        loadMonaco().then(() => {
+            if (cancelled) return;
+            const el = divRef.current;
+            if (!el) return;
 
-        const model = createModel(text, path, language);
-        console.log("[monaco] CREATE MODEL", path, model);
+            model = createModel(text, path, language);
+            console.log("[monaco] CREATE MODEL", path, model);
 
-        const editor = monaco.editor.create(el, {
-            ...options,
-            readOnly: readonly,
-            model,
+            editor = monaco.editor.create(el, {
+                ...options,
+                readOnly: readonly,
+                model,
+            });
+            editorRef.current = editor;
+
+            sub = model.onDidChangeContent(() => {
+                if (applyingFromProps.current) return;
+                onChange?.(model!.getValue());
+            });
+
+            if (onMount) {
+                onUnmountRef.current = onMount(editor, monaco);
+            }
         });
-        editorRef.current = editor;
-
-        const sub = model.onDidChangeContent(() => {
-            if (applyingFromProps.current) return;
-            onChange?.(model.getValue());
-        });
-
-        if (onMount) {
-            onUnmountRef.current = onMount(editor, monaco);
-        }
 
         return () => {
-            sub.dispose();
+            cancelled = true;
+            sub?.dispose();
             if (onUnmountRef.current) onUnmountRef.current();
-            editor.setModel(null);
-            editor.dispose();
-            model.dispose();
+            if (editor) {
+                editor.setModel(null);
+                editor.dispose();
+            }
+            model?.dispose();
             console.log("[monaco] dispose model");
             editorRef.current = null;
         };
@@ -130,27 +139,35 @@ export function MonacoDiffViewer({ original, modified, language, path, options }
 
     // Create once
     useEffect(() => {
-        loadMonaco();
+        let cancelled = false;
+        let originalModel: MonacoTypes.editor.ITextModel | null = null;
+        let modifiedModel: MonacoTypes.editor.ITextModel | null = null;
+        let diff: MonacoTypes.editor.IStandaloneDiffEditor | null = null;
 
-        const el = divRef.current;
-        if (!el) return;
+        loadMonaco().then(() => {
+            if (cancelled) return;
+            const el = divRef.current;
+            if (!el) return;
 
-        const origUri = monaco.Uri.parse(`wave://diff/${encodeURIComponent(path)}.orig`);
-        const modUri = monaco.Uri.parse(`wave://diff/${encodeURIComponent(path)}.mod`);
+            const origUri = monaco.Uri.parse(`wave://diff/${encodeURIComponent(path)}.orig`);
+            const modUri = monaco.Uri.parse(`wave://diff/${encodeURIComponent(path)}.mod`);
 
-        const originalModel = monaco.editor.createModel(original, language, origUri);
-        const modifiedModel = monaco.editor.createModel(modified, language, modUri);
+            originalModel = monaco.editor.createModel(original, language, origUri);
+            modifiedModel = monaco.editor.createModel(modified, language, modUri);
 
-        const diff = monaco.editor.createDiffEditor(el, options);
-        diffRef.current = diff;
-
-        diff.setModel({ original: originalModel, modified: modifiedModel });
+            diff = monaco.editor.createDiffEditor(el, options);
+            diffRef.current = diff;
+            diff.setModel({ original: originalModel, modified: modifiedModel });
+        });
 
         return () => {
-            diff.setModel(null);
-            diff.dispose();
-            originalModel.dispose();
-            modifiedModel.dispose();
+            cancelled = true;
+            if (diff) {
+                diff.setModel(null);
+                diff.dispose();
+            }
+            originalModel?.dispose();
+            modifiedModel?.dispose();
             diffRef.current = null;
         };
     }, []);
