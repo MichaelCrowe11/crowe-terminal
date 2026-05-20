@@ -7,9 +7,9 @@
 // dependency. The schema is intentionally narrow: three tables capture
 // the chain of custody from substrate through fruiting through harvest.
 //
-//   batches    started life of a thing (grain jar, fruiting bag, etc.)
-//   events     anything that happened to a batch (transfer, contam, FAE)
-//   harvests   weights pulled off a fruiting batch
+//	batches    started life of a thing (grain jar, fruiting bag, etc.)
+//	events     anything that happened to a batch (transfer, contam, FAE)
+//	harvests   weights pulled off a fruiting batch
 //
 // A future sync tool can push these to the Crowe Logic AI Platform; the
 // local DB is the source of truth.
@@ -89,6 +89,17 @@ var (
 // log somewhere specific.
 const EnvFarmDBPath = "CROWE_FARM_DB_PATH"
 
+func configDir() string {
+	if override := os.Getenv(EnvFarmDBPath); override != "" {
+		return filepath.Dir(override)
+	}
+	base, err := os.UserConfigDir()
+	if err != nil || base == "" {
+		base = filepath.Join(os.Getenv("HOME"), ".config")
+	}
+	return filepath.Join(base, configDirName)
+}
+
 func dbPath() (string, error) {
 	if override := os.Getenv(EnvFarmDBPath); override != "" {
 		dir := filepath.Dir(override)
@@ -97,11 +108,7 @@ func dbPath() (string, error) {
 		}
 		return override, nil
 	}
-	base, err := os.UserConfigDir()
-	if err != nil {
-		base = filepath.Join(os.Getenv("HOME"), ".config")
-	}
-	dir := filepath.Join(base, configDirName)
+	dir := configDir()
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", fmt.Errorf("mkdir %s: %w", dir, err)
 	}

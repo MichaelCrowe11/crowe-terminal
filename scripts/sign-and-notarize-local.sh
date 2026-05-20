@@ -27,7 +27,7 @@ done
 
 export CSC_LINK="$P12"
 export CSC_KEY_PASSWORD="$(<"$P12_PW_FILE")"
-export CSC_NAME="${CSC_NAME:-Developer ID Application: Michael Crowe (6QLMV9UCPP)}"
+export CSC_NAME="${CSC_NAME:-Michael Crowe (6QLMV9UCPP)}"
 export APPLE_ID="${APPLE_ID:-crowelogicmc@icloud.com}"
 export APPLE_APP_SPECIFIC_PASSWORD="$(<"$NOTARY_PW_FILE")"
 export APPLE_TEAM_ID="${APPLE_TEAM_ID:-6QLMV9UCPP}"
@@ -49,6 +49,25 @@ echo "[sign] targets:     $cli_args"
 npm run build:prod
 # shellcheck disable=SC2086
 npm exec electron-builder -- -c electron-builder.config.cjs -p never $cli_args
+
+echo "[sign] signing + notarizing DMG containers"
+dmg_sign_identity="$(security find-identity -v -p codesigning | awk '/Developer ID Application/ { print $2; exit }')"
+if [[ -z "$dmg_sign_identity" ]]; then
+    echo "[sign] no Developer ID Application identity available for DMG signing" >&2
+    exit 1
+fi
+
+shopt -s nullglob
+for dmg in make/*.dmg; do
+    echo "[sign] dmg: $dmg"
+    codesign --force --sign "$dmg_sign_identity" "$dmg"
+    xcrun notarytool submit "$dmg" \
+        --apple-id "$APPLE_ID" \
+        --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+        --team-id "$APPLE_TEAM_ID" \
+        --wait
+    xcrun stapler staple "$dmg"
+done
 
 echo "[sign] verifying artifacts in ./make"
 bash "$(dirname "$0")/verify-mac-release.sh" make

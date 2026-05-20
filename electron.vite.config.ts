@@ -144,9 +144,12 @@ export default defineConfig({
     },
     renderer: {
         root: ".",
+        worker: {
+            format: "es",
+        },
         build: {
             target: CHROME,
-            sourcemap: true,
+            sourcemap: false,
             outDir: "dist/frontend",
             rollupOptions: {
                 input: {

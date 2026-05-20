@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { globalStore } from "@/app/store/jotaiStore";
+import { WshRouter } from "@/app/store/wshrouter";
+import { setDefaultRouter } from "@/app/store/wshrpcutil-base";
 import { makeMockWaveEnv } from "@/preview/mock/mockwaveenv";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -22,6 +24,8 @@ describe("webview preview fallback", () => {
     });
 
     it("uses the supplied env for homepage atoms and config updates", async () => {
+        setDefaultRouter(new WshRouter({ recvRpcMessage: () => {} }));
+
         const blockId = "webview-env-block";
         const env = makeMockWaveEnv({
             settings: {
