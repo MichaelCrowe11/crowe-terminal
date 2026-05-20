@@ -40,7 +40,8 @@
         .tab-inner {
             border-color: transparent;
             border-radius: 6px;
-            background: rgb(from var(--main-text-color) r g b / 0.1);
+            background: rgba(191, 166, 105, 0.10);
+            box-shadow: inset 0 -2px 0 0 var(--accent-color);
         }
 
         .name {
