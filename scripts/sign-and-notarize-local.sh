@@ -50,24 +50,7 @@ npm run build:prod
 # shellcheck disable=SC2086
 npm exec electron-builder -- -c electron-builder.config.cjs -p never $cli_args
 
-echo "[sign] signing + notarizing DMG containers"
-dmg_sign_identity="$(security find-identity -v -p codesigning | awk '/Developer ID Application/ { print $2; exit }')"
-if [[ -z "$dmg_sign_identity" ]]; then
-    echo "[sign] no Developer ID Application identity available for DMG signing" >&2
-    exit 1
-fi
-
-shopt -s nullglob
-for dmg in make/*.dmg; do
-    echo "[sign] dmg: $dmg"
-    codesign --force --sign "$dmg_sign_identity" "$dmg"
-    xcrun notarytool submit "$dmg" \
-        --apple-id "$APPLE_ID" \
-        --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-        --team-id "$APPLE_TEAM_ID" \
-        --wait
-    xcrun stapler staple "$dmg"
-done
+APPLE_ID_PASSWORD="$APPLE_APP_SPECIFIC_PASSWORD" bash "$(dirname "$0")/notarize-dmg.sh" make
 
 echo "[sign] verifying artifacts in ./make"
 bash "$(dirname "$0")/verify-mac-release.sh" make
