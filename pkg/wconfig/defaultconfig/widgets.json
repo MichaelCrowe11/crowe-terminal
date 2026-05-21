@@ -31,6 +31,16 @@
             }
         }
     },
+    "defwidget@crowecode": {
+        "display:order": -2.5,
+        "icon": "code",
+        "label": "code",
+        "blockdef": {
+            "meta": {
+                "view": "crowecode"
+            }
+        }
+    },
     "defwidget@sysinfo": {
         "display:order": -2,
         "icon": "chart-line",
