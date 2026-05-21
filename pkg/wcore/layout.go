@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/wavetermdev/waveterm/pkg/waveobj"
+	"github.com/wavetermdev/waveterm/pkg/wconfig"
 	"github.com/wavetermdev/waveterm/pkg/wstore"
 )
 
@@ -61,6 +62,20 @@ func GetStarterLayout() PortableLayout {
 }
 
 func GetNewTabLayout() PortableLayout {
+	// app:defaultnewblock controls which view fills a fresh tab. Defaults
+	// to "launcher" via defaultconfig/settings.json so the capability grid
+	// is the first surface users see. Any other value (or empty) falls
+	// back to a terminal block.
+	settings := wconfig.GetWatcher().GetFullConfig().Settings
+	if settings.AppDefaultNewBlock == "launcher" {
+		return PortableLayout{
+			{IndexArr: []int{0}, BlockDef: &waveobj.BlockDef{
+				Meta: waveobj.MetaMapType{
+					waveobj.MetaKey_View: "launcher",
+				},
+			}, Focused: true},
+		}
+	}
 	return PortableLayout{
 		{IndexArr: []int{0}, BlockDef: &waveobj.BlockDef{
 			Meta: waveobj.MetaMapType{
