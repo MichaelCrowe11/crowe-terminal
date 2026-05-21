@@ -41,11 +41,10 @@ const AIThinking = memo(
                     {isWaitingApproval ? (
                         <i className="fa fa-clock text-base text-yellow-500"></i>
                     ) : (
-                        <div className="animate-pulse flex items-center">
-                            <i className="fa fa-circle text-[10px]"></i>
-                            <i className="fa fa-circle text-[10px] mx-1"></i>
-                            <i className="fa fa-circle text-[10px]"></i>
-                        </div>
+                        <span
+                            aria-hidden="true"
+                            className="inline-block w-[2px] h-[14px] bg-accent animate-pulse rounded-[1px]"
+                        />
                     )}
                     {message && <span className="text-sm text-gray-400">{message}</span>}
                 </div>
@@ -223,7 +222,7 @@ export const AIMessage = memo(({ message, isStreaming }: AIMessageProps) => {
                 className={cn(
                     "px-2 rounded-[2px] [&>*:first-child]:!mt-0",
                     message.role === "user"
-                        ? "py-2 bg-zinc-700/60 text-white max-w-[calc(100%-50px)]"
+                        ? "py-2.5 px-3.5 bg-accent/10 border border-accent/20 text-white max-w-[calc(100%-50px)]"
                         : "min-w-[min(100%,500px)]"
                 )}
             >
