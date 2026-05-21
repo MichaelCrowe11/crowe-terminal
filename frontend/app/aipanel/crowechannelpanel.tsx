@@ -1,7 +1,8 @@
 // Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { cn } from "@/util/util";
+import { createBlock } from "@/app/store/global";
+import { cn, fireAndForget } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo } from "react";
 import { WaveAIModel } from "./waveai-model";
@@ -11,6 +12,11 @@ type CroweChannel = {
     name: string;
     scope: string;
     prompt: string;
+    // Optional block to spawn in the focused tab on click. When set, clicking
+    // the lane both inserts the prompt AND opens the matching workspace block
+    // — the "click and a destination opens" promise the lanes look like they
+    // make. Without a blockdef the lane is channel-only (prompt template).
+    blockdef?: BlockDef;
 };
 
 const CHANNELS: CroweChannel[] = [
@@ -25,6 +31,7 @@ const CHANNELS: CroweChannel[] = [
         name: "Code",
         scope: "Implement, refactor, test, review",
         prompt: "Review the current project, identify the next useful code change, and make a concrete plan.",
+        blockdef: { meta: { view: "crowecode" } },
     },
     {
         id: "research",
@@ -47,6 +54,9 @@ export const CroweChannelPanel = memo(({ compact = false }: { compact?: boolean 
     const insertChannelPrompt = (channel: CroweChannel) => {
         model.appendText(channel.prompt);
         model.focusInput();
+        if (channel.blockdef != null) {
+            fireAndForget(() => createBlock(channel.blockdef!));
+        }
     };
 
     return (
