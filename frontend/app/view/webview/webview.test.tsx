@@ -12,10 +12,10 @@ import { getWebPreviewDisplayUrl, WebViewModel, WebViewPreviewFallback } from ".
 
 describe("webview preview fallback", () => {
     it("shows the requested URL", () => {
-        const markup = renderToStaticMarkup(<WebViewPreviewFallback url="https://waveterm.dev/docs" />);
+        const markup = renderToStaticMarkup(<WebViewPreviewFallback url="https://docs.crowelogic.com/terminal" />);
 
         expect(markup).toContain("electron webview unavailable");
-        expect(markup).toContain("https://waveterm.dev/docs");
+        expect(markup).toContain("https://docs.crowelogic.com/terminal");
     });
 
     it("falls back to about:blank when no URL is available", () => {

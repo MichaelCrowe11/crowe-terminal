@@ -23,7 +23,9 @@ const UpgradeOnboardingModal_v0_14_0_Content = () => {
                     <div className="text-foreground text-base font-semibold leading-[18px]">
                         Durable SSH Sessions{" "}
                         <button
-                            onClick={() => waveEnv.electron.openExternal("https://docs.waveterm.dev/durable-sessions")}
+                            onClick={() =>
+                                waveEnv.electron.openExternal("https://docs.crowelogic.com/terminal/durable-sessions")
+                            }
                             className="text-accent text-sm font-normal cursor-pointer hover:underline"
                         >
                             [see docs]

@@ -241,7 +241,7 @@ export class CroweCodeViewModel implements ViewModel {
             if (rtn?.granted) {
                 await RpcApi.SetMetaCommand(TabRpcClient, {
                     oref: WOS.makeORef("block", this.blockId),
-                    meta: { "crowecode:scope": rtn.scopename || "sandbox" },
+                    meta: { "crowecode:scope": rtn.scopename || "sandbox" } as MetaType,
                 });
             }
         } catch (e) {

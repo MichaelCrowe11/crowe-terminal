@@ -3,7 +3,7 @@
 
 import { BlockNodeModel } from "@/app/block/blocktypes";
 import { loadMonaco } from "@/app/monaco/monaco-env";
-import { createBlock, WOS } from "@/app/store/global";
+import { WOS } from "@/app/store/global";
 import { globalStore } from "@/app/store/jotaiStore";
 import type { TabModel } from "@/app/store/tab-model";
 import { WaveEnv } from "@/app/waveenv/waveenv";
@@ -35,6 +35,7 @@ export class CroweCodeProblemsViewModel implements ViewModel {
     blockId: string;
     nodeModel: BlockNodeModel;
     blockAtom: jotai.Atom<Block>;
+    env: WaveEnv;
 
     viewIcon = jotai.atom<string>("circle-exclamation");
     viewName = jotai.atom<string>("Problems");
@@ -44,11 +45,21 @@ export class CroweCodeProblemsViewModel implements ViewModel {
     workspaceModel: CroweCodeWorkspaceModel;
     private markersDisposable: monaco.IDisposable | null = null;
 
-    constructor({ blockId, nodeModel }: { blockId: string; nodeModel: BlockNodeModel; tabModel: TabModel; waveEnv: WaveEnv }) {
+    constructor({
+        blockId,
+        nodeModel,
+        waveEnv,
+    }: {
+        blockId: string;
+        nodeModel: BlockNodeModel;
+        tabModel: TabModel;
+        waveEnv: WaveEnv;
+    }) {
         this.viewType = "crowecode-problems";
         this.blockId = blockId;
         this.nodeModel = nodeModel;
         this.blockAtom = WOS.getWaveObjectAtom<Block>(`block:${blockId}`);
+        this.env = waveEnv;
         this.workspaceModel = CroweCodeWorkspaceModel.getInstance();
         this.problemsAtom = jotai.atom<ProblemEntry[]>([]);
         fireAndForget(this.subscribe.bind(this));
@@ -103,9 +114,9 @@ export class CroweCodeProblemsViewModel implements ViewModel {
                 view: "crowecode",
                 "crowecode:file": filePath,
                 ...(workspace ? { "crowecode:workspace": workspace } : {}),
-            },
+            } as MetaType,
         };
-        await createBlock(blockDef, false, false);
+        await this.env.createBlock(blockDef, false, false);
     }
 
     dispose(): void {

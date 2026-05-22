@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BlockNodeModel } from "@/app/block/blocktypes";
-import { createBlock, WOS } from "@/app/store/global";
+import { WOS } from "@/app/store/global";
 import { globalStore } from "@/app/store/jotaiStore";
 import type { TabModel } from "@/app/store/tab-model";
 import { RpcApi } from "@/app/store/wshclientapi";
@@ -27,6 +27,7 @@ export class CroweCodeExplorerViewModel implements ViewModel {
     blockId: string;
     nodeModel: BlockNodeModel;
     blockAtom: jotai.Atom<Block>;
+    env: WaveEnv;
 
     viewIcon = jotai.atom<string>("folder-tree");
     viewName = jotai.atom<string>("Files");
@@ -47,11 +48,21 @@ export class CroweCodeExplorerViewModel implements ViewModel {
     loadingAtom: jotai.PrimitiveAtom<Set<string>>;
     errorAtom: jotai.PrimitiveAtom<string | null>;
 
-    constructor({ blockId, nodeModel }: { blockId: string; nodeModel: BlockNodeModel; tabModel: TabModel; waveEnv: WaveEnv }) {
+    constructor({
+        blockId,
+        nodeModel,
+        waveEnv,
+    }: {
+        blockId: string;
+        nodeModel: BlockNodeModel;
+        tabModel: TabModel;
+        waveEnv: WaveEnv;
+    }) {
         this.viewType = "crowecode-explorer";
         this.blockId = blockId;
         this.nodeModel = nodeModel;
         this.blockAtom = WOS.getWaveObjectAtom<Block>(`block:${blockId}`);
+        this.env = waveEnv;
         this.workspaceModel = CroweCodeWorkspaceModel.getInstance();
 
         this.rootAtom = jotai.atom((get) => {
@@ -83,7 +94,7 @@ export class CroweCodeExplorerViewModel implements ViewModel {
         // same root after a tab reload.
         await RpcApi.SetMetaCommand(TabRpcClient, {
             oref: WOS.makeORef("block", this.blockId),
-            meta: { "crowecode-explorer:root": root },
+            meta: { "crowecode-explorer:root": root } as MetaType,
         });
     }
 
@@ -100,7 +111,7 @@ export class CroweCodeExplorerViewModel implements ViewModel {
                 .map((i) => ({
                     name: i.name!,
                     path: i.path ?? `${dirPath}/${i.name}`,
-                    isDir: !!i.isDir,
+                    isDir: !!i.isdir,
                 }))
                 .sort((a, b) => {
                     // dirs first, then alpha
@@ -145,9 +156,9 @@ export class CroweCodeExplorerViewModel implements ViewModel {
                 view: "crowecode",
                 "crowecode:file": filePath,
                 ...(workspace ? { "crowecode:workspace": workspace } : {}),
-            },
+            } as MetaType,
         };
-        await createBlock(blockDef, false, false);
+        await this.env.createBlock(blockDef, false, false);
     }
 
     refresh(): void {

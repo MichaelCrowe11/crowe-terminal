@@ -57,7 +57,7 @@ export class CroweCodeWorkspaceModel {
     private reportHandler: ((state: ActiveEditorState | null) => void) | null = null;
 
     private constructor() {
-        this.workspaceFolderAtom = jotai.atom<string | undefined>(undefined);
+        this.workspaceFolderAtom = jotai.atom<string | undefined>(undefined) as jotai.PrimitiveAtom<string | undefined>;
         this.activeEditorAtom = jotai.atom<ActiveEditorState | null>(null) as jotai.PrimitiveAtom<ActiveEditorState | null>;
     }
 

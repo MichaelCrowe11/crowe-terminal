@@ -1,7 +1,6 @@
 // Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { ViewComponentProps } from "@/app/block/blocktypes";
 import { globalStore } from "@/app/store/jotaiStore";
 import { CodeEditor } from "@/app/view/codeeditor/codeeditor";
 import { fireAndForget } from "@/util/util";

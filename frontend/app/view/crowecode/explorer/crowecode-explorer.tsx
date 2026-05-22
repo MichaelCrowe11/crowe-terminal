@@ -1,7 +1,6 @@
 // Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { ViewComponentProps } from "@/app/block/blocktypes";
 import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo, useEffect, useMemo, useState } from "react";
