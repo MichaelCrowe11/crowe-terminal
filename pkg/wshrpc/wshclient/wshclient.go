@@ -197,6 +197,18 @@ func CroweCodeBootstrapScopeCommand(w *wshutil.WshRpc, data wshrpc.CommandCroweC
 	return resp, err
 }
 
+// command "crowecodegetactiveeditor", wshserver.CroweCodeGetActiveEditorCommand
+func CroweCodeGetActiveEditorCommand(w *wshutil.WshRpc, data string, opts *wshrpc.RpcOpts) (*wshrpc.CommandCroweCodeActiveEditorData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandCroweCodeActiveEditorData](w, "crowecodegetactiveeditor", data, opts)
+	return resp, err
+}
+
+// command "crowecodereportactiveeditor", wshserver.CroweCodeReportActiveEditorCommand
+func CroweCodeReportActiveEditorCommand(w *wshutil.WshRpc, data wshrpc.CommandCroweCodeActiveEditorData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "crowecodereportactiveeditor", data, opts)
+	return err
+}
+
 // command "debugterm", wshserver.DebugTermCommand
 func DebugTermCommand(w *wshutil.WshRpc, data wshrpc.CommandDebugTermData, opts *wshrpc.RpcOpts) (*wshrpc.CommandDebugTermRtnData, error) {
 	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandDebugTermRtnData](w, "debugterm", data, opts)

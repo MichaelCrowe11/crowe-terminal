@@ -1,18 +1,80 @@
 #!/usr/bin/env bash
-# Sign, notarize, and staple Crowe Terminal .dmg files.
-# Requires:
-#   - "Developer ID Application: <Name> (TEAM_ID)" cert in default keychain
-#   - APPLE_ID, APPLE_ID_PASSWORD, APPLE_TEAM_ID env vars
-#     (APPLE_ID_PASSWORD is an app-specific password, not your Apple ID password)
+# Sign, notarize, and staple Crowe Terminal .dmg files in-place.
+#
+# Requires a Developer ID Application certificate in the active keychain and:
+#   - APPLE_ID
+#   - APPLE_TEAM_ID
+#   - APPLE_ID_PASSWORD or APPLE_APP_SPECIFIC_PASSWORD
+#
 # Run from the repo root after `task package`.
 
 set -euo pipefail
 
-: "${APPLE_ID:?set APPLE_ID env var (e.g. info@southwestmushrooms.com)}"
-: "${APPLE_ID_PASSWORD:?set APPLE_ID_PASSWORD env var (app-specific password)}"
+: "${APPLE_ID:?set APPLE_ID env var}"
 : "${APPLE_TEAM_ID:?set APPLE_TEAM_ID env var (10-char team id)}"
 
-IDENTITY="$(security find-identity -v -p codesigning | awk '/Developer ID Application/ { print $2; exit }')"
+APPLE_ID_PASSWORD="${APPLE_ID_PASSWORD:-${APPLE_APP_SPECIFIC_PASSWORD:-}}"
+if [[ -z "$APPLE_ID_PASSWORD" ]]; then
+    echo "set APPLE_ID_PASSWORD or APPLE_APP_SPECIFIC_PASSWORD env var (app-specific password)" >&2
+    exit 1
+fi
+
+find_identity() {
+    security find-identity -v -p codesigning | awk '/Developer ID Application/ { print $2; exit }'
+}
+
+import_csc_link() {
+    if [[ -z "${CSC_LINK:-}" || -z "${CSC_KEY_PASSWORD:-}" ]]; then
+        return 1
+    fi
+
+    local tmp_base cert_path keychain_path keychain_password
+    tmp_base="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
+    cert_path="$(mktemp "$tmp_base/crowe-terminal-certificate.XXXXXX.p12")"
+    keychain_path="$(mktemp -u "$tmp_base/crowe-terminal-signing.XXXXXX.keychain-db")"
+    keychain_password="$(uuidgen 2>/dev/null || date +%s)"
+
+    if [[ -f "$CSC_LINK" ]]; then
+        cp "$CSC_LINK" "$cert_path"
+    else
+        printf '%s' "$CSC_LINK" | base64 --decode > "$cert_path"
+    fi
+
+    security create-keychain -p "$keychain_password" "$keychain_path"
+    security set-keychain-settings -lut 21600 "$keychain_path"
+    security unlock-keychain -p "$keychain_password" "$keychain_path"
+    security import "$cert_path" \
+        -k "$keychain_path" \
+        -P "$CSC_KEY_PASSWORD" \
+        -T /usr/bin/codesign \
+        -T /usr/bin/productbuild
+
+    local current_keychains=()
+    local keychain
+    while IFS= read -r keychain; do
+        keychain="${keychain//\"/}"
+        keychain="${keychain#"${keychain%%[![:space:]]*}"}"
+        keychain="${keychain%"${keychain##*[![:space:]]}"}"
+        if [[ -n "$keychain" && "$keychain" != "$keychain_path" ]]; then
+            current_keychains+=("$keychain")
+        fi
+    done < <(security list-keychains -d user)
+
+    security list-keychains -d user -s "$keychain_path" "${current_keychains[@]}"
+    security default-keychain -s "$keychain_path"
+    security set-key-partition-list \
+        -S apple-tool:,apple:,codesign: \
+        -s \
+        -k "$keychain_password" \
+        "$keychain_path"
+}
+
+IDENTITY="$(find_identity)"
+if [[ -z "$IDENTITY" ]]; then
+    echo "[notarize] no active Developer ID identity found; importing CSC_LINK certificate"
+    import_csc_link || true
+    IDENTITY="$(find_identity)"
+fi
 if [[ -z "$IDENTITY" ]]; then
     echo "no Developer ID Application identity found in keychain" >&2
     exit 1
@@ -27,8 +89,9 @@ if [[ ${#DMGS[@]} -eq 0 ]]; then
     exit 1
 fi
 
-# Store credentials once so subsequent runs don't re-prompt.
-xcrun notarytool store-credentials crowe-notarize \
+PROFILE="${NOTARYTOOL_PROFILE:-crowe-terminal-notary}"
+
+xcrun notarytool store-credentials "$PROFILE" \
     --apple-id "$APPLE_ID" \
     --team-id "$APPLE_TEAM_ID" \
     --password "$APPLE_ID_PASSWORD" >/dev/null 2>&1 || true
@@ -37,39 +100,18 @@ for dmg in "${DMGS[@]}"; do
     echo
     echo "=== $dmg ==="
 
-    echo "[notarize] re-signing inner app with Developer ID..."
-    mount_point="$(mktemp -d)"
-    hdiutil attach "$dmg" -mountpoint "$mount_point" -nobrowse >/dev/null
-    app_path="$(find "$mount_point" -maxdepth 1 -name "*.app" | head -1)"
-    if [[ -z "$app_path" ]]; then
-        hdiutil detach "$mount_point" >/dev/null
-        echo "no .app inside $dmg" >&2
-        continue
-    fi
-    work_app="/tmp/$(basename "$app_path")"
-    rm -rf "$work_app"
-    cp -R "$app_path" "$work_app"
-    hdiutil detach "$mount_point" >/dev/null
-
-    codesign --deep --force --options runtime \
-        --entitlements scripts/entitlements.plist \
-        --sign "$IDENTITY" \
-        "$work_app"
-
-    echo "[notarize] re-packaging dmg with signed .app..."
-    new_dmg="${dmg%.dmg}-signed.dmg"
-    rm -f "$new_dmg"
-    hdiutil create -volname "Crowe Terminal" -srcfolder "$work_app" -ov -format UDZO "$new_dmg" >/dev/null
-    codesign --force --sign "$IDENTITY" "$new_dmg"
+    echo "[notarize] signing dmg container..."
+    codesign --force --sign "$IDENTITY" "$dmg"
 
     echo "[notarize] submitting to Apple..."
-    xcrun notarytool submit "$new_dmg" --keychain-profile crowe-notarize --wait
+    xcrun notarytool submit "$dmg" --keychain-profile "$PROFILE" --wait
 
     echo "[notarize] stapling ticket..."
-    xcrun stapler staple "$new_dmg"
-    xcrun stapler validate "$new_dmg"
+    xcrun stapler staple "$dmg"
+    xcrun stapler validate "$dmg"
+    spctl -a -vv -t install "$dmg" >/dev/null
 
-    echo "[notarize] done: $new_dmg"
+    echo "[notarize] done: $dmg"
 done
 
 echo

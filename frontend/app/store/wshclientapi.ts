@@ -198,6 +198,18 @@ export class RpcApiType {
         return client.wshRpcCall("crowecodebootstrapscope", data, opts);
     }
 
+    // command "crowecodegetactiveeditor" [call]
+    CroweCodeGetActiveEditorCommand(client: WshClient, data: string, opts?: RpcOpts): Promise<CommandCroweCodeActiveEditorData> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "crowecodegetactiveeditor", data, opts);
+        return client.wshRpcCall("crowecodegetactiveeditor", data, opts);
+    }
+
+    // command "crowecodereportactiveeditor" [call]
+    CroweCodeReportActiveEditorCommand(client: WshClient, data: CommandCroweCodeActiveEditorData, opts?: RpcOpts): Promise<void> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "crowecodereportactiveeditor", data, opts);
+        return client.wshRpcCall("crowecodereportactiveeditor", data, opts);
+    }
+
     // command "debugterm" [call]
     DebugTermCommand(client: WshClient, data: CommandDebugTermData, opts?: RpcOpts): Promise<CommandDebugTermRtnData> {
         if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "debugterm", data, opts);

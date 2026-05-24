@@ -22,13 +22,13 @@
 
      ## What is this?
 
-     Crowe Terminal is a fork of [Wave Terminal](https://www.waveterm.dev) (Apache 2.0) re-skinned with Crowe Logic branding and wired directly to the [Crowe Logic Foundry](https://github.com/MichaelCrowe11/crowe-logic-foundry) agent.
+     Crowe Terminal is an AI-native terminal from Crowe Logic, wired directly to the [Crowe Logic Foundry](https://github.com/MichaelCrowe11/crowe-logic-foundry) agent.
 
      Out of the box you get:
 
      - **Five CroweLM models** in the AI block: Auto (router), Supreme (flagship reasoning), Apex (peak performance), Titan (long-context), Oracle (deep foresight)
      - **Local agent bridge** — the Foundry agent runs on your machine via a local OpenAI-compatible API at `127.0.0.1:8011`. Your code stays local; only model calls leave the machine
-     - **Wave's terminal foundation** — split panes, browser block, SSH sessions, themes, dynamic layout
+     - **Crowe Terminal foundation** — split panes, browser block, SSH sessions, themes, dynamic layout
 
      ## Install (macOS)
 
@@ -47,7 +47,7 @@
      1. Probes `127.0.0.1:8011` — if a bridge is already running, reuses it
      2. Else looks for the foundry at `$CROWE_FOUNDRY_PATH` or `~/Projects/crowe-logic-foundry`
      3. Spawns `python -m cli.openai_bridge` with the foundry's venv if found
-     4. Skips silently if no foundry is found — Wave's manual AI config still works
+     4. Skips silently if no foundry is found — the manual AI config still works
 
      Set up the Foundry locally:
 

@@ -3,6 +3,7 @@
 
 import { App } from "@/app/app";
 import { loadMonaco } from "@/app/monaco/monaco-env";
+import { CroweCodeWorkspaceModel } from "@/app/view/crowecode/crowecode-workspace-model";
 import { loadBadges } from "@/app/store/badge";
 import { GlobalModel } from "@/app/store/global-model";
 import {
@@ -49,6 +50,48 @@ let savedInitOpts: WaveInitOpts = null;
 (window as any).countersClear = countersClear;
 (window as any).getLayoutModelForStaticTab = getLayoutModelForStaticTab;
 (window as any).modalsModel = modalsModel;
+
+// wireActiveEditorReports binds the workspace model's debounced active-editor
+// callback to a wshrpc CroweCodeReportActiveEditorCommand. The renderer now
+// pushes a snapshot to wavesrv every time a Crowe Code block changes focus,
+// cursor, or selection. The agent reads the latest snapshot via the
+// editor.get_active_context tool — same process, no extra round-trip.
+function wireActiveEditorReports() {
+    const workspaceModel = CroweCodeWorkspaceModel.getInstance();
+    workspaceModel.setReportHandler((state) => {
+        const tabId = globalStore.get(activeTabIdAtom);
+        if (!tabId) return;
+        if (state == null) {
+            void RpcApi.CroweCodeReportActiveEditorCommand(TabRpcClient, {
+                tabid: tabId,
+                blockid: "",
+                filepath: "",
+                cursorline: 0,
+                cursorcolumn: 0,
+                selectionstartline: 0,
+                selectionstartcolumn: 0,
+                selectionendline: 0,
+                selectionendcolumn: 0,
+                hasselection: false,
+                empty: true,
+            });
+            return;
+        }
+        void RpcApi.CroweCodeReportActiveEditorCommand(TabRpcClient, {
+            tabid: tabId,
+            blockid: state.blockId,
+            filepath: state.filePath,
+            languageid: state.languageId,
+            cursorline: state.cursorLine,
+            cursorcolumn: state.cursorColumn,
+            selectionstartline: state.selectionStartLine,
+            selectionstartcolumn: state.selectionStartColumn,
+            selectionendline: state.selectionEndLine,
+            selectionendcolumn: state.selectionEndColumn,
+            hasselection: state.hasSelection,
+        });
+    });
+}
 
 function updateZoomFactor(zoomFactor: number) {
     console.log("update zoomfactor", zoomFactor);
@@ -191,6 +234,11 @@ async function initWave(initOpts: WaveInitOpts) {
     registerElectronReinjectKeyHandler();
     registerControlShiftStateUpdateHandler();
     await loadMonaco();
+    // Wire the workspace model's active-editor report stream to the backend so
+    // the agent can read "what is the user looking at?" via
+    // editor.get_active_context. Late-bound here to keep the workspace model
+    // file free of wshrpc imports.
+    wireActiveEditorReports();
     const fullConfig = await RpcApi.GetFullConfigCommand(TabRpcClient);
     console.log("fullconfig", fullConfig);
     globalStore.set(atoms.fullConfigAtom, fullConfig);

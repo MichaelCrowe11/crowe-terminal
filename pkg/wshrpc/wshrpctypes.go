@@ -218,6 +218,12 @@ type WshRpcInterface interface {
 
 	// crowecode scope
 	CroweCodeBootstrapScopeCommand(ctx context.Context, data CommandCroweCodeBootstrapScopeData) (*CommandCroweCodeBootstrapScopeRtnData, error)
+
+	// crowecode active editor context (Phase 5a)
+	// Report is called by the renderer every time focus/cursor moves; Get is
+	// the read side the agent's editor.get_active_context tool calls.
+	CroweCodeReportActiveEditorCommand(ctx context.Context, data CommandCroweCodeActiveEditorData) error
+	CroweCodeGetActiveEditorCommand(ctx context.Context, tabId string) (*CommandCroweCodeActiveEditorData, error)
 }
 
 // for frontend
@@ -294,6 +300,29 @@ type CommandCroweCodeBootstrapScopeRtnData struct {
 	AgentSessionId string            `json:"agentsessionid"`
 	Tools          map[string]string `json:"tools"`
 	TargetPatterns map[string][]string `json:"targetpatterns,omitempty"`
+}
+
+// CommandCroweCodeActiveEditorData carries the renderer's snapshot of the
+// currently focused Crowe Code block. The agent reads this via the
+// editor.get_active_context tool to answer "what is the user looking at?"
+// without the user having to copy-paste.
+//
+// All line and column fields are 1-indexed (Monaco convention).
+type CommandCroweCodeActiveEditorData struct {
+	TabId                string `json:"tabid"`
+	BlockId              string `json:"blockid"`
+	FilePath             string `json:"filepath"`
+	LanguageId           string `json:"languageid,omitempty"`
+	CursorLine           int    `json:"cursorline"`
+	CursorColumn         int    `json:"cursorcolumn"`
+	SelectionStartLine   int    `json:"selectionstartline"`
+	SelectionStartColumn int    `json:"selectionstartcolumn"`
+	SelectionEndLine     int    `json:"selectionendline"`
+	SelectionEndColumn   int    `json:"selectionendcolumn"`
+	HasSelection         bool   `json:"hasselection"`
+	// Empty means "no editor is focused right now" — agent should treat that
+	// as a missing-context state, not an error.
+	Empty bool `json:"empty,omitempty"`
 }
 
 type CommandResolveIdsData struct {

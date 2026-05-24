@@ -70,7 +70,7 @@ const config = {
         identity: hasMacSigningCert ? process.env.CSC_NAME || undefined : null,
         hardenedRuntime: hasMacSigningCert,
         gatekeeperAssess: false,
-        notarize: hasMacNotarizeCreds ? { teamId: process.env.APPLE_TEAM_ID } : false,
+        notarize: hasMacNotarizeCreds,
         extendInfo: {
             NSContactsUsageDescription: "A CLI application running in Crowe Terminal wants to use your contacts.",
             NSRemindersUsageDescription: "A CLI application running in Crowe Terminal wants to use your reminders.",

@@ -315,6 +315,22 @@ declare global {
         blockdef: BlockDef;
     };
 
+    // wshrpc.CommandCroweCodeActiveEditorData
+    type CommandCroweCodeActiveEditorData = {
+        tabid: string;
+        blockid: string;
+        filepath: string;
+        languageid?: string;
+        cursorline: number;
+        cursorcolumn: number;
+        selectionstartline: number;
+        selectionstartcolumn: number;
+        selectionendline: number;
+        selectionendcolumn: number;
+        hasselection: boolean;
+        empty?: boolean;
+    };
+
     // wshrpc.CommandCroweCodeBootstrapScopeData
     type CommandCroweCodeBootstrapScopeData = {
         blockid: string;

@@ -51,7 +51,7 @@ const AboutModalV = ({ versionString, updaterChannel, onClose }: AboutModalVProp
                         <i className="fa-brands fa-github mr-2"></i>GitHub
                     </a>
                     <a
-                        href="https://crowelogic.com/?ref=about"
+                        href="https://www.crowelogic.com/?ref=about"
                         target="_blank"
                         rel="noopener"
                         className="inline-flex items-center justify-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
@@ -64,7 +64,7 @@ const AboutModalV = ({ versionString, updaterChannel, onClose }: AboutModalVProp
                         rel="noopener"
                         className="inline-flex items-center justify-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
                     >
-                        <i className="fa-sharp fa-light fa-code-branch mr-2"></i>Upstream
+                        <i className="fa-sharp fa-light fa-code-branch mr-2"></i>Attribution
                     </a>
                     <a
                         href="https://github.com/MichaelCrowe11/crowe-terminal/blob/main/NOTICE"

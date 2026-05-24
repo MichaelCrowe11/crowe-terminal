@@ -3,16 +3,26 @@
 
 import { handleWaveAIContextMenu } from "@/app/aipanel/aipanel-contextmenu";
 import { cn } from "@/util/util";
+import { CroweCodeWorkspaceModel } from "@/app/view/crowecode/crowecode-workspace-model";
+import { useWaveEnv } from "@/app/waveenv/waveenv";
 import { useAtomValue } from "jotai";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { WaveAIModel } from "./waveai-model";
-import croweFace from "@/app/asset/crowe-face.png";
+import croweMark from "@/app/asset/crowe-mark.png";
+import croweWordmark from "@/app/asset/crowe-wordmark.svg";
 
 export const AIPanelHeader = memo(() => {
     const model = WaveAIModel.getInstance();
+    const waveEnv = useWaveEnv();
     const widgetAccess = useAtomValue(model.widgetAccessAtom);
     const isStreaming = useAtomValue(model.isAIStreaming);
     const inBuilder = model.inBuilder;
+    const activeEditor = useAtomValue(CroweCodeWorkspaceModel.getInstance().activeEditorAtom);
+    const activeLabel = useMemo(() => {
+        if (!activeEditor) return null;
+        const base = activeEditor.filePath.split("/").pop() || activeEditor.filePath;
+        return `${base} · L${activeEditor.cursorLine}`;
+    }, [activeEditor]);
 
     const handleKebabClick = (e: React.MouseEvent) => {
         handleWaveAIContextMenu(e, false);
@@ -27,29 +37,47 @@ export const AIPanelHeader = memo(() => {
         setTimeout(() => model.focusInput(), 0);
     };
 
+    const openCroweCode = () => {
+        // Temporary fallback while crowecode.com DNS/TLS is being finalized.
+        waveEnv.electron.openExternal("https://www.crowelogic.com");
+    };
+
     return (
         <div
             className="py-2 pl-3 pr-2 flex items-center justify-between min-w-0 border-b border-[#bfa669]/18 bg-[#0b0b0c]/90"
             onContextMenu={handleContextMenu}
         >
-            <div className="flex items-center gap-2.5 min-w-0">
-                <div className="relative h-8 w-8 flex-shrink-0 bg-[#0b0b0c]">
-                    <span
-                        className={cn(
-                            "absolute inset-[-3px] border border-[#bfa669]/25",
-                            isStreaming && "animate-spin border-t-[#bfa669] border-r-[#bfa669]/60"
-                        )}
-                    />
-                    <img src={croweFace} alt="" className="relative h-full w-full object-cover" />
-                </div>
-                <div className="min-w-0">
-                    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/75 whitespace-nowrap">
-                        CroweLM
+            <div className="min-w-0 flex items-center gap-2.5">
+                <button
+                    type="button"
+                    onClick={openCroweCode}
+                    className="group min-w-0 flex items-center gap-2.5 cursor-pointer"
+                    title="Open crowelogic.com"
+                >
+                    <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-[2px] border border-[#bfa669]/30 bg-[#0b0b0c]">
+                        <img src={croweMark} alt="" className="h-full w-full object-cover" />
                     </div>
-                    <div className="truncate text-[11px] text-[#e8e2cf]/48">
-                        Managed workspace
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <img src={croweWordmark} alt="Crowe Logic" className="h-4 w-auto flex-shrink-0" />
+                            <span
+                                className={cn(
+                                    "h-1.5 w-1.5 rounded-[1px] bg-[#bfa669]/45",
+                                    isStreaming && "animate-pulse bg-[#bfa669]"
+                                )}
+                            />
+                        </div>
+                        <div
+                            className={cn(
+                                "truncate text-[11px] mt-0.5 group-hover:text-[#bfa669]",
+                                activeLabel ? "font-mono text-[#bfa669]/85" : "text-[#e8e2cf]/48"
+                            )}
+                            title={activeEditor?.filePath ?? "Managed workspace"}
+                        >
+                            {activeLabel ?? "Managed workspace"}
+                        </div>
                     </div>
-                </div>
+                </button>
             </div>
 
             <div className="flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">

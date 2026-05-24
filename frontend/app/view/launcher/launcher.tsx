@@ -30,6 +30,8 @@ type WorkspaceAction = {
     blockdef: BlockDef;
 };
 
+const CROWE_WEB_IDE_URL = "https://crowecode-web-production.up.railway.app/ide?surface=crowe-terminal";
+
 const WORKSPACE_ACTIONS: WorkspaceAction[] = [
     {
         id: "account",
@@ -37,7 +39,16 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
         name: "Sign in",
         tagline: "Use the managed Crowe Logic workspace. No API keys or model setup.",
         status: "secure",
-        blockdef: { meta: { view: "webview", url: "https://www.crowelogic.com/account" } },
+        // Temporary fallback while crowecode.com DNS/TLS is being finalized.
+        blockdef: { meta: { view: "web", url: "https://www.crowelogic.com/account" } },
+    },
+    {
+        id: "crowecode-web",
+        eyebrow: "Web IDE",
+        name: "CroweCode Web",
+        tagline: "Run the live CroweCode workspace natively inside Crowe Terminal.",
+        status: "native",
+        blockdef: { meta: { view: "web", url: CROWE_WEB_IDE_URL } },
     },
     {
         id: "code",
@@ -46,6 +57,22 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
         tagline: "Open files, diffs, and implementation tools inside the terminal.",
         status: "local",
         blockdef: { meta: { view: "crowecode" } },
+    },
+    {
+        id: "files",
+        eyebrow: "Workspace",
+        name: "Files",
+        tagline: "Browse a folder. Click a file to open it in Crowe Code.",
+        status: "local",
+        blockdef: { meta: { view: "crowecode-explorer" } },
+    },
+    {
+        id: "problems",
+        eyebrow: "Diagnostics",
+        name: "Problems",
+        tagline: "Live errors, warnings, and hints across every open file.",
+        status: "live",
+        blockdef: { meta: { view: "crowecode-problems" } },
     },
     {
         id: "crowelm",

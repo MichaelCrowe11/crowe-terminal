@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { globalStore } from "@/app/store/jotaiStore";
+import { WshRouter } from "@/app/store/wshrouter";
+import { setDefaultRouter } from "@/app/store/wshrpcutil-base";
 import { makeMockWaveEnv } from "@/preview/mock/mockwaveenv";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -10,10 +12,10 @@ import { getWebPreviewDisplayUrl, WebViewModel, WebViewPreviewFallback } from ".
 
 describe("webview preview fallback", () => {
     it("shows the requested URL", () => {
-        const markup = renderToStaticMarkup(<WebViewPreviewFallback url="https://waveterm.dev/docs" />);
+        const markup = renderToStaticMarkup(<WebViewPreviewFallback url="https://docs.crowelogic.com/terminal" />);
 
         expect(markup).toContain("electron webview unavailable");
-        expect(markup).toContain("https://waveterm.dev/docs");
+        expect(markup).toContain("https://docs.crowelogic.com/terminal");
     });
 
     it("falls back to about:blank when no URL is available", () => {
@@ -22,6 +24,8 @@ describe("webview preview fallback", () => {
     });
 
     it("uses the supplied env for homepage atoms and config updates", async () => {
+        setDefaultRouter(new WshRouter({ recvRpcMessage: () => {} }));
+
         const blockId = "webview-env-block";
         const env = makeMockWaveEnv({
             settings: {

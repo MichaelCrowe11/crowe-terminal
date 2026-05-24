@@ -12,8 +12,8 @@ import { useAtom, useAtomValue } from "jotai";
 import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 
 const MockConfigErrors: ConfigError[] = [
-    { file: "~/.waveterm/config.json", err: 'unknown preset "bg@aurora"' },
-    { file: "~/.waveterm/settings.json", err: "invalid color for tab theme" },
+    { file: "~/.crowe-terminal/config.json", err: 'unknown preset "bg@aurora"' },
+    { file: "~/.crowe-terminal/settings.json", err: "invalid color for tab theme" },
 ];
 
 export function TabBarPreview() {

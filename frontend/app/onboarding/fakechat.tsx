@@ -13,9 +13,10 @@ interface ChatConfig {
 
 const chatConfigs: ChatConfig[] = [
     {
-        userPrompt: "Check out ~/waveterm and summarize the project, including what it does and how it's organized.",
+        userPrompt:
+            "Check out ~/Projects/crowe-terminal and summarize the project, including what it does and how it's organized.",
         toolName: "read_dir",
-        toolDescription: 'reading directory "~/waveterm"',
+        toolDescription: 'reading directory "~/Projects/crowe-terminal"',
         markdownResponse: `Here's a quick, file-structure–driven overview of this repo (Crowe Terminal):
 
 ## What it is
@@ -30,7 +31,7 @@ const chatConfigs: ChatConfig[] = [
 
 ## Key directories
 - **cmd/:** entrypoints and generators
-  - \`server/\`: wavesrv main
+  - \`server/\`: main backend service
   - \`generategs/\`, \`generatego/\`: TS/Go bindings generation
   - \`wsh/\`: shell helper
 
@@ -39,7 +40,7 @@ const chatConfigs: ChatConfig[] = [
   - \`web/\`: HTTP+WS servers, Unix listener
   - \`waveai/\`: AI backends (OpenAI, Anthropic, Google, Perplexity)
   - \`wshrpc\`, \`wshutil\`, \`wslconn\`, \`remote/*\`: local/remote RPC, WSL, SSH, fileshare
-  - \`wstore/\`: persistent store (SQLite via sqlx); \`waveobj/\`: object model
+  - \`wstore/\`: persistent store (SQLite via sqlx); object model and metadata types
   - \`filestore/\`: local file cache/storage
   - \`telemetry/\`: metrics/events, periodic reporting`,
     },
@@ -63,14 +64,14 @@ Want deeper triage? Run these and paste results:
 \`\`\`bash
 # 1) Scan recent logs for problems
 grep -Ei 'error|panic|fatal|websocket|1006|1011' \\
-  "$HOME/Library/Application Support/waveterm-dev/waveapp.log" | tail -n 200
+  "$HOME/Library/Application Support/crowe-terminal-dev/waveapp.log" | tail -n 200
 
 # 2) Inspect around the disconnect window
 awk '($0 ~ /2025-10-10 18:08:2[0-9]/){print}' \\
-  "$HOME/Library/Application Support/waveterm-dev/waveapp.log"
+  "$HOME/Library/Application Support/crowe-terminal-dev/waveapp.log"
 
 # 3) Live follow for recurring drops
-tail -f "$HOME/Library/Application Support/waveterm-dev/waveapp.log" \\
+tail -f "$HOME/Library/Application Support/crowe-terminal-dev/waveapp.log" \\
   | grep -Ei 'error|panic|fatal|websocket|close'
 \`\`\`
 

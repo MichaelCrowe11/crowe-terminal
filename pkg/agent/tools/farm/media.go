@@ -335,13 +335,9 @@ func copyAll(dst, src interface{ Read(p []byte) (int, error) }) (int64, error) {
 }
 
 func newPhotoPath(batchID int64) string {
-	base, _ := os.UserConfigDir()
-	if base == "" {
-		base = filepath.Join(os.Getenv("HOME"), ".config")
-	}
 	stamp := time.Now().UTC().Format("20060102-150405")
 	name := fmt.Sprintf("batch%d-%s.png", batchID, stamp)
-	return filepath.Join(base, configDirName, photosSubdir, name)
+	return filepath.Join(configDir(), photosSubdir, name)
 }
 
 // ----- log_sensor -----

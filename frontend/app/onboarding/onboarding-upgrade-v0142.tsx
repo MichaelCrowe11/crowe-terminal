@@ -43,7 +43,7 @@ const UpgradeOnboardingModal_v0_14_2_Content = () => {
                                 hooks to surface AI task status as tab bar notifications{" "}
                                 <button
                                     onClick={() =>
-                                        waveEnv.electron.openExternal("https://docs.waveterm.dev/claude-code")
+                                        waveEnv.electron.openExternal("https://docs.crowelogic.com/terminal/claude-code")
                                     }
                                     className="text-accent text-sm font-normal cursor-pointer hover:underline"
                                 >

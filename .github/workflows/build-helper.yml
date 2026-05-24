@@ -142,7 +142,7 @@ jobs:
               name: Build (Darwin)
               if: matrix.platform == 'darwin'
               with:
-                  command: task package
+                  command: task package && bash scripts/notarize-dmg.sh make
                   timeout_minutes: 120
                   retry_on: error
                   max_attempts: 3

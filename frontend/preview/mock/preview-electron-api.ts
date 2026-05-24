@@ -12,6 +12,7 @@ const previewElectronApi: ElectronApi = {
     getDataDir: () => "",
     getConfigDir: () => "",
     getHomeDir: () => "",
+    getPathForFile: (_file: File) => "",
     getWebviewPreload: () => "",
     getAboutModalDetails: () => ({}) as AboutModalDetails,
     getZoomFactor: () => 1.0,
