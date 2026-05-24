@@ -8,7 +8,7 @@ on:
 jobs:
     publish-s3:
         name: Publish to Releases
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && vars.ENABLE_S3_STAGING == 'true' }}
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v6
