@@ -18,6 +18,10 @@
        <a href="https://crowelogic.com">crowelogic.com</a>
      </p>
 
+     <p align="center">
+       <em>Crowe Terminal is becoming Crowe Code. v1.0.0 will ship as a separate app and will not auto-update from v0.14.x. Watch <a href="https://www.crowelogic.com">crowelogic.com</a> for the release.</em>
+     </p>
+
      ---
 
      ## What is this?
