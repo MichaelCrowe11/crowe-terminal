@@ -27,6 +27,7 @@ import { UpgradeOnboardingModal_v0_14_1_Content } from "./onboarding-upgrade-v01
 import { UpgradeOnboardingModal_v0_14_2_Content } from "./onboarding-upgrade-v0142";
 import { UpgradeOnboardingModal_v0_14_4_Content } from "./onboarding-upgrade-v0144";
 import { UpgradeOnboardingModal_v0_14_5_Content } from "./onboarding-upgrade-v0145";
+import { UpgradeOnboardingModal_v0_14_11_Content } from "./onboarding-upgrade-v01411";
 
 interface VersionConfig {
     version: string;
@@ -153,6 +154,12 @@ export const UpgradeOnboardingVersions: VersionConfig[] = [
         version: "v0.14.5",
         content: () => <UpgradeOnboardingModal_v0_14_5_Content />,
         prevText: "Prev (v0.14.4)",
+        nextText: "Next (v0.14.11)",
+    },
+    {
+        version: "v0.14.11",
+        content: () => <UpgradeOnboardingModal_v0_14_11_Content />,
+        prevText: "Prev (v0.14.5)",
     },
 ];
 
