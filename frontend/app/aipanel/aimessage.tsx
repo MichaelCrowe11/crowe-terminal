@@ -9,6 +9,7 @@ import { AIFeedbackButtons } from "./aifeedbackbuttons";
 import { AIToolUseGroup } from "./aitooluse";
 import { WaveUIMessage, WaveUIMessagePart } from "./aitypes";
 import { WaveAIModel } from "./waveai-model";
+import croweFace from "@/app/asset/crowe-face.png";
 
 const AIThinking = memo(
     ({
@@ -217,7 +218,12 @@ export const AIMessage = memo(({ message, isStreaming }: AIMessageProps) => {
     const groupedParts = groupMessageParts(displayParts);
 
     return (
-        <div className={cn("flex", message.role === "user" ? "justify-end" : "justify-start")}>
+        <div className={cn("flex items-start gap-2", message.role === "user" ? "justify-end" : "justify-start")}>
+            {message.role === "assistant" && (
+                <div className="mt-1 h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-[#bfa669]/30 bg-[#0b0b0c]">
+                    <img src={croweFace} alt="CroweLM assistant" className="h-full w-full object-cover" />
+                </div>
+            )}
             <div
                 className={cn(
                     "px-2 rounded-[2px] [&>*:first-child]:!mt-0",

@@ -57,7 +57,7 @@ const mockWidgets: { [key: string]: WidgetConfigType } = {
         label: "Web",
         description: "Open a web browser",
         "display:order": 2,
-        blockdef: { meta: { view: "web", url: "https://crowelogic.com" } },
+        blockdef: { meta: { view: "web", url: "https://www.crowelogic.com" } },
     },
     "defwidget@files": {
         icon: "folder",

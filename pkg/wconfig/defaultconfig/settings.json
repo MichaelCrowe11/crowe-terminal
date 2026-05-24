@@ -17,7 +17,7 @@
     "conn:askbeforewshinstall": true,
     "conn:wshenabled": true,
     "editor:minimapenabled": true,
-    "web:defaulturl": "https://crowecode.com",
+    "web:defaulturl": "https://www.crowelogic.com",
     "web:defaultsearch": "https://www.google.com/search?q={query}",
     "window:tilegapsize": 3,
     "window:maxtabcachesize": 10,

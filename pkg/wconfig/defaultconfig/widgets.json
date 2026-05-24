@@ -41,6 +41,17 @@
             }
         }
     },
+    "defwidget@crowecodeweb": {
+        "display:order": -2.25,
+        "icon": "globe",
+        "label": "crowecode web",
+        "blockdef": {
+            "meta": {
+                "view": "web",
+                "url": "https://crowecode-web-production.up.railway.app/ide?surface=crowe-terminal"
+            }
+        }
+    },
     "defwidget@sysinfo": {
         "display:order": -2,
         "icon": "chart-line",
