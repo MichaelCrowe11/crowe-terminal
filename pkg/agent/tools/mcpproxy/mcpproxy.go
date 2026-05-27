@@ -24,6 +24,8 @@ import (
 
 	"github.com/wavetermdev/waveterm/pkg/agent/mcpclient"
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
+	"github.com/wavetermdev/waveterm/pkg/mcpui"
 )
 
 // Mount describes one upstream MCP server we proxy.
@@ -108,6 +110,34 @@ func (m *Mount) wrap(upstream mcpclient.Tool) *registry.Tool {
 	}
 }
 
+// renderUI is the seam that turns a detected UI resource into a rendered
+// block. It is a package var so tests can fake it and so the real
+// implementation (pkg/mcpui/uihost) can be injected at init time.
+var renderUI = func(ctx context.Context, session, tool string, ui *mcpui.UIResource) (string, error) {
+	return "", nil
+}
+
+// handleResult converts an upstream CallResult into a registry.Result.
+// On a detected, renderable UI resource it renders a block and returns a
+// short text summary; on anything else (or any render failure) it falls
+// back to the marshalled CallResult body, preserving the prior behavior.
+func handleResult(ctx context.Context, tool string, callRes *mcpclient.CallResult) registry.Result {
+	if ui, ok := mcpui.Detect(callRes.Content); ok {
+		session, _ := scope.AgentSessionIDFromContext(ctx)
+		if summary, err := renderUI(ctx, session, tool, ui); err == nil && summary != "" {
+			body, _ := json.Marshal(summary)
+			return registry.Result{Content: body}
+		}
+	}
+	body, _ := json.Marshal(callRes)
+	out := registry.Result{Content: body}
+	if callRes.IsError {
+		out.IsError = true
+		out.ErrorText = stringifyContent(callRes.Content)
+	}
+	return out
+}
+
 func (m *Mount) makeHandler(upstreamName string) registry.Handler {
 	return func(ctx context.Context, raw json.RawMessage) (registry.Result, error) {
 		var args map[string]any
@@ -124,13 +154,7 @@ func (m *Mount) makeHandler(upstreamName string) registry.Handler {
 		if err != nil {
 			return registry.Result{IsError: true, ErrorText: err.Error()}, nil
 		}
-		body, _ := json.Marshal(callRes)
-		out := registry.Result{Content: body}
-		if callRes.IsError {
-			out.IsError = true
-			out.ErrorText = stringifyContent(callRes.Content)
-		}
-		return out, nil
+		return handleResult(ctx, m.toolName(upstreamName), callRes), nil
 	}
 }
 
