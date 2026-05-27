@@ -8,23 +8,20 @@ import (
 	"fmt"
 )
 
-// ActionKind enumerates the MCP-UI postMessage action types we support.
-type ActionKind string
-
 const (
-	ActionTool   ActionKind = "tool"
-	ActionPrompt ActionKind = "prompt"
-	ActionLink   ActionKind = "link"
-	ActionNotify ActionKind = "notify"
+	ActionTool   = "tool"
+	ActionPrompt = "prompt"
+	ActionLink   = "link"
+	ActionNotify = "notify"
 )
 
 // Action is a parsed MCP-UI message from a rendered UI iframe.
 type Action struct {
-	Kind     ActionKind
-	ToolName string          // ActionTool
-	Params   json.RawMessage // ActionTool
-	Text     string          // ActionPrompt (prompt), ActionNotify (message)
-	URL      string          // ActionLink
+	Kind     string
+	ToolName string
+	Params   json.RawMessage
+	Text     string
+	URL      string
 }
 
 type rawMessage struct {
@@ -44,7 +41,7 @@ func MapAction(raw []byte) (Action, error) {
 	if err := json.Unmarshal(raw, &m); err != nil {
 		return Action{}, fmt.Errorf("mcpui: malformed action: %w", err)
 	}
-	switch ActionKind(m.Type) {
+	switch m.Type {
 	case ActionTool:
 		return Action{Kind: ActionTool, ToolName: m.Payload.ToolName, Params: m.Payload.Params}, nil
 	case ActionPrompt:

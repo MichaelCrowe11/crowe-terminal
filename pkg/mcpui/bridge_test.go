@@ -26,14 +26,20 @@ func TestMapActionPrompt(t *testing.T) {
 }
 
 func TestMapActionLink(t *testing.T) {
-	a, _ := MapAction([]byte(`{"type":"link","payload":{"url":"https://x.com"}}`))
+	a, err := MapAction([]byte(`{"type":"link","payload":{"url":"https://x.com"}}`))
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
 	if a.Kind != ActionLink || a.URL != "https://x.com" {
 		t.Fatalf("bad action: %+v", a)
 	}
 }
 
 func TestMapActionNotify(t *testing.T) {
-	a, _ := MapAction([]byte(`{"type":"notify","payload":{"message":"done"}}`))
+	a, err := MapAction([]byte(`{"type":"notify","payload":{"message":"done"}}`))
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
 	if a.Kind != ActionNotify || a.Text != "done" {
 		t.Fatalf("bad action: %+v", a)
 	}
