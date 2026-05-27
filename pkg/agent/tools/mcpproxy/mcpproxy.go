@@ -118,6 +118,11 @@ func noopRenderUI(ctx context.Context, session, tool string, ui *mcpui.UIResourc
 // inject the real implementation at init time.
 var renderUI = noopRenderUI
 
+// SetRenderer installs the UI render hook (called by pkg/mcpui/uihost at init).
+func SetRenderer(fn func(ctx context.Context, session, tool string, ui *mcpui.UIResource) (string, error)) {
+	renderUI = fn
+}
+
 // handleResult renders a detected UI resource into a block and returns a
 // summary; on a detect miss, render failure, or empty summary it falls back
 // to the marshalled CallResult body to preserve pre-feature behavior.
