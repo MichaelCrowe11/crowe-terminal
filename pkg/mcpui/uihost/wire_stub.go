@@ -7,11 +7,7 @@ import (
 	"context"
 
 	"github.com/wavetermdev/waveterm/pkg/mcpui"
-	"github.com/wavetermdev/waveterm/pkg/vdom"
 )
-
-// eventData extracts the raw postMessage JSON from a VDomEvent. Filled in Task 6.
-func eventData(ev vdom.VDomEvent) []byte { return nil }
 
 func dispatchTool(ctx context.Context, session string, a mcpui.Action)   {}
 func dispatchPrompt(ctx context.Context, session string, a mcpui.Action) {}

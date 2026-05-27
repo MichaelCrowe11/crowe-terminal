@@ -13,7 +13,7 @@ type fakeRenderer struct {
 	blockID string
 }
 
-func (f *fakeRenderer) Render(ctx context.Context, html string, onAction func(mcpui.Action)) (string, error) {
+func (f *fakeRenderer) Render(ctx context.Context, html string) (string, error) {
 	f.html = html
 	return f.blockID, nil
 }
@@ -21,7 +21,8 @@ func (f *fakeRenderer) Render(ctx context.Context, html string, onAction func(mc
 func TestRenderReusesBlockPerSessionTool(t *testing.T) {
 	fakes := map[string]*fakeRenderer{}
 	prev := newRenderer
-	newRenderer = func(k string) renderer {
+	newRenderer = func(callingBlockID, session, tool string) renderer {
+		k := key(session, tool)
 		if _, ok := fakes[k]; !ok {
 			fakes[k] = &fakeRenderer{blockID: "blk-" + k}
 		}
@@ -49,7 +50,7 @@ func TestRenderReusesBlockPerSessionTool(t *testing.T) {
 
 func TestRenderSummaryMentionsTool(t *testing.T) {
 	prev := newRenderer
-	newRenderer = func(k string) renderer { return &fakeRenderer{blockID: "blk-x"} }
+	newRenderer = func(callingBlockID, session, tool string) renderer { return &fakeRenderer{blockID: "blk-x"} }
 	defer func() { newRenderer = prev }()
 
 	ui := &mcpui.UIResource{URI: "ui://w/1", MimeType: "text/html", HTML: "<h1>hi</h1>"}
