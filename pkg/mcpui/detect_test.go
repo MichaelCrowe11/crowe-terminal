@@ -6,7 +6,7 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/agent/mcpclient"
 )
 
-func html(uri, mime, text string) mcpclient.ContentItem {
+func makeResource(uri, mime, text string) mcpclient.ContentItem {
 	return mcpclient.ContentItem{
 		Type:     "resource",
 		Resource: &mcpclient.EmbeddedResource{URI: uri, MimeType: mime, Text: text},
@@ -16,19 +16,19 @@ func html(uri, mime, text string) mcpclient.ContentItem {
 func TestDetectFindsHTMLUIResource(t *testing.T) {
 	content := []mcpclient.ContentItem{
 		{Type: "text", Text: "preamble"},
-		html("ui://widget/1", "text/html", "<h1>hi</h1>"),
+		makeResource("ui://widget/1", "text/html", "<h1>hi</h1>"),
 	}
 	got, ok := Detect(content)
 	if !ok {
 		t.Fatal("expected detection")
 	}
-	if got.URI != "ui://widget/1" || got.HTML != "<h1>hi</h1>" {
+	if got.URI != "ui://widget/1" || got.MimeType != "text/html" || got.HTML != "<h1>hi</h1>" {
 		t.Fatalf("bad resource: %+v", got)
 	}
 }
 
 func TestDetectIgnoresNonUIResource(t *testing.T) {
-	content := []mcpclient.ContentItem{html("file:///x.txt", "text/plain", "data")}
+	content := []mcpclient.ContentItem{makeResource("file:///x.txt", "text/plain", "data")}
 	if _, ok := Detect(content); ok {
 		t.Fatal("non-ui:// resource must not be detected")
 	}
@@ -43,17 +43,17 @@ func TestDetectIgnoresPlainText(t *testing.T) {
 
 func TestDetectRemoteDomUnsupportedInPhase1(t *testing.T) {
 	content := []mcpclient.ContentItem{
-		html("ui://widget/2", "application/vnd.mcp-ui.remote-dom", "script"),
+		makeResource("ui://widget/2", "application/vnd.mcp-ui.remote-dom", "script"),
 	}
 	if _, ok := Detect(content); ok {
-		t.Fatal("remote-dom must be unsupported (text fallback) in phase 1")
+		t.Fatal("remote-dom must not be detected in phase 1")
 	}
 }
 
 func TestDetectReturnsFirstUIResource(t *testing.T) {
 	content := []mcpclient.ContentItem{
-		html("ui://a", "text/html", "<p>A</p>"),
-		html("ui://b", "text/html", "<p>B</p>"),
+		makeResource("ui://a", "text/html", "<p>A</p>"),
+		makeResource("ui://b", "text/html", "<p>B</p>"),
 	}
 	got, _ := Detect(content)
 	if got.URI != "ui://a" {

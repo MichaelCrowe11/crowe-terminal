@@ -10,7 +10,7 @@ const (
 	UISchemePrefix = "ui://"
 	// MimeHTML is the phase-1 supported UI payload type.
 	MimeHTML = "text/html"
-	// MimeRemoteDOM is detected but unsupported in phase 1 (text fallback).
+	// MimeRemoteDOM is reserved for phase 2; phase-1 Detect rejects it.
 	MimeRemoteDOM = "application/vnd.mcp-ui.remote-dom"
 )
 
