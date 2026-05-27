@@ -12,6 +12,13 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/mcpui"
 )
 
+func uiCallResult() *mcpclient.CallResult {
+	return &mcpclient.CallResult{Content: []mcpclient.ContentItem{
+		{Type: "resource", Resource: &mcpclient.EmbeddedResource{
+			URI: "ui://w/1", MimeType: "text/html", Text: "<h1>hi</h1>"}},
+	}}
+}
+
 func TestHandleResultRendersUIResource(t *testing.T) {
 	var rendered *mcpui.UIResource
 	prev := renderUI
@@ -21,10 +28,7 @@ func TestHandleResultRendersUIResource(t *testing.T) {
 	}
 	defer func() { renderUI = prev }()
 
-	cr := &mcpclient.CallResult{Content: []mcpclient.ContentItem{
-		{Type: "resource", Resource: &mcpclient.EmbeddedResource{
-			URI: "ui://w/1", MimeType: "text/html", Text: "<h1>hi</h1>"}},
-	}}
+	cr := uiCallResult()
 	out := handleResult(context.Background(), "demo.tool", cr)
 	if out.IsError {
 		t.Fatalf("unexpected error: %s", out.ErrorText)
@@ -63,10 +67,7 @@ func TestHandleResultFallsBackWhenRenderFails(t *testing.T) {
 	}
 	defer func() { renderUI = prev }()
 
-	cr := &mcpclient.CallResult{Content: []mcpclient.ContentItem{
-		{Type: "resource", Resource: &mcpclient.EmbeddedResource{
-			URI: "ui://w/1", MimeType: "text/html", Text: "<h1>hi</h1>"}},
-	}}
+	cr := uiCallResult()
 	out := handleResult(context.Background(), "demo.tool", cr)
 	if out.IsError {
 		t.Fatalf("render failure must not error the tool call: %s", out.ErrorText)
@@ -74,5 +75,25 @@ func TestHandleResultFallsBackWhenRenderFails(t *testing.T) {
 	var decoded mcpclient.CallResult
 	if err := json.Unmarshal(out.Content, &decoded); err != nil {
 		t.Fatalf("expected text fallback (marshalled CallResult), got %s", out.Content)
+	}
+}
+
+func TestHandleResultErrorResultNotRenderedAsUI(t *testing.T) {
+	var called bool
+	prev := renderUI
+	renderUI = func(ctx context.Context, session, tool string, ui *mcpui.UIResource) (string, error) {
+		called = true
+		return "should not happen", nil
+	}
+	defer func() { renderUI = prev }()
+
+	cr := uiCallResult()
+	cr.IsError = true
+	out := handleResult(context.Background(), "demo.tool", cr)
+	if called {
+		t.Fatal("renderer must not run on an errored result")
+	}
+	if !out.IsError {
+		t.Fatal("errored result must keep IsError")
 	}
 }

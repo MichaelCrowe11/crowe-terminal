@@ -110,19 +110,19 @@ func (m *Mount) wrap(upstream mcpclient.Tool) *registry.Tool {
 	}
 }
 
-// renderUI is the seam that turns a detected UI resource into a rendered
-// block. It is a package var so tests can fake it and so the real
-// implementation (pkg/mcpui/uihost) can be injected at init time.
-var renderUI = func(ctx context.Context, session, tool string, ui *mcpui.UIResource) (string, error) {
+func noopRenderUI(ctx context.Context, session, tool string, ui *mcpui.UIResource) (string, error) {
 	return "", nil
 }
 
-// handleResult converts an upstream CallResult into a registry.Result.
-// On a detected, renderable UI resource it renders a block and returns a
-// short text summary; on anything else (or any render failure) it falls
-// back to the marshalled CallResult body, preserving the prior behavior.
+// renderUI is a package var so tests can fake it and pkg/mcpui/uihost can
+// inject the real implementation at init time.
+var renderUI = noopRenderUI
+
+// handleResult renders a detected UI resource into a block and returns a
+// summary; on a detect miss, render failure, or empty summary it falls back
+// to the marshalled CallResult body to preserve pre-feature behavior.
 func handleResult(ctx context.Context, tool string, callRes *mcpclient.CallResult) registry.Result {
-	if ui, ok := mcpui.Detect(callRes.Content); ok {
+	if ui, ok := mcpui.Detect(callRes.Content); ok && !callRes.IsError {
 		session, _ := scope.AgentSessionIDFromContext(ctx)
 		if summary, err := renderUI(ctx, session, tool, ui); err == nil && summary != "" {
 			body, _ := json.Marshal(summary)
