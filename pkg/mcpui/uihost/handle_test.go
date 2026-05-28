@@ -31,7 +31,7 @@ func TestHandleActionToolScopesAndDispatches(t *testing.T) {
 		Session:  "sessA",
 		Type:     mcpui.ActionTool,
 		ToolName: "fs.read",
-		Params:   json.RawMessage(`{"path":"/x"}`),
+		Params:   `{"path":"/x"}`,
 	})
 
 	if gotName != "fs.read" || string(gotArgs) != `{"path":"/x"}` {

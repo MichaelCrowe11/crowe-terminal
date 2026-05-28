@@ -5,6 +5,7 @@ package uihost
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	"github.com/wavetermdev/waveterm/pkg/mcpui"
@@ -16,7 +17,10 @@ import (
 // the inbound wsh context does not carry it; session scoping is owned by Dispatch.
 func HandleAction(ctx context.Context, data wshrpc.CommandMcpUiActionData) {
 	ctx = scope.WithBlockID(ctx, data.BlockId)
-	a := mcpui.Action{Kind: data.Type, ToolName: data.ToolName, Params: data.Params, URL: data.Url, Intent: data.Intent}
+	a := mcpui.Action{Kind: data.Type, ToolName: data.ToolName, URL: data.Url, Intent: data.Intent}
+	if data.Params != "" {
+		a.Params = json.RawMessage(data.Params)
+	}
 	switch data.Type {
 	case mcpui.ActionPrompt:
 		a.Text = data.Prompt

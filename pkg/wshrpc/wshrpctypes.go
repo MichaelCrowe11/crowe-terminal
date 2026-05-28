@@ -340,7 +340,7 @@ type CommandMcpUiActionData struct {
 	Session   string          `json:"session"`
 	Type      string          `json:"type"`
 	ToolName  string          `json:"toolname,omitempty"`
-	Params    json.RawMessage `json:"params,omitempty"`
+	Params    string          `json:"params,omitempty"`
 	Prompt    string          `json:"prompt,omitempty"`
 	Url       string          `json:"url,omitempty"`
 	Intent    string          `json:"intent,omitempty"`

@@ -79,7 +79,7 @@ type MetaTSType struct {
 	AiFileDiffChatId     string `json:"aifilediff:chatid,omitempty"`
 	AiFileDiffToolCallId string `json:"aifilediff:toolcallid,omitempty"`
 
-	McpUiHtml    string `json:"mcpui:html,omitempty"`
+	McpUiHTML    string `json:"mcpui:html,omitempty"`
 	McpUiSession string `json:"mcpui:session,omitempty"`
 	McpUiTool    string `json:"mcpui:tool,omitempty"`
 

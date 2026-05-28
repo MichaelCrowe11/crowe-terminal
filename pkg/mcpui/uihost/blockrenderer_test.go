@@ -65,13 +65,13 @@ func TestBlockRendererFirstRenderCreates(t *testing.T) {
 	if v, _ := ops.createMeta[waveobj.MetaKey_View].(string); v != View_McpUi {
 		t.Fatalf("create meta view should be %q, got %q", View_McpUi, v)
 	}
-	if v, _ := ops.createMeta[MetaKey_McpUiHTML].(string); v != "<h1>hi</h1>" {
+	if v, _ := ops.createMeta[waveobj.MetaKey_McpUiHTML].(string); v != "<h1>hi</h1>" {
 		t.Fatalf("create meta html mismatch: %q", v)
 	}
-	if v, _ := ops.createMeta[MetaKey_McpUiSession].(string); v != "sessA" {
+	if v, _ := ops.createMeta[waveobj.MetaKey_McpUiSession].(string); v != "sessA" {
 		t.Fatalf("create meta session mismatch: %q", v)
 	}
-	if v, _ := ops.createMeta[MetaKey_McpUiTool].(string); v != "demo.tool" {
+	if v, _ := ops.createMeta[waveobj.MetaKey_McpUiTool].(string); v != "demo.tool" {
 		t.Fatalf("create meta tool mismatch: %q", v)
 	}
 }
@@ -97,7 +97,7 @@ func TestBlockRendererSecondRenderUpdatesMeta(t *testing.T) {
 	if ops.setMetaCalls != 1 {
 		t.Fatalf("expected exactly 1 setMeta call, got %d", ops.setMetaCalls)
 	}
-	if v, _ := ops.setMetaMeta[MetaKey_McpUiHTML].(string); v != "<h1>2</h1>" {
+	if v, _ := ops.setMetaMeta[waveobj.MetaKey_McpUiHTML].(string); v != "<h1>2</h1>" {
 		t.Fatalf("setMeta html mismatch: %q", v)
 	}
 }

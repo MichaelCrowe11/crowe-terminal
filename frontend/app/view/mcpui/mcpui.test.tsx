@@ -37,7 +37,7 @@ describe("mcpui sendAction", () => {
         vi.restoreAllMocks();
     });
 
-    it("merges blockid and session into the action payload", () => {
+    it("sends params as a JSON-text string the server decodes back to raw JSON", () => {
         const spy = vi.spyOn(RpcApi, "McpUiActionCommand").mockResolvedValue(undefined);
         const model = makeModel("sess-123");
 

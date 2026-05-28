@@ -14,12 +14,7 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/wstore"
 )
 
-const (
-	MetaKey_McpUiHTML    = "mcpui:html"
-	MetaKey_McpUiSession = "mcpui:session"
-	MetaKey_McpUiTool    = "mcpui:tool"
-	View_McpUi           = "mcpui"
-)
+const View_McpUi = "mcpui"
 
 // blockOps is the injectable seam over block lifecycle RPCs so tests never hit
 // the wsh transport.
@@ -85,7 +80,7 @@ func (r *blockRenderer) Render(ctx context.Context, html string) (string, error)
 	defer r.mu.Unlock()
 
 	if r.blockID != "" {
-		err := r.ops.setMeta(ctx, r.blockID, map[string]any{MetaKey_McpUiHTML: html})
+		err := r.ops.setMeta(ctx, r.blockID, map[string]any{waveobj.MetaKey_McpUiHTML: html})
 		if err != nil {
 			return "", err
 		}
@@ -97,10 +92,10 @@ func (r *blockRenderer) Render(ctx context.Context, html string) (string, error)
 		return "", err
 	}
 	meta := map[string]any{
-		waveobj.MetaKey_View: View_McpUi,
-		MetaKey_McpUiHTML:    html,
-		MetaKey_McpUiSession: r.session,
-		MetaKey_McpUiTool:    r.tool,
+		waveobj.MetaKey_View:        View_McpUi,
+		waveobj.MetaKey_McpUiHTML:    html,
+		waveobj.MetaKey_McpUiSession: r.session,
+		waveobj.MetaKey_McpUiTool:    r.tool,
 	}
 	blockID, err := r.ops.create(ctx, tabID, r.callingBlockID, meta)
 	if err != nil {
