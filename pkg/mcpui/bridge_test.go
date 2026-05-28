@@ -56,3 +56,16 @@ func TestMapActionMalformedErrors(t *testing.T) {
 		t.Fatal("malformed json must error")
 	}
 }
+
+func TestMapActionIntent(t *testing.T) {
+	a, err := MapAction([]byte(`{"type":"intent","payload":{"intent":"open-settings","params":{"tab":"general"}}}`))
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if a.Kind != ActionIntent || a.Intent != "open-settings" {
+		t.Fatalf("bad action: %+v", a)
+	}
+	if string(a.Params) != `{"tab":"general"}` {
+		t.Fatalf("bad params: %s", a.Params)
+	}
+}

@@ -13,6 +13,7 @@ const (
 	ActionPrompt = "prompt"
 	ActionLink   = "link"
 	ActionNotify = "notify"
+	ActionIntent = "intent"
 )
 
 // Action is a parsed MCP-UI message from a rendered UI iframe.
@@ -22,6 +23,7 @@ type Action struct {
 	Params   json.RawMessage
 	Text     string
 	URL      string
+	Intent   string
 }
 
 type rawMessage struct {
@@ -32,6 +34,7 @@ type rawMessage struct {
 		Prompt   string          `json:"prompt"`
 		URL      string          `json:"url"`
 		Message  string          `json:"message"`
+		Intent   string          `json:"intent"`
 	} `json:"payload"`
 }
 
@@ -50,6 +53,8 @@ func MapAction(raw []byte) (Action, error) {
 		return Action{Kind: ActionLink, URL: m.Payload.URL}, nil
 	case ActionNotify:
 		return Action{Kind: ActionNotify, Text: m.Payload.Message}, nil
+	case ActionIntent:
+		return Action{Kind: ActionIntent, Intent: m.Payload.Intent, Params: m.Payload.Params}, nil
 	default:
 		return Action{}, fmt.Errorf("mcpui: unknown action type %q", m.Type)
 	}

@@ -20,5 +20,7 @@ func Dispatch(ctx context.Context, session string, a mcpui.Action) {
 		dispatchLink(ctx, a)
 	case mcpui.ActionNotify:
 		dispatchNotify(ctx, a)
+	case mcpui.ActionIntent:
+		dispatchIntent(ctx, session, a)
 	}
 }
