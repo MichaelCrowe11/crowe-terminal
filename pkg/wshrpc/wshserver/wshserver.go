@@ -300,7 +300,7 @@ func (ws *WshServer) CreateBlockCommand(ctx context.Context, data wshrpc.Command
 }
 
 func (ws *WshServer) McpUiActionCommand(ctx context.Context, data wshrpc.CommandMcpUiActionData) error {
-	uihost.HandleAction(ctx, data.BlockId, data.Session, data.Type, data.ToolName, data.Params, data.Prompt, data.Url, data.Intent, data.Message)
+	uihost.HandleAction(ctx, data)
 	return nil
 }
 

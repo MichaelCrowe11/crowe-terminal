@@ -345,6 +345,7 @@ type CommandMcpUiActionData struct {
 	Url       string          `json:"url,omitempty"`
 	Intent    string          `json:"intent,omitempty"`
 	Message   string          `json:"message,omitempty"`
+	// MessageId correlates an async ui-message-response back to the iframe; reserved for a later phase.
 	MessageId string          `json:"messageid,omitempty"`
 }
 

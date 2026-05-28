@@ -10,6 +10,7 @@ import (
 
 	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	"github.com/wavetermdev/waveterm/pkg/mcpui"
+	"github.com/wavetermdev/waveterm/pkg/wshrpc"
 )
 
 func TestHandleActionToolScopesAndDispatches(t *testing.T) {
@@ -25,7 +26,13 @@ func TestHandleActionToolScopesAndDispatches(t *testing.T) {
 	}
 	defer func() { callTool = prev }()
 
-	HandleAction(context.Background(), "blk-1", "sessA", mcpui.ActionTool, "fs.read", json.RawMessage(`{"path":"/x"}`), "", "", "", "")
+	HandleAction(context.Background(), wshrpc.CommandMcpUiActionData{
+		BlockId:  "blk-1",
+		Session:  "sessA",
+		Type:     mcpui.ActionTool,
+		ToolName: "fs.read",
+		Params:   json.RawMessage(`{"path":"/x"}`),
+	})
 
 	if gotName != "fs.read" || string(gotArgs) != `{"path":"/x"}` {
 		t.Fatalf("bad tool call: %s %s", gotName, gotArgs)
@@ -35,5 +42,22 @@ func TestHandleActionToolScopesAndDispatches(t *testing.T) {
 	}
 	if !blockOK || gotBlock != "blk-1" {
 		t.Fatalf("block not scoped: ok=%v val=%q", blockOK, gotBlock)
+	}
+}
+
+func TestHandleActionPromptNotifyDoNotPanic(t *testing.T) {
+	prev := callTool
+	callTool = func(ctx context.Context, name string, args json.RawMessage) {}
+	defer func() { callTool = prev }()
+
+	types := []wshrpc.CommandMcpUiActionData{
+		{BlockId: "b", Session: "s", Type: mcpui.ActionPrompt, Prompt: "hello"},
+		{BlockId: "b", Session: "s", Type: mcpui.ActionNotify, Message: "done"},
+		{BlockId: "b", Session: "s", Type: mcpui.ActionIntent, Intent: "open"},
+		{BlockId: "b", Session: "s", Type: mcpui.ActionLink, Url: "https://x.com"},
+		{BlockId: "b", Session: "s", Type: "bogus"},
+	}
+	for _, d := range types {
+		HandleAction(context.Background(), d)
 	}
 }
