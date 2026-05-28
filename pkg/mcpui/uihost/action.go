@@ -14,18 +14,16 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/mcpui"
 )
 
-// callTool re-enters the agent registry; overridable in tests.
 var callTool = func(ctx context.Context, name string, args json.RawMessage) {
-	_, _ = registry.Default().Call(ctx, registry.CallRequest{Name: name, Arguments: args})
+	if _, err := registry.Default().Call(ctx, registry.CallRequest{Name: name, Arguments: args}); err != nil {
+		log.Printf("[mcpui] tool call failed name=%s: %v", name, err)
+	}
 }
 
-// openLink is overridable in tests.
 var openLink = func(url string) { _ = open.Run(url) }
 
 func dispatchTool(ctx context.Context, session string, a mcpui.Action) {
-	blockID, _ := scope.BlockIDFromContext(ctx)
 	ctx = scope.WithAgentSessionID(ctx, session)
-	ctx = scope.WithBlockID(ctx, blockID)
 	callTool(ctx, a.ToolName, a.Params)
 }
 
