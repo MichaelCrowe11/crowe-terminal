@@ -646,6 +646,12 @@ func MakeDraftFromLocalCommand(w *wshutil.WshRpc, data wshrpc.CommandMakeDraftFr
 	return resp, err
 }
 
+// command "mcpuiaction", wshserver.McpUiActionCommand
+func McpUiActionCommand(w *wshutil.WshRpc, data wshrpc.CommandMcpUiActionData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "mcpuiaction", data, opts)
+	return err
+}
+
 // command "message", wshserver.MessageCommand
 func MessageCommand(w *wshutil.WshRpc, data wshrpc.CommandMessageData, opts *wshrpc.RpcOpts) error {
 	_, err := sendRpcRequestCallHelper[any](w, "message", data, opts)

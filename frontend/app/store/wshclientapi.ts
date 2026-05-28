@@ -648,6 +648,12 @@ export class RpcApiType {
         return client.wshRpcCall("makedraftfromlocal", data, opts);
     }
 
+    // command "mcpuiaction" [call]
+    McpUiActionCommand(client: WshClient, data: CommandMcpUiActionData, opts?: RpcOpts): Promise<void> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "mcpuiaction", data, opts);
+        return client.wshRpcCall("mcpuiaction", data, opts);
+    }
+
     // command "message" [call]
     MessageCommand(client: WshClient, data: CommandMessageData, opts?: RpcOpts): Promise<void> {
         if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "message", data, opts);

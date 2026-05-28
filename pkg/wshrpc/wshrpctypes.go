@@ -56,6 +56,7 @@ type WshRpcInterface interface {
 	ControllerAppendOutputCommand(ctx context.Context, data CommandControllerAppendOutputData) error
 	ResolveIdsCommand(ctx context.Context, data CommandResolveIdsData) (CommandResolveIdsRtnData, error)
 	CreateBlockCommand(ctx context.Context, data CommandCreateBlockData) (waveobj.ORef, error)
+	McpUiActionCommand(ctx context.Context, data CommandMcpUiActionData) error
 	CreateSubBlockCommand(ctx context.Context, data CommandCreateSubBlockData) (waveobj.ORef, error)
 	DeleteBlockCommand(ctx context.Context, data CommandDeleteBlockData) error
 	DeleteSubBlockCommand(ctx context.Context, data CommandDeleteBlockData) error
@@ -332,6 +333,19 @@ type CommandResolveIdsData struct {
 
 type CommandResolveIdsRtnData struct {
 	ResolvedIds map[string]waveobj.ORef `json:"resolvedids"`
+}
+
+type CommandMcpUiActionData struct {
+	BlockId   string          `json:"blockid"`
+	Session   string          `json:"session"`
+	Type      string          `json:"type"`
+	ToolName  string          `json:"toolname,omitempty"`
+	Params    json.RawMessage `json:"params,omitempty"`
+	Prompt    string          `json:"prompt,omitempty"`
+	Url       string          `json:"url,omitempty"`
+	Intent    string          `json:"intent,omitempty"`
+	Message   string          `json:"message,omitempty"`
+	MessageId string          `json:"messageid,omitempty"`
 }
 
 type CommandCreateBlockData struct {

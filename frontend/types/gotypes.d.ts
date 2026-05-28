@@ -534,6 +534,20 @@ declare global {
         draftappid: string;
     };
 
+    // wshrpc.CommandMcpUiActionData
+    type CommandMcpUiActionData = {
+        blockid: string;
+        session: string;
+        type: string;
+        toolname?: string;
+        params?: string;
+        prompt?: string;
+        url?: string;
+        intent?: string;
+        message?: string;
+        messageid?: string;
+    };
+
     // wshrpc.CommandMessageData
     type CommandMessageData = {
         message: string;

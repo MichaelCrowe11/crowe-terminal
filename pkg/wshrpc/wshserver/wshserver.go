@@ -34,6 +34,7 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/filestore"
 	"github.com/wavetermdev/waveterm/pkg/genconn"
 	"github.com/wavetermdev/waveterm/pkg/jobcontroller"
+	"github.com/wavetermdev/waveterm/pkg/mcpui/uihost"
 	"github.com/wavetermdev/waveterm/pkg/panichandler"
 	"github.com/wavetermdev/waveterm/pkg/remote"
 	"github.com/wavetermdev/waveterm/pkg/remote/conncontroller"
@@ -296,6 +297,11 @@ func (ws *WshServer) CreateBlockCommand(ctx context.Context, data wshrpc.Command
 	updates := waveobj.ContextGetUpdatesRtn(ctx)
 	wps.Broker.SendUpdateEvents(updates)
 	return &waveobj.ORef{OType: waveobj.OType_Block, OID: blockData.OID}, nil
+}
+
+func (ws *WshServer) McpUiActionCommand(ctx context.Context, data wshrpc.CommandMcpUiActionData) error {
+	uihost.HandleAction(ctx, data.BlockId, data.Session, data.Type, data.ToolName, data.Params, data.Prompt, data.Url, data.Intent, data.Message)
+	return nil
 }
 
 func (ws *WshServer) CreateSubBlockCommand(ctx context.Context, data wshrpc.CommandCreateSubBlockData) (*waveobj.ORef, error) {
