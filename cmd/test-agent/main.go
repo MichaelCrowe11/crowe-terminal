@@ -24,6 +24,7 @@ import (
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/fetchmcp"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/fsmcp"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/githubmcp"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/mcpuidemo"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/playwright"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/system"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/terminal"
