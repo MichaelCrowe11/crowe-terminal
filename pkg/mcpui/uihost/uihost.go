@@ -18,8 +18,7 @@ type renderer interface {
 	Render(ctx context.Context, html string) (blockID string, err error)
 }
 
-// newRenderer is overridable in tests; default builds a block-backed renderer
-// that surfaces the HTML in an mcpui-view block split off the calling block.
+// newRenderer is overridable in tests.
 var newRenderer = func(callingBlockID, session, tool string) renderer {
 	return makeBlockRenderer(callingBlockID, session, tool)
 }
@@ -31,20 +30,23 @@ var (
 
 func key(session, tool string) string { return session + "\x00" + tool }
 
+func lookupOrCreateRenderer(callingBlockID, session, tool string) renderer {
+	mu.Lock()
+	defer mu.Unlock()
+	k := key(session, tool)
+	if r, ok := renderers[k]; ok {
+		return r
+	}
+	r := newRenderer(callingBlockID, session, tool)
+	renderers[k] = r
+	return r
+}
+
 // Render renders ui into the block for (session, tool), creating it on first
 // use and updating it after, then returns a summary for the agent.
 func Render(ctx context.Context, session, tool string, ui *mcpui.UIResource) (string, error) {
 	callingBlockID, _ := scope.BlockIDFromContext(ctx)
-
-	mu.Lock()
-	k := key(session, tool)
-	r, ok := renderers[k]
-	if !ok {
-		r = newRenderer(callingBlockID, session, tool)
-		renderers[k] = r
-	}
-	mu.Unlock()
-
+	r := lookupOrCreateRenderer(callingBlockID, session, tool)
 	blockID, err := r.Render(ctx, ui.HTML)
 	if err != nil {
 		return "", err

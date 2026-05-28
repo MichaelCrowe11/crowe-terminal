@@ -19,6 +19,8 @@ func (f *fakeRenderer) Render(ctx context.Context, html string) (string, error) 
 }
 
 func TestRenderReusesBlockPerSessionTool(t *testing.T) {
+	renderers = map[string]renderer{}
+	defer func() { renderers = map[string]renderer{} }()
 	fakes := map[string]*fakeRenderer{}
 	prev := newRenderer
 	newRenderer = func(callingBlockID, session, tool string) renderer {
@@ -49,6 +51,8 @@ func TestRenderReusesBlockPerSessionTool(t *testing.T) {
 }
 
 func TestRenderSummaryMentionsTool(t *testing.T) {
+	renderers = map[string]renderer{}
+	defer func() { renderers = map[string]renderer{} }()
 	prev := newRenderer
 	newRenderer = func(callingBlockID, session, tool string) renderer { return &fakeRenderer{blockID: "blk-x"} }
 	defer func() { newRenderer = prev }()
