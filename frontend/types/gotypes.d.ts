@@ -1219,6 +1219,9 @@ declare global {
         "ai:timeoutms"?: number;
         "aifilediff:chatid"?: string;
         "aifilediff:toolcallid"?: string;
+        "mcpui:html"?: string;
+        "mcpui:session"?: string;
+        "mcpui:tool"?: string;
         "editor:*"?: boolean;
         "editor:minimapenabled"?: boolean;
         "editor:stickyscrollenabled"?: boolean;

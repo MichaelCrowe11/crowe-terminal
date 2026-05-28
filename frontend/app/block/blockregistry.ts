@@ -8,6 +8,7 @@ import { CroweCodeViewModel } from "@/app/view/crowecode/crowecode-model";
 import { CroweCodeExplorerViewModel } from "@/app/view/crowecode/explorer/crowecode-explorer-model";
 import { CroweCodeProblemsViewModel } from "@/app/view/crowecode/problems/crowecode-problems-model";
 import { LauncherViewModel } from "@/app/view/launcher/launcher";
+import { McpUiViewModel } from "@/app/view/mcpui/mcpui-model";
 import { PreviewModel } from "@/app/view/preview/preview-model";
 import { ProcessViewerViewModel } from "@/app/view/processviewer/processviewer";
 import { SysinfoViewModel } from "@/app/view/sysinfo/sysinfo";
@@ -41,6 +42,7 @@ BlockRegistry.set("processviewer", ProcessViewerViewModel);
 BlockRegistry.set("crowecode", CroweCodeViewModel);
 BlockRegistry.set("crowecode-explorer", CroweCodeExplorerViewModel);
 BlockRegistry.set("crowecode-problems", CroweCodeProblemsViewModel);
+BlockRegistry.set("mcpui", McpUiViewModel);
 
 function makeDefaultViewModel(viewType: string): ViewModel {
     const viewModel: ViewModel = {

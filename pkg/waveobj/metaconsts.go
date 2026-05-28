@@ -77,6 +77,10 @@ const (
 	MetaKey_AiFileDiffChatId                 = "aifilediff:chatid"
 	MetaKey_AiFileDiffToolCallId             = "aifilediff:toolcallid"
 
+	MetaKey_McpUiHtml                        = "mcpui:html"
+	MetaKey_McpUiSession                     = "mcpui:session"
+	MetaKey_McpUiTool                        = "mcpui:tool"
+
 	MetaKey_EditorClear                      = "editor:*"
 	MetaKey_EditorMinimapEnabled             = "editor:minimapenabled"
 	MetaKey_EditorStickyScrollEnabled        = "editor:stickyscrollenabled"
