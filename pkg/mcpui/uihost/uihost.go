@@ -23,6 +23,9 @@ var newRenderer = func(callingBlockID, session, tool string) renderer {
 	return makeBlockRenderer(callingBlockID, session, tool)
 }
 
+// renderers is process-global, keyed by session+tool, and is never evicted.
+// Phase-1 limitation: a closed block leaves a stale entry whose next render
+// falls back to text until the process restarts; revisit with lifecycle eviction.
 var (
 	mu        sync.Mutex
 	renderers = map[string]renderer{}

@@ -295,11 +295,11 @@ type CommandCroweCodeBootstrapScopeData struct {
 }
 
 type CommandCroweCodeBootstrapScopeRtnData struct {
-	Granted        bool              `json:"granted"`
-	ScopeName      string            `json:"scopename"`
-	BlockId        string            `json:"blockid"`
-	AgentSessionId string            `json:"agentsessionid"`
-	Tools          map[string]string `json:"tools"`
+	Granted        bool                `json:"granted"`
+	ScopeName      string              `json:"scopename"`
+	BlockId        string              `json:"blockid"`
+	AgentSessionId string              `json:"agentsessionid"`
+	Tools          map[string]string   `json:"tools"`
 	TargetPatterns map[string][]string `json:"targetpatterns,omitempty"`
 }
 
@@ -336,17 +336,17 @@ type CommandResolveIdsRtnData struct {
 }
 
 type CommandMcpUiActionData struct {
-	BlockId   string          `json:"blockid"`
-	Session   string          `json:"session"`
-	Type      string          `json:"type"`
-	ToolName  string          `json:"toolname,omitempty"`
-	Params    string          `json:"params,omitempty"`
-	Prompt    string          `json:"prompt,omitempty"`
-	Url       string          `json:"url,omitempty"`
-	Intent    string          `json:"intent,omitempty"`
-	Message   string          `json:"message,omitempty"`
+	BlockId  string `json:"blockid"`
+	Session  string `json:"session"`
+	Type     string `json:"type"`
+	ToolName string `json:"toolname,omitempty"`
+	Params   string `json:"params,omitempty"`
+	Prompt   string `json:"prompt,omitempty"`
+	Url      string `json:"url,omitempty"`
+	Intent   string `json:"intent,omitempty"`
+	Message  string `json:"message,omitempty"`
 	// MessageId correlates an async ui-message-response back to the iframe; reserved for a later phase.
-	MessageId string          `json:"messageid,omitempty"`
+	MessageId string `json:"messageid,omitempty"`
 }
 
 type CommandCreateBlockData struct {
@@ -407,7 +407,6 @@ type CommandEventReadHistoryData struct {
 	Scope    string `json:"scope"`
 	MaxItems int    `json:"maxitems"`
 }
-
 
 type CpuDataRequest struct {
 	Id    string `json:"id"`
@@ -736,8 +735,8 @@ type CommandTermGetScrollbackLinesRtnData struct {
 
 // Crowe Agent — webview-driving commands routed via MakeFeBlockRouteId.
 type CommandWebExecuteJSData struct {
-	Script     string `json:"script"`
-	TimeoutMs  int    `json:"timeoutms,omitempty"`
+	Script    string `json:"script"`
+	TimeoutMs int    `json:"timeoutms,omitempty"`
 }
 
 type CommandWebExecuteJSRtnData struct {

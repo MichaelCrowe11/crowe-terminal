@@ -92,7 +92,7 @@ func (r *blockRenderer) Render(ctx context.Context, html string) (string, error)
 		return "", err
 	}
 	meta := map[string]any{
-		waveobj.MetaKey_View:        View_McpUi,
+		waveobj.MetaKey_View:         View_McpUi,
 		waveobj.MetaKey_McpUiHTML:    html,
 		waveobj.MetaKey_McpUiSession: r.session,
 		waveobj.MetaKey_McpUiTool:    r.tool,

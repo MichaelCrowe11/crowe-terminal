@@ -3,10 +3,7 @@
 
 package mcpui
 
-import (
-	"encoding/json"
-	"fmt"
-)
+import "encoding/json"
 
 const (
 	ActionTool   = "tool"
@@ -24,38 +21,4 @@ type Action struct {
 	Text     string
 	URL      string
 	Intent   string
-}
-
-type rawMessage struct {
-	Type    string `json:"type"`
-	Payload struct {
-		ToolName string          `json:"toolName"`
-		Params   json.RawMessage `json:"params"`
-		Prompt   string          `json:"prompt"`
-		URL      string          `json:"url"`
-		Message  string          `json:"message"`
-		Intent   string          `json:"intent"`
-	} `json:"payload"`
-}
-
-// MapAction parses a raw MCP-UI postMessage body into a typed Action.
-func MapAction(raw []byte) (Action, error) {
-	var m rawMessage
-	if err := json.Unmarshal(raw, &m); err != nil {
-		return Action{}, fmt.Errorf("mcpui: malformed action: %w", err)
-	}
-	switch m.Type {
-	case ActionTool:
-		return Action{Kind: ActionTool, ToolName: m.Payload.ToolName, Params: m.Payload.Params}, nil
-	case ActionPrompt:
-		return Action{Kind: ActionPrompt, Text: m.Payload.Prompt}, nil
-	case ActionLink:
-		return Action{Kind: ActionLink, URL: m.Payload.URL}, nil
-	case ActionNotify:
-		return Action{Kind: ActionNotify, Text: m.Payload.Message}, nil
-	case ActionIntent:
-		return Action{Kind: ActionIntent, Intent: m.Payload.Intent, Params: m.Payload.Params}, nil
-	default:
-		return Action{}, fmt.Errorf("mcpui: unknown action type %q", m.Type)
-	}
 }

@@ -53,10 +53,6 @@ export class McpUiViewModel implements ViewModel {
         if (session == null) {
             return;
         }
-        RpcApi.McpUiActionCommand(TabRpcClient, {
-            blockid: this.blockId,
-            session,
-            ...data,
-        });
+        RpcApi.McpUiActionCommand(TabRpcClient, { ...data, blockid: this.blockId, session });
     }
 }
