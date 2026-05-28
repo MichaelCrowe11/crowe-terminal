@@ -63,8 +63,6 @@ func handleShow(ctx context.Context, _ json.RawMessage) (registry.Result, error)
 }
 
 func handleEcho(_ context.Context, args json.RawMessage) (registry.Result, error) {
-	var params map[string]any
-	_ = json.Unmarshal(args, &params)
 	return registry.Result{Content: mustJSON(fmt.Sprintf("echo received params: %s", string(args)))}, nil
 }
 
