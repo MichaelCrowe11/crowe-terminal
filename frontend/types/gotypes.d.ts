@@ -349,6 +349,12 @@ declare global {
         targetpatterns?: {[key: string]: string[]};
     };
 
+    // wshrpc.CommandCroweCodeWatchFileData
+    type CommandCroweCodeWatchFileData = {
+        path: string;
+        unwatch?: boolean;
+    };
+
     // wshrpc.CommandDebugTermData
     type CommandDebugTermData = {
         blockid: string;
@@ -958,6 +964,13 @@ declare global {
     type CpuDataRequest = {
         id: string;
         count: number;
+    };
+
+    // wps.CroweCodeFileChangeData
+    type CroweCodeFileChangeData = {
+        path: string;
+        op: string;
+        origin: string;
     };
 
     // wshrpc.DirEntryOut

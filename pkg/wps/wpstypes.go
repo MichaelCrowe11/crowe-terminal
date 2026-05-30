@@ -34,6 +34,7 @@ const (
 	Event_AIModeConfig        = "waveai:modeconfig"    // type: wconfig.AIModeConfigUpdate
 	Event_BlockJobStatus      = "block:jobstatus"      // type: wshrpc.BlockJobStatusData
 	Event_Badge               = "badge"                // type: baseds.BadgeEvent
+	Event_CroweCodeFileChange = "crowecode:filechange" // type: CroweCodeFileChangeData
 )
 
 var AllEvents []string = []string{
@@ -56,6 +57,7 @@ var AllEvents []string = []string{
 	Event_AIModeConfig,
 	Event_BlockJobStatus,
 	Event_Badge,
+	Event_CroweCodeFileChange,
 }
 
 type WaveEvent struct {
@@ -89,4 +91,24 @@ type WSFileEventData struct {
 	FileName string `json:"filename"`
 	FileOp   string `json:"fileop"`
 	Data64   string `json:"data64"`
+}
+
+// Origin values for CroweCodeFileChangeData: who changed the file. Provenance
+// is the primitive that lets the editor attribute a reload ("3 lines changed by
+// the agent") rather than just silently swapping the buffer.
+const (
+	CroweCodeOriginAgent    = "agent"    // an editor.* tool wrote it
+	CroweCodeOriginExternal = "external" // an out-of-app editor/process wrote it
+	CroweCodeOriginSelf     = "self"     // the block's own save (reserved)
+)
+
+// CroweCodeFileChangeData announces that a file a Crowe Code block has open was
+// mutated on disk. Blocks bound to Path use it to live-reload the buffer. Op is
+// "write"/"edit"/"external"; Origin attributes the change (see consts above).
+// Carries no contents: subscribers re-read from disk so there is one source of
+// truth.
+type CroweCodeFileChangeData struct {
+	Path   string `json:"path"`
+	Op     string `json:"op"`
+	Origin string `json:"origin"`
 }

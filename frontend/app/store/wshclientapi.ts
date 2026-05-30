@@ -210,6 +210,12 @@ export class RpcApiType {
         return client.wshRpcCall("crowecodereportactiveeditor", data, opts);
     }
 
+    // command "crowecodewatchfile" [call]
+    CroweCodeWatchFileCommand(client: WshClient, data: CommandCroweCodeWatchFileData, opts?: RpcOpts): Promise<void> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "crowecodewatchfile", data, opts);
+        return client.wshRpcCall("crowecodewatchfile", data, opts);
+    }
+
     // command "debugterm" [call]
     DebugTermCommand(client: WshClient, data: CommandDebugTermData, opts?: RpcOpts): Promise<CommandDebugTermRtnData> {
         if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "debugterm", data, opts);

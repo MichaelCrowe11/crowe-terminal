@@ -209,6 +209,12 @@ func CroweCodeReportActiveEditorCommand(w *wshutil.WshRpc, data wshrpc.CommandCr
 	return err
 }
 
+// command "crowecodewatchfile", wshserver.CroweCodeWatchFileCommand
+func CroweCodeWatchFileCommand(w *wshutil.WshRpc, data wshrpc.CommandCroweCodeWatchFileData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "crowecodewatchfile", data, opts)
+	return err
+}
+
 // command "debugterm", wshserver.DebugTermCommand
 func DebugTermCommand(w *wshutil.WshRpc, data wshrpc.CommandDebugTermData, opts *wshrpc.RpcOpts) (*wshrpc.CommandDebugTermRtnData, error) {
 	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandDebugTermRtnData](w, "debugterm", data, opts)

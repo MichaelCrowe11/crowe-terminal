@@ -225,6 +225,11 @@ type WshRpcInterface interface {
 	// the read side the agent's editor.get_active_context tool calls.
 	CroweCodeReportActiveEditorCommand(ctx context.Context, data CommandCroweCodeActiveEditorData) error
 	CroweCodeGetActiveEditorCommand(ctx context.Context, tabId string) (*CommandCroweCodeActiveEditorData, error)
+
+	// crowecode external-edit live reload: the renderer asks the backend to
+	// watch (or stop watching) the file a Crowe Code block has open, so edits
+	// from outside the app republish crowecode:filechange and the block reloads.
+	CroweCodeWatchFileCommand(ctx context.Context, data CommandCroweCodeWatchFileData) error
 }
 
 // for frontend
@@ -301,6 +306,14 @@ type CommandCroweCodeBootstrapScopeRtnData struct {
 	AgentSessionId string              `json:"agentsessionid"`
 	Tools          map[string]string   `json:"tools"`
 	TargetPatterns map[string][]string `json:"targetpatterns,omitempty"`
+}
+
+// CommandCroweCodeWatchFileData asks the backend to watch Path for external
+// changes (Unwatch=false) or to release a prior watch (Unwatch=true). Watches
+// are ref-counted per path, so each open block balances its own watch/unwatch.
+type CommandCroweCodeWatchFileData struct {
+	Path    string `json:"path"`
+	Unwatch bool   `json:"unwatch,omitempty"`
 }
 
 // CommandCroweCodeActiveEditorData carries the renderer's snapshot of the
