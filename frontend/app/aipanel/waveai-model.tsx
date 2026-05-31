@@ -662,8 +662,7 @@ export class WaveAIModel {
         const blockDef: BlockDef = {
             meta: {
                 view: "webview",
-                // Temporary fallback while crowecode.com DNS/TLS is being finalized.
-                url: "https://www.crowelogic.com/account",
+                url: "https://crowecode.com/account",
             },
         };
         await createBlock(blockDef, false, true);
