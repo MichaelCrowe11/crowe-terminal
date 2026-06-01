@@ -10,8 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/wps"
 )
 
 func mustJSON(t *testing.T, v any) json.RawMessage {
@@ -155,6 +157,86 @@ func TestRejectsBinaryRead(t *testing.T) {
 	r, _ := handleReadFile(context.Background(), mustJSON(t, readArgs{Path: path}))
 	if !r.IsError {
 		t.Fatalf("expected binary read to be rejected")
+	}
+}
+
+type captureClient struct {
+	ch chan wps.WaveEvent
+}
+
+func (c *captureClient) SendEvent(routeId string, event wps.WaveEvent) {
+	c.ch <- event
+}
+
+func waitFileChange(t *testing.T, ch chan wps.WaveEvent) wps.CroweCodeFileChangeData {
+	t.Helper()
+	select {
+	case ev := <-ch:
+		data, ok := ev.Data.(wps.CroweCodeFileChangeData)
+		if !ok {
+			t.Fatalf("event data is %T, want CroweCodeFileChangeData", ev.Data)
+		}
+		return data
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for crowecode:filechange event")
+		return wps.CroweCodeFileChangeData{}
+	}
+}
+
+func TestPublishesFileChangeEvent(t *testing.T) {
+	cap := &captureClient{ch: make(chan wps.WaveEvent, 8)}
+	prev := wps.Broker.GetClient()
+	wps.Broker.SetClient(cap)
+	defer wps.Broker.SetClient(prev)
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "live.txt")
+	abs, err := normalizePath(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wps.Broker.Subscribe("test-route", wps.SubscriptionRequest{
+		Event:  wps.Event_CroweCodeFileChange,
+		Scopes: []string{abs},
+	})
+	defer wps.Broker.UnsubscribeAll("test-route")
+
+	handleWriteFile(context.Background(), mustJSON(t, writeArgs{Path: path, Contents: "v1\n"}))
+	wrote := waitFileChange(t, cap.ch)
+	if wrote.Path != abs || wrote.Op != "write" {
+		t.Fatalf("write event mismatch: got %+v, want path=%s op=write", wrote, abs)
+	}
+
+	handleApplyEdit(context.Background(), mustJSON(t, editArgs{Path: path, OldText: "v1", NewText: "v2"}))
+	edited := waitFileChange(t, cap.ch)
+	if edited.Path != abs || edited.Op != "edit" {
+		t.Fatalf("edit event mismatch: got %+v, want path=%s op=edit", edited, abs)
+	}
+}
+
+func TestNoEventOnFailedEdit(t *testing.T) {
+	cap := &captureClient{ch: make(chan wps.WaveEvent, 8)}
+	prev := wps.Broker.GetClient()
+	wps.Broker.SetClient(cap)
+	defer wps.Broker.SetClient(prev)
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "ambig.txt")
+	if err := os.WriteFile(path, []byte("foo\nfoo\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	abs, _ := normalizePath(path)
+	wps.Broker.Subscribe("test-route-2", wps.SubscriptionRequest{
+		Event:  wps.Event_CroweCodeFileChange,
+		Scopes: []string{abs},
+	})
+	defer wps.Broker.UnsubscribeAll("test-route-2")
+
+	handleApplyEdit(context.Background(), mustJSON(t, editArgs{Path: path, OldText: "foo", NewText: "bar"}))
+	select {
+	case ev := <-cap.ch:
+		t.Fatalf("ambiguous edit must not publish, got %+v", ev)
+	case <-time.After(300 * time.Millisecond):
 	}
 }
 

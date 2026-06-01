@@ -209,6 +209,12 @@ func CroweCodeReportActiveEditorCommand(w *wshutil.WshRpc, data wshrpc.CommandCr
 	return err
 }
 
+// command "crowecodewatchfile", wshserver.CroweCodeWatchFileCommand
+func CroweCodeWatchFileCommand(w *wshutil.WshRpc, data wshrpc.CommandCroweCodeWatchFileData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "crowecodewatchfile", data, opts)
+	return err
+}
+
 // command "debugterm", wshserver.DebugTermCommand
 func DebugTermCommand(w *wshutil.WshRpc, data wshrpc.CommandDebugTermData, opts *wshrpc.RpcOpts) (*wshrpc.CommandDebugTermRtnData, error) {
 	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandDebugTermRtnData](w, "debugterm", data, opts)
@@ -644,6 +650,12 @@ func MacOSVersionCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (string, error
 func MakeDraftFromLocalCommand(w *wshutil.WshRpc, data wshrpc.CommandMakeDraftFromLocalData, opts *wshrpc.RpcOpts) (*wshrpc.CommandMakeDraftFromLocalRtnData, error) {
 	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandMakeDraftFromLocalRtnData](w, "makedraftfromlocal", data, opts)
 	return resp, err
+}
+
+// command "mcpuiaction", wshserver.McpUiActionCommand
+func McpUiActionCommand(w *wshutil.WshRpc, data wshrpc.CommandMcpUiActionData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "mcpuiaction", data, opts)
+	return err
 }
 
 // command "message", wshserver.MessageCommand

@@ -79,6 +79,10 @@ type MetaTSType struct {
 	AiFileDiffChatId     string `json:"aifilediff:chatid,omitempty"`
 	AiFileDiffToolCallId string `json:"aifilediff:toolcallid,omitempty"`
 
+	McpUiHTML    string `json:"mcpui:html,omitempty"`
+	McpUiSession string `json:"mcpui:session,omitempty"`
+	McpUiTool    string `json:"mcpui:tool,omitempty"`
+
 	EditorClear               bool    `json:"editor:*,omitempty"`
 	EditorMinimapEnabled      bool    `json:"editor:minimapenabled,omitempty"`
 	EditorStickyScrollEnabled bool    `json:"editor:stickyscrollenabled,omitempty"`

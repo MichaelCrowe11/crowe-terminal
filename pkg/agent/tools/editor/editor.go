@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/wps"
 )
 
 const (
@@ -222,6 +223,7 @@ func handleWriteFile(ctx context.Context, raw json.RawMessage) (registry.Result,
 		return errResult(err), nil
 	}
 	noteRecent(abs, "write")
+	publishFileChange(abs, "write")
 	body, _ := json.Marshal(map[string]any{
 		"path":          abs,
 		"bytes_written": len(args.Contents),
@@ -284,6 +286,7 @@ func handleApplyEdit(ctx context.Context, raw json.RawMessage) (registry.Result,
 		return errResult(err), nil
 	}
 	noteRecent(abs, "edit")
+	publishFileChange(abs, "edit")
 	body, _ := json.Marshal(map[string]any{
 		"path":         abs,
 		"changed":      true,
@@ -381,6 +384,18 @@ func isLikelyBinary(data []byte) bool {
 
 func errResult(err error) registry.Result {
 	return registry.Result{IsError: true, ErrorText: err.Error()}
+}
+
+// publishFileChange tells any open Crowe Code block bound to abs to live-reload
+// from disk. Scoped by path so only interested blocks are woken. Published in a
+// goroutine: an edit must not block on event delivery, and the broker lock must
+// not be taken on the tool's hot path.
+func publishFileChange(abs, op string) {
+	go wps.Broker.Publish(wps.WaveEvent{
+		Event:  wps.Event_CroweCodeFileChange,
+		Scopes: []string{abs},
+		Data:   wps.CroweCodeFileChangeData{Path: abs, Op: op, Origin: wps.CroweCodeOriginAgent},
+	})
 }
 
 type recentEntry struct {

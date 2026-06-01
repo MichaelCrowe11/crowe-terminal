@@ -5,6 +5,7 @@ import { BlockNodeModel } from "@/app/block/blocktypes";
 import { globalStore } from "@/app/store/jotaiStore";
 import type { TabModel } from "@/app/store/tab-model";
 import { RpcApi } from "@/app/store/wshclientapi";
+import { waveEventSubscribeSingle } from "@/app/store/wps";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
 import { WOS } from "@/store/global";
 import { WaveEnv } from "@/app/waveenv/waveenv";
@@ -13,6 +14,7 @@ import { base64ToString, fireAndForget, stringToBase64 } from "@/util/util";
 import * as jotai from "jotai";
 import { CroweCodeView } from "./crowecode";
 import { CroweCodeWorkspaceModel } from "./crowecode-workspace-model";
+import { changedLineRange, decideReconcile } from "./reconcile";
 
 const PLACEHOLDER_TEXT = `// Crowe Code: editor block
 
@@ -56,6 +58,11 @@ export class CroweCodeViewModel implements ViewModel {
     loadErrorAtom: jotai.PrimitiveAtom<string | null>;
     isLoadingAtom: jotai.PrimitiveAtom<boolean>;
     isSavingAtom: jotai.PrimitiveAtom<boolean>;
+    diskChangedAtom: jotai.PrimitiveAtom<boolean>;
+    // reloadHighlightAtom carries the 1-indexed lines that changed on the most
+    // recent live-reload, so the view can flash them. token monotonically
+    // increments so the view re-flashes even when the same lines change twice.
+    reloadHighlightAtom: jotai.PrimitiveAtom<{ lines: number[]; token: number; origin: string }>;
 
     fileNameAtom: jotai.Atom<string | undefined>;
     languageAtom: jotai.Atom<string | undefined>;
@@ -63,6 +70,9 @@ export class CroweCodeViewModel implements ViewModel {
     workspaceAtom: jotai.Atom<string | undefined>;
     dirtyAtom: jotai.Atom<boolean>;
     viewText!: jotai.Atom<HeaderElem[]>;
+    fileChangeUnsubFn: () => void;
+    watchedPath: string = null;
+    reloadToken: number = 0;
 
     constructor({ blockId, nodeModel }: { blockId: string; nodeModel: BlockNodeModel; tabModel: TabModel; waveEnv: WaveEnv }) {
         this.viewType = "crowecode";
@@ -75,6 +85,8 @@ export class CroweCodeViewModel implements ViewModel {
         this.loadErrorAtom = jotai.atom<string | null>(null) as jotai.PrimitiveAtom<string | null>;
         this.isLoadingAtom = jotai.atom<boolean>(false);
         this.isSavingAtom = jotai.atom<boolean>(false);
+        this.diskChangedAtom = jotai.atom<boolean>(false);
+        this.reloadHighlightAtom = jotai.atom<{ lines: number[]; token: number; origin: string }>({ lines: [], token: 0, origin: "" });
 
         this.fileNameAtom = jotai.atom((get) => {
             const blockData = get(this.blockAtom);
@@ -115,6 +127,7 @@ export class CroweCodeViewModel implements ViewModel {
             const isSaving = get(this.isSavingAtom);
             const isLoading = get(this.isLoadingAtom);
             const loadError = get(this.loadErrorAtom);
+            const diskChanged = get(this.diskChangedAtom);
             const rtn: HeaderElem[] = [];
             if (fileName) {
                 rtn.push({ elemtype: "text", text: fileName });
@@ -131,18 +144,26 @@ export class CroweCodeViewModel implements ViewModel {
                 rtn.push({ elemtype: "text", text: loadError, className: "crowecode-error-pill" });
             }
             if (dirty && fileName) {
+                if (diskChanged) {
+                    rtn.push({
+                        elemtype: "text",
+                        text: "changed on disk",
+                        className: "crowecode-error-pill",
+                    });
+                }
                 rtn.push({
                     elemtype: "iconbutton",
                     icon: isSaving ? "circle-notch" : "floppy-disk",
                     iconSpin: isSaving,
-                    title: "Save (Cmd+S)",
+                    title: diskChanged ? "Save (overwrites disk changes)" : "Save (Cmd+S)",
                     click: () => fireAndForget(this.saveToDisk.bind(this)),
                 });
                 rtn.push({
                     elemtype: "iconbutton",
-                    icon: "rotate-left",
-                    title: "Revert",
-                    click: () => this.revert(),
+                    icon: isLoading ? "circle-notch" : "rotate-left",
+                    iconSpin: isLoading,
+                    title: diskChanged ? "Discard local edits and reload from disk" : "Revert",
+                    click: () => (diskChanged ? fireAndForget(this.loadFromDisk.bind(this)) : this.revert()),
                 });
             }
             if (fileName && !dirty) {
@@ -156,14 +177,61 @@ export class CroweCodeViewModel implements ViewModel {
             }
             return rtn;
         });
+
+        // Live reload: an agent editor.* tool wrote this file on disk. We
+        // subscribe to all file-change events and filter by path in the
+        // handler (rather than scoping the subscription) because the block's
+        // backing file can change via meta after construction. Event volume is
+        // tiny — only agent writes publish — so the broadcast is cheap.
+        this.fileChangeUnsubFn = waveEventSubscribeSingle({
+            eventType: "crowecode:filechange",
+            handler: (event) => this.handleFileChange(event.data),
+        });
+    }
+
+    // handleFileChange reconciles an on-disk change made by an agent tool. If
+    // the buffer has no unsaved edits we reload silently; if it is dirty we
+    // refuse to clobber the user's work and raise a conflict flag instead,
+    // surfaced as a header warning with an explicit discard-and-reload action.
+    private handleFileChange(data: CroweCodeFileChangeData) {
+        const fileName = globalStore.get(this.fileNameAtom);
+        const action = decideReconcile({
+            matchesOpenFile: !!data?.path && !!fileName && fileName === data.path,
+            dirty: globalStore.get(this.dirtyAtom),
+        });
+        if (action === "ignore") return;
+        if (action === "guard") {
+            globalStore.set(this.diskChangedAtom, true);
+            return;
+        }
+        fireAndForget(() => this.loadFromDisk(data?.origin));
+    }
+
+    // syncFileWatch keeps the backend external-edit watch aligned with the file
+    // this block currently has open. The path can change via meta, so we release
+    // any prior watch before registering the new one; each Watch is balanced by
+    // an Unwatch here or in dispose(). Fire-and-forget: a missed watch only costs
+    // the out-of-app live reload, never correctness of the in-memory buffer.
+    private syncFileWatch(path: string | undefined) {
+        const next = path ?? null;
+        if (next === this.watchedPath) return;
+        const prev = this.watchedPath;
+        this.watchedPath = next;
+        if (prev) {
+            fireAndForget(() => RpcApi.CroweCodeWatchFileCommand(TabRpcClient, { path: prev, unwatch: true }));
+        }
+        if (next) {
+            fireAndForget(() => RpcApi.CroweCodeWatchFileCommand(TabRpcClient, { path: next }));
+        }
     }
 
     get viewComponent(): ViewComponent {
         return CroweCodeView;
     }
 
-    async loadFromDisk() {
+    async loadFromDisk(origin?: string) {
         const fileName = globalStore.get(this.fileNameAtom);
+        this.syncFileWatch(fileName);
         if (!fileName) {
             globalStore.set(this.loadErrorAtom, null);
             return;
@@ -174,8 +242,21 @@ export class CroweCodeViewModel implements ViewModel {
         try {
             const file = await RpcApi.FileReadCommand(TabRpcClient, { info: { path: fileName } }, null);
             const text = file?.data64 ? base64ToString(file.data64) : "";
+            const prevText = globalStore.get(this.textAtom);
+            const wasLoaded = globalStore.get(this.savedTextAtom) !== null;
             globalStore.set(this.textAtom, text);
             globalStore.set(this.savedTextAtom, text);
+            globalStore.set(this.diskChangedAtom, false);
+            // Flash the lines that changed, but only on a true reload (the file
+            // was already loaded once) — never on the initial mount, where every
+            // line would "change" from the placeholder.
+            if (wasLoaded && prevText !== text) {
+                const lines = changedLineRange(prevText, text);
+                if (lines.length > 0) {
+                    this.reloadToken++;
+                    globalStore.set(this.reloadHighlightAtom, { lines, token: this.reloadToken, origin: origin ?? "" });
+                }
+            }
             // Make the file URI discoverable to VS Code services so language
             // servers, search, and diagnostics can operate on it. Fire-and-
             // forget: registration failure doesn't affect the in-memory edit.
@@ -210,6 +291,7 @@ export class CroweCodeViewModel implements ViewModel {
                 null,
             );
             globalStore.set(this.savedTextAtom, current);
+            globalStore.set(this.diskChangedAtom, false);
         } catch (e: any) {
             globalStore.set(this.loadErrorAtom, `save failed: ${e?.message ?? e}`);
         } finally {
@@ -260,5 +342,10 @@ export class CroweCodeViewModel implements ViewModel {
 
     giveFocus(): boolean {
         return false;
+    }
+
+    dispose() {
+        this.fileChangeUnsubFn?.();
+        this.syncFileWatch(undefined);
     }
 }

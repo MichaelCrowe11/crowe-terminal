@@ -24,6 +24,8 @@ import (
 
 	"github.com/wavetermdev/waveterm/pkg/agent/mcpclient"
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
+	"github.com/wavetermdev/waveterm/pkg/mcpui"
 )
 
 // Mount describes one upstream MCP server we proxy.
@@ -108,6 +110,39 @@ func (m *Mount) wrap(upstream mcpclient.Tool) *registry.Tool {
 	}
 }
 
+func noopRenderUI(ctx context.Context, session, tool string, ui *mcpui.UIResource) (string, error) {
+	return "", nil
+}
+
+// renderUI is a package var so tests can fake it and pkg/mcpui/uihost can
+// inject the real implementation at init time.
+var renderUI = noopRenderUI
+
+// SetRenderer installs the UI render hook (called by pkg/mcpui/uihost at init).
+func SetRenderer(fn func(ctx context.Context, session, tool string, ui *mcpui.UIResource) (string, error)) {
+	renderUI = fn
+}
+
+// handleResult renders a detected UI resource into a block and returns a
+// summary; on a detect miss, render failure, or empty summary it falls back
+// to the marshalled CallResult body to preserve pre-feature behavior.
+func handleResult(ctx context.Context, tool string, callRes *mcpclient.CallResult) registry.Result {
+	if ui, ok := mcpui.Detect(callRes.Content); ok && !callRes.IsError {
+		session, _ := scope.AgentSessionIDFromContext(ctx)
+		if summary, err := renderUI(ctx, session, tool, ui); err == nil && summary != "" {
+			body, _ := json.Marshal(summary)
+			return registry.Result{Content: body}
+		}
+	}
+	body, _ := json.Marshal(callRes)
+	out := registry.Result{Content: body}
+	if callRes.IsError {
+		out.IsError = true
+		out.ErrorText = stringifyContent(callRes.Content)
+	}
+	return out
+}
+
 func (m *Mount) makeHandler(upstreamName string) registry.Handler {
 	return func(ctx context.Context, raw json.RawMessage) (registry.Result, error) {
 		var args map[string]any
@@ -124,13 +159,7 @@ func (m *Mount) makeHandler(upstreamName string) registry.Handler {
 		if err != nil {
 			return registry.Result{IsError: true, ErrorText: err.Error()}, nil
 		}
-		body, _ := json.Marshal(callRes)
-		out := registry.Result{Content: body}
-		if callRes.IsError {
-			out.IsError = true
-			out.ErrorText = stringifyContent(callRes.Content)
-		}
-		return out, nil
+		return handleResult(ctx, m.toolName(upstreamName), callRes), nil
 	}
 }
 

@@ -6,9 +6,10 @@ import { CodeEditor } from "@/app/view/codeeditor/codeeditor";
 import { fireAndForget } from "@/util/util";
 import { useAtomValue } from "jotai";
 import type * as MonacoTypes from "monaco-editor";
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CroweCodeViewModel } from "./crowecode-model";
 import { CroweCodeWorkspaceModel } from "./crowecode-workspace-model";
+import { describeReload, type ReloadOrigin } from "./reconcile";
 import "./crowecode.scss";
 
 export const CroweCodeView: React.FC<ViewComponentProps<CroweCodeViewModel>> = ({ blockId, model, contentRef }) => {
@@ -16,10 +17,53 @@ export const CroweCodeView: React.FC<ViewComponentProps<CroweCodeViewModel>> = (
     const language = useAtomValue(model.languageAtom);
     const fileName = useAtomValue(model.fileNameAtom);
     const isLoading = useAtomValue(model.isLoadingAtom);
+    const reloadHighlight = useAtomValue(model.reloadHighlightAtom);
+
+    const editorRef = useRef<MonacoTypes.editor.IStandaloneCodeEditor>(null);
+    const monacoRef = useRef<typeof MonacoTypes>(null);
+
+    // Honor the OS "reduce motion" setting: motion-sensitive users get a static
+    // highlight instead of the fade animation. The gutter glyph carries the
+    // signal either way, so the change is never communicated by color alone.
+    const reduceMotion = useMemo(
+        () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches,
+        []
+    );
+
+    // Screen-reader announcement for a live reload. Routed through an aria-live
+    // region below so non-sighted users learn that the file changed, who changed
+    // it, and where — the same information the gold flash conveys visually.
+    const [announcement, setAnnouncement] = useState("");
 
     useEffect(() => {
         fireAndForget(model.bootstrapScope.bind(model));
     }, [model]);
+
+    // Flash the lines a live-reload just changed, so the user sees WHAT the
+    // agent (or an external editor) touched, not merely that the buffer moved.
+    // The decorations auto-clear after a beat; the token in the atom guarantees
+    // this fires again even when the same lines change on a subsequent reload.
+    useEffect(() => {
+        const editor = editorRef.current;
+        const monaco = monacoRef.current;
+        if (!editor || !monaco || !reloadHighlight?.lines?.length) {
+            return;
+        }
+        const lineClassName = reduceMotion ? "crowecode-reload-line-static" : "crowecode-reload-line";
+        const collection = editor.createDecorationsCollection(
+            reloadHighlight.lines.map((line) => ({
+                range: new monaco.Range(line, 1, line, 1),
+                // glyph in the line-number gutter is the non-color-dependent signal
+                options: { isWholeLine: true, className: lineClassName, linesDecorationsClassName: "crowecode-reload-glyph" },
+            }))
+        );
+        setAnnouncement(describeReload(fileName, reloadHighlight.lines, reloadHighlight.origin as ReloadOrigin));
+        const timer = setTimeout(() => collection.clear(), 2400);
+        return () => {
+            clearTimeout(timer);
+            collection.clear();
+        };
+    }, [reloadHighlight, reduceMotion, fileName]);
 
     useEffect(() => {
         if (fileName) {
@@ -36,9 +80,12 @@ export const CroweCodeView: React.FC<ViewComponentProps<CroweCodeViewModel>> = (
     // at?" without the user copy-pasting. Only fires when a fileName is set —
     // scratch buffers don't pollute the active-editor state.
     const handleEditorMount = (
-        editor: MonacoTypes.editor.IStandaloneCodeEditor
+        editor: MonacoTypes.editor.IStandaloneCodeEditor,
+        monaco: typeof MonacoTypes
     ): (() => void) => {
         const workspaceModel = CroweCodeWorkspaceModel.getInstance();
+        editorRef.current = editor;
+        monacoRef.current = monaco;
 
         const pushState = () => {
             const currentFile = globalStore.get(model.fileNameAtom);
@@ -73,6 +120,10 @@ export const CroweCodeView: React.FC<ViewComponentProps<CroweCodeViewModel>> = (
         return () => {
             for (const s of subs) s.dispose();
             workspaceModel.clearActiveEditorIfMatches(blockId);
+            if (editorRef.current === editor) {
+                editorRef.current = null;
+                monacoRef.current = null;
+            }
         };
     };
 
@@ -90,6 +141,9 @@ export const CroweCodeView: React.FC<ViewComponentProps<CroweCodeViewModel>> = (
                 onChange={handleChange}
                 onMount={handleEditorMount}
             />
+            <div className="sr-only" role="status" aria-live="polite">
+                {announcement}
+            </div>
         </div>
     );
 };

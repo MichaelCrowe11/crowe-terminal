@@ -349,6 +349,12 @@ declare global {
         targetpatterns?: {[key: string]: string[]};
     };
 
+    // wshrpc.CommandCroweCodeWatchFileData
+    type CommandCroweCodeWatchFileData = {
+        path: string;
+        unwatch?: boolean;
+    };
+
     // wshrpc.CommandDebugTermData
     type CommandDebugTermData = {
         blockid: string;
@@ -532,6 +538,20 @@ declare global {
     // wshrpc.CommandMakeDraftFromLocalRtnData
     type CommandMakeDraftFromLocalRtnData = {
         draftappid: string;
+    };
+
+    // wshrpc.CommandMcpUiActionData
+    type CommandMcpUiActionData = {
+        blockid: string;
+        session: string;
+        type: string;
+        toolname?: string;
+        params?: string;
+        prompt?: string;
+        url?: string;
+        intent?: string;
+        message?: string;
+        messageid?: string;
     };
 
     // wshrpc.CommandMessageData
@@ -946,6 +966,13 @@ declare global {
         count: number;
     };
 
+    // wps.CroweCodeFileChangeData
+    type CroweCodeFileChangeData = {
+        path: string;
+        op: string;
+        origin: string;
+    };
+
     // wshrpc.DirEntryOut
     type DirEntryOut = {
         name: string;
@@ -1205,6 +1232,9 @@ declare global {
         "ai:timeoutms"?: number;
         "aifilediff:chatid"?: string;
         "aifilediff:toolcallid"?: string;
+        "mcpui:html"?: string;
+        "mcpui:session"?: string;
+        "mcpui:tool"?: string;
         "editor:*"?: boolean;
         "editor:minimapenabled"?: boolean;
         "editor:stickyscrollenabled"?: boolean;

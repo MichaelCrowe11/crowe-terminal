@@ -30,10 +30,12 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/blockcontroller"
 	"github.com/wavetermdev/waveterm/pkg/blocklogger"
 	"github.com/wavetermdev/waveterm/pkg/buildercontroller"
+	"github.com/wavetermdev/waveterm/pkg/crowecode/livewatch"
 	"github.com/wavetermdev/waveterm/pkg/filebackup"
 	"github.com/wavetermdev/waveterm/pkg/filestore"
 	"github.com/wavetermdev/waveterm/pkg/genconn"
 	"github.com/wavetermdev/waveterm/pkg/jobcontroller"
+	"github.com/wavetermdev/waveterm/pkg/mcpui/uihost"
 	"github.com/wavetermdev/waveterm/pkg/panichandler"
 	"github.com/wavetermdev/waveterm/pkg/remote"
 	"github.com/wavetermdev/waveterm/pkg/remote/conncontroller"
@@ -296,6 +298,11 @@ func (ws *WshServer) CreateBlockCommand(ctx context.Context, data wshrpc.Command
 	updates := waveobj.ContextGetUpdatesRtn(ctx)
 	wps.Broker.SendUpdateEvents(updates)
 	return &waveobj.ORef{OType: waveobj.OType_Block, OID: blockData.OID}, nil
+}
+
+func (ws *WshServer) McpUiActionCommand(ctx context.Context, data wshrpc.CommandMcpUiActionData) error {
+	uihost.HandleAction(ctx, data)
+	return nil
 }
 
 func (ws *WshServer) CreateSubBlockCommand(ctx context.Context, data wshrpc.CommandCreateSubBlockData) (*waveobj.ORef, error) {
@@ -1628,6 +1635,21 @@ func (ws *WshServer) CroweCodeGetActiveEditorCommand(ctx context.Context, tabId 
 		SelectionEndColumn:   ae.SelectionEndColumn,
 		HasSelection:         ae.HasSelection,
 	}, nil
+}
+
+// CroweCodeWatchFileCommand registers (or releases) a backend file watch for a
+// Crowe Code block. While watched, external edits to the file republish
+// crowecode:filechange so the open block live-reloads via its normal reconcile.
+func (ws *WshServer) CroweCodeWatchFileCommand(ctx context.Context, data wshrpc.CommandCroweCodeWatchFileData) error {
+	if data.Path == "" {
+		return fmt.Errorf("path is required")
+	}
+	if data.Unwatch {
+		livewatch.Unwatch(data.Path)
+		return nil
+	}
+	livewatch.Watch(data.Path)
+	return nil
 }
 
 // CroweCodeBootstrapScopeCommand installs a default capability grant for a

@@ -56,6 +56,7 @@ type WshRpcInterface interface {
 	ControllerAppendOutputCommand(ctx context.Context, data CommandControllerAppendOutputData) error
 	ResolveIdsCommand(ctx context.Context, data CommandResolveIdsData) (CommandResolveIdsRtnData, error)
 	CreateBlockCommand(ctx context.Context, data CommandCreateBlockData) (waveobj.ORef, error)
+	McpUiActionCommand(ctx context.Context, data CommandMcpUiActionData) error
 	CreateSubBlockCommand(ctx context.Context, data CommandCreateSubBlockData) (waveobj.ORef, error)
 	DeleteBlockCommand(ctx context.Context, data CommandDeleteBlockData) error
 	DeleteSubBlockCommand(ctx context.Context, data CommandDeleteBlockData) error
@@ -224,6 +225,11 @@ type WshRpcInterface interface {
 	// the read side the agent's editor.get_active_context tool calls.
 	CroweCodeReportActiveEditorCommand(ctx context.Context, data CommandCroweCodeActiveEditorData) error
 	CroweCodeGetActiveEditorCommand(ctx context.Context, tabId string) (*CommandCroweCodeActiveEditorData, error)
+
+	// crowecode external-edit live reload: the renderer asks the backend to
+	// watch (or stop watching) the file a Crowe Code block has open, so edits
+	// from outside the app republish crowecode:filechange and the block reloads.
+	CroweCodeWatchFileCommand(ctx context.Context, data CommandCroweCodeWatchFileData) error
 }
 
 // for frontend
@@ -294,12 +300,20 @@ type CommandCroweCodeBootstrapScopeData struct {
 }
 
 type CommandCroweCodeBootstrapScopeRtnData struct {
-	Granted        bool              `json:"granted"`
-	ScopeName      string            `json:"scopename"`
-	BlockId        string            `json:"blockid"`
-	AgentSessionId string            `json:"agentsessionid"`
-	Tools          map[string]string `json:"tools"`
+	Granted        bool                `json:"granted"`
+	ScopeName      string              `json:"scopename"`
+	BlockId        string              `json:"blockid"`
+	AgentSessionId string              `json:"agentsessionid"`
+	Tools          map[string]string   `json:"tools"`
 	TargetPatterns map[string][]string `json:"targetpatterns,omitempty"`
+}
+
+// CommandCroweCodeWatchFileData asks the backend to watch Path for external
+// changes (Unwatch=false) or to release a prior watch (Unwatch=true). Watches
+// are ref-counted per path, so each open block balances its own watch/unwatch.
+type CommandCroweCodeWatchFileData struct {
+	Path    string `json:"path"`
+	Unwatch bool   `json:"unwatch,omitempty"`
 }
 
 // CommandCroweCodeActiveEditorData carries the renderer's snapshot of the
@@ -332,6 +346,20 @@ type CommandResolveIdsData struct {
 
 type CommandResolveIdsRtnData struct {
 	ResolvedIds map[string]waveobj.ORef `json:"resolvedids"`
+}
+
+type CommandMcpUiActionData struct {
+	BlockId  string `json:"blockid"`
+	Session  string `json:"session"`
+	Type     string `json:"type"`
+	ToolName string `json:"toolname,omitempty"`
+	Params   string `json:"params,omitempty"`
+	Prompt   string `json:"prompt,omitempty"`
+	Url      string `json:"url,omitempty"`
+	Intent   string `json:"intent,omitempty"`
+	Message  string `json:"message,omitempty"`
+	// MessageId correlates an async ui-message-response back to the iframe; reserved for a later phase.
+	MessageId string `json:"messageid,omitempty"`
 }
 
 type CommandCreateBlockData struct {
@@ -392,7 +420,6 @@ type CommandEventReadHistoryData struct {
 	Scope    string `json:"scope"`
 	MaxItems int    `json:"maxitems"`
 }
-
 
 type CpuDataRequest struct {
 	Id    string `json:"id"`
@@ -721,8 +748,8 @@ type CommandTermGetScrollbackLinesRtnData struct {
 
 // Crowe Agent — webview-driving commands routed via MakeFeBlockRouteId.
 type CommandWebExecuteJSData struct {
-	Script     string `json:"script"`
-	TimeoutMs  int    `json:"timeoutms,omitempty"`
+	Script    string `json:"script"`
+	TimeoutMs int    `json:"timeoutms,omitempty"`
 }
 
 type CommandWebExecuteJSRtnData struct {

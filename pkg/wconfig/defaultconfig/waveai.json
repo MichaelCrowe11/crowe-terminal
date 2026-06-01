@@ -84,5 +84,56 @@
             "openai"
         ],
         "ai:apitoken": "local-bridge-no-auth"
+    },
+    "waveai@deepparallel-apex": {
+        "display:name": "DeepParallel Apex",
+        "display:order": 2,
+        "display:icon": "diamond",
+        "display:description": "Crowe Logic flagship: reasoning + code, via the DeepParallel gateway.",
+        "ai:provider": "openai",
+        "ai:apitype": "openai-chat",
+        "ai:endpoint": "http://127.0.0.1:8013/v1/chat/completions",
+        "ai:model": "crowelm-apex",
+        "ai:capabilities": [
+            "tools"
+        ],
+        "ai:switchcompat": [
+            "openai"
+        ],
+        "ai:apitoken": "local-gateway-no-auth"
+    },
+    "waveai@deepparallel-reason": {
+        "display:name": "DeepParallel Reason",
+        "display:order": 3,
+        "display:icon": "brain",
+        "display:description": "Deep step-by-step reasoning model, via the DeepParallel gateway.",
+        "ai:provider": "openai",
+        "ai:apitype": "openai-chat",
+        "ai:endpoint": "http://127.0.0.1:8013/v1/chat/completions",
+        "ai:model": "crowelm-reason",
+        "ai:capabilities": [
+            "tools"
+        ],
+        "ai:switchcompat": [
+            "openai"
+        ],
+        "ai:apitoken": "local-gateway-no-auth"
+    },
+    "waveai@deepparallel-flash": {
+        "display:name": "DeepParallel Flash",
+        "display:order": 4,
+        "display:icon": "bolt",
+        "display:description": "Fast, lightweight model for quick turns, via the DeepParallel gateway.",
+        "ai:provider": "openai",
+        "ai:apitype": "openai-chat",
+        "ai:endpoint": "http://127.0.0.1:8013/v1/chat/completions",
+        "ai:model": "crowelm-flash",
+        "ai:capabilities": [
+            "tools"
+        ],
+        "ai:switchcompat": [
+            "openai"
+        ],
+        "ai:apitoken": "local-gateway-no-auth"
     }
 }

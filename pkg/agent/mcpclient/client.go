@@ -63,9 +63,17 @@ type CallResult struct {
 }
 
 type ContentItem struct {
-	Type string `json:"type"`
-	Text string `json:"text,omitempty"`
-	Data string `json:"data,omitempty"`
+	Type     string            `json:"type"`
+	Text     string            `json:"text,omitempty"`
+	Data     string            `json:"data,omitempty"`
+	Resource *EmbeddedResource `json:"resource,omitempty"`
+}
+
+type EmbeddedResource struct {
+	URI      string `json:"uri"`
+	MimeType string `json:"mimeType,omitempty"`
+	Text     string `json:"text,omitempty"` // inline text payload (e.g. HTML)
+	Blob     string `json:"blob,omitempty"` // base64-encoded binary payload
 }
 
 type jsonRPCRequest struct {
