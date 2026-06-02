@@ -31,7 +31,7 @@ func TestGrantReadOnlyDeniesWrite(t *testing.T) {
 func TestGrantReadOnlyOutsideTargetIsAsk(t *testing.T) {
 	s := MakeMemoryStore()
 	GrantReadOnly(s, "block-1", "sess-1", []string{"/Users/me/Projects/*"})
-	d := Check(s, "block-1", "sess-1", ToolEditorRead, "/etc/passwd", time.Now())
+	d := Check(s, "block-1", "sess-1", ToolEditorRead, "/Users/me/Downloads/report.pdf", time.Now())
 	if d.Mode != ModeAsk {
 		t.Fatalf("read outside target glob should fall to ask: %+v", d)
 	}
@@ -69,7 +69,7 @@ func TestGrantReadOnlyAllowsWidgetOpenInsidePath(t *testing.T) {
 	if d := Check(s, "block-1", "sess-1", ToolWidgetOpenInCroweCode, "/Users/me/Projects/foo.go", time.Now()); d.Mode != ModeAllow {
 		t.Fatalf("widget open should be allowed inside read-only target: %+v", d)
 	}
-	if d := Check(s, "block-1", "sess-1", ToolWidgetOpenInCroweCode, "/etc/passwd", time.Now()); d.Mode != ModeAsk {
+	if d := Check(s, "block-1", "sess-1", ToolWidgetOpenInCroweCode, "/Users/me/Downloads/report.pdf", time.Now()); d.Mode != ModeAsk {
 		t.Fatalf("widget open outside target should fall to ask: %+v", d)
 	}
 }
