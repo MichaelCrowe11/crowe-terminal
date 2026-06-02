@@ -4,7 +4,6 @@
 package scope
 
 import (
-	"path"
 	"time"
 )
 
@@ -51,17 +50,31 @@ type Store interface {
 	Revoke(blockID, agentSessionID string)
 }
 
-// Check resolves the mode for one tool call against one block. The caller
-// supplies the optional target string (a file path, URL, or block id) that the
-// tool would operate on; pattern matching uses path.Match so callers can pass
-// glob-style restrictions in TargetPatterns.
+// Check resolves the mode for one tool call against one block. It looks up the
+// grant in the store (nil store or missing grant resolves like a nil grant)
+// and delegates to CheckGrant, the pure resolver mirrored from the TS kernel.
 func Check(store Store, blockID, agentSessionID, toolName, target string, now time.Time) CheckResult {
-	if store == nil {
-		return CheckResult{Mode: DefaultMode, Reason: "no store configured"}
+	var grant *CapabilityGrant
+	if store != nil {
+		if g, ok := store.Get(blockID, agentSessionID); ok {
+			grant = g
+		}
 	}
-	grant, ok := store.Get(blockID, agentSessionID)
-	if !ok {
-		return CheckResult{Mode: DefaultMode, Reason: "no grant for this block"}
+	return CheckGrant(grant, toolName, target, now)
+}
+
+// CheckGrant is the pure authorization resolver: it mirrors the TS
+// @crowe/code-capability check() exactly and is the function the shared
+// conformance vectors test. Order: sensitive-path deny first (no grant may
+// promote past it), then no grant / expired / tool-absent / target-mismatch all
+// fall back to the default ask, an explicit deny wins, otherwise the granted
+// mode applies.
+func CheckGrant(grant *CapabilityGrant, toolName, target string, now time.Time) CheckResult {
+	if target != "" && IsSensitivePath(target) {
+		return CheckResult{Mode: ModeDeny, Reason: "sensitive path"}
+	}
+	if grant == nil {
+		return CheckResult{Mode: DefaultMode, Reason: "no grant"}
 	}
 	if grant.ExpiresAt != nil && now.After(*grant.ExpiresAt) {
 		return CheckResult{Mode: DefaultMode, Reason: "grant expired"}
@@ -71,7 +84,7 @@ func Check(store Store, blockID, agentSessionID, toolName, target string, now ti
 		return CheckResult{Mode: DefaultMode, Reason: "tool not in grant"}
 	}
 	if mode == ModeDeny {
-		return CheckResult{Mode: ModeDeny, Reason: "explicitly denied for this block"}
+		return CheckResult{Mode: ModeDeny, Reason: "explicitly denied"}
 	}
 	if !targetMatches(grant, toolName, target) {
 		return CheckResult{Mode: DefaultMode, Reason: "target outside granted patterns"}
@@ -91,8 +104,7 @@ func targetMatches(grant *CapabilityGrant, toolName, target string) bool {
 		return false
 	}
 	for _, p := range patterns {
-		matched, err := path.Match(p, target)
-		if err == nil && matched {
+		if MatchGlob(p, target) {
 			return true
 		}
 	}
