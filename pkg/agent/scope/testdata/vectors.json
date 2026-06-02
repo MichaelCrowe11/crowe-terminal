@@ -1,0 +1,138 @@
+{
+  "now": 1000000,
+  "cases": [
+    {
+      "name": "no grant asks",
+      "grant": null,
+      "tool": "file.write",
+      "target": "src/a.ts",
+      "expect": "ask"
+    },
+    {
+      "name": "expired grant asks",
+      "grant": {
+        "subjectId": "s", "sessionId": "x", "workspaceId": "ws1",
+        "tools": { "file.write": "allow" }, "targets": { "file.write": ["src/**"] },
+        "expiresAt": 999999
+      },
+      "tool": "file.write",
+      "target": "src/a.ts",
+      "expect": "ask"
+    },
+    {
+      "name": "tool absent asks",
+      "grant": {
+        "subjectId": "s", "sessionId": "x", "workspaceId": "ws1",
+        "tools": { "file.write": "allow" }, "targets": {}
+      },
+      "tool": "exec.run",
+      "target": "src/a.ts",
+      "expect": "ask"
+    },
+    {
+      "name": "explicit deny denies",
+      "grant": {
+        "subjectId": "s", "sessionId": "x", "workspaceId": "ws1",
+        "tools": { "file.write": "deny" }, "targets": {}
+      },
+      "tool": "file.write",
+      "target": "src/a.ts",
+      "expect": "deny"
+    },
+    {
+      "name": "target outside patterns asks",
+      "grant": {
+        "subjectId": "s", "sessionId": "x", "workspaceId": "ws1",
+        "tools": { "file.write": "allow" }, "targets": { "file.write": ["src/**"] }
+      },
+      "tool": "file.write",
+      "target": "other/a.ts",
+      "expect": "ask"
+    },
+    {
+      "name": "recursive glob allows nested",
+      "grant": {
+        "subjectId": "s", "sessionId": "x", "workspaceId": "ws1",
+        "tools": { "file.write": "allow" }, "targets": { "file.write": ["src/**"] }
+      },
+      "tool": "file.write",
+      "target": "src/deep/nested/a.ts",
+      "expect": "allow"
+    },
+    {
+      "name": "single-star does not cross separators",
+      "grant": {
+        "subjectId": "s", "sessionId": "x", "workspaceId": "ws1",
+        "tools": { "file.write": "allow" }, "targets": { "file.write": ["src/*.ts"] }
+      },
+      "tool": "file.write",
+      "target": "src/deep/a.ts",
+      "expect": "ask"
+    },
+    {
+      "name": "empty patterns means no restriction",
+      "grant": {
+        "subjectId": "s", "sessionId": "x", "workspaceId": "ws1",
+        "tools": { "file.write": "allow" }, "targets": { "file.write": [] }
+      },
+      "tool": "file.write",
+      "target": "anywhere/a.ts",
+      "expect": "allow"
+    },
+    {
+      "name": "sensitive path denies past an allow grant",
+      "grant": {
+        "subjectId": "s", "sessionId": "x", "workspaceId": "ws1",
+        "tools": { "file.write": "allow" }, "targets": { "file.write": ["**"] }
+      },
+      "tool": "file.write",
+      "target": "app/.env",
+      "expect": "deny"
+    },
+    {
+      "name": "trailing ** matches the workspace root exactly",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["src/**"] } },
+      "tool": "file.write", "target": "src", "expect": "allow"
+    },
+    {
+      "name": "trailing ** does NOT match a sibling prefix (scope-escape guard)",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["src/**"] } },
+      "tool": "file.write", "target": "srcfoo/x", "expect": "ask"
+    },
+    {
+      "name": "workspace glob does NOT match a numeric sibling (isolation)",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["ws1/**"] } },
+      "tool": "file.write", "target": "ws10/secret", "expect": "ask"
+    },
+    {
+      "name": "leading **/ matches a bare filename (zero leading segments)",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["**/*.ts"] } },
+      "tool": "file.write", "target": "a.ts", "expect": "allow"
+    },
+    {
+      "name": "middle /**/ matches zero intermediate segments",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["a/**/b"] } },
+      "tool": "file.write", "target": "a/b", "expect": "allow"
+    },
+    {
+      "name": "middle /**/ requires the literal boundary",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["a/**/b"] } },
+      "tool": "file.write", "target": "ab", "expect": "ask"
+    },
+    {
+      "name": "single * matches a dotfile-style zero-width stem",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["*.ts"] } },
+      "tool": "file.write", "target": ".ts", "expect": "allow"
+    },
+    {
+      "name": "single * does not cross a separator into a nested dir",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["src/*"] } },
+      "tool": "file.write", "target": "src/a/b", "expect": "ask"
+    },
+    {
+      "name": "degenerate a/**b is NOT globstar: ** glued to a literal stays within one segment",
+      "grant": { "subjectId": "s", "sessionId": "x", "workspaceId": "ws1", "tools": { "file.write": "allow" }, "targets": { "file.write": ["a/**b"] } },
+      "tool": "file.write", "target": "ab", "expect": "ask"
+    }
+  ]
+}
