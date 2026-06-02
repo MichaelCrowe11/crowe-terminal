@@ -18,6 +18,14 @@ import "strings"
 //
 // A '**' that is not a whole segment (e.g. "a/**b") is treated as ordinary '*'
 // wildcards within that one segment; it does not cross '/'.
+//
+// Known cross-transport edge: this matches by byte while the TS kernel matches
+// by UTF-16 code unit, so '?' and exact-count '*' boundaries can diverge on
+// non-ASCII filenames. The divergence is fail-safe (Go falls to the default
+// ask, never a broader allow) and the sensitive-path blocklist is unaffected
+// (it uses only '*'/'**', which stay byte-greedy). Tracked for Phase 2; add a
+// non-ASCII conformance vector if the kernel ever commits to normative
+// code-unit semantics.
 func MatchGlob(pattern, target string) bool {
 	return matchSegments(strings.Split(pattern, "/"), strings.Split(target, "/"))
 }
