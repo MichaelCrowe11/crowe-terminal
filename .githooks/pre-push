@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# CCCP local CI gate (no GitHub Actions required). Runs the Go capability-scope
+# suite (incl. TestConformanceVectors) and verifies the vendored conformance
+# vectors still match the canonical crowe-id copy before every push. Enable once
+# per clone with:
+#   git config core.hooksPath .githooks
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+
+echo "[pre-push] scope conformance: go test"
+( cd "$root" && go test ./pkg/agent/scope/... )
+
+# Cross-repo parity: the canonical vectors live in crowe-id. If that repo is
+# present alongside, fail the push when the vendored copy has drifted (the cloud
+# workflows cannot see across repos; this hook can).
+canon="${CROWE_ID_DIR:-$HOME/Projects/crowe-id}/capability/conformance/vectors.json"
+vendored="$root/pkg/agent/scope/testdata/vectors.json"
+if [ -f "$canon" ]; then
+  if ! diff -q "$canon" "$vendored" >/dev/null 2>&1; then
+    echo "[pre-push] ERROR: vendored vectors.json has drifted from the canonical crowe-id copy." >&2
+    echo "           run scripts/sync-conformance-vectors.sh, re-test, and commit." >&2
+    exit 1
+  fi
+  echo "[pre-push] vectors parity: vendored matches canonical"
+else
+  echo "[pre-push] note: crowe-id not found at \$CROWE_ID_DIR; skipped cross-repo vectors diff"
+fi
+
+echo "[pre-push] OK"
