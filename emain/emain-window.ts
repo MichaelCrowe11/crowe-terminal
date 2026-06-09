@@ -24,6 +24,7 @@ import { ElectronWshClient } from "./emain-wsh";
 import { updater } from "./updater";
 
 const DevInitTimeoutMs = 5000;
+const ProdInitTimeoutMs = 15000;
 
 export type WindowOpts = {
     unamePlatform: NodeJS.Platform;
@@ -452,7 +453,20 @@ export class WaveBrowserWindow extends BaseWindow {
 
     private async awaitWithDevTimeout<T>(promise: Promise<T>, name: string, tabId: string): Promise<T> {
         if (!isDev) {
-            return promise;
+            // A hung init used to leave the window hidden forever in production.
+            // Show the window after the timeout so the user sees the app instead
+            // of nothing, but keep waiting — init may still complete.
+            const showTimeout = setTimeout(() => {
+                console.log(`${name} still pending after ${ProdInitTimeoutMs}ms for tab ${tabId}, showing window`);
+                if (!this.isDestroyed() && !this.isVisible()) {
+                    this.show();
+                }
+            }, ProdInitTimeoutMs);
+            try {
+                return await promise;
+            } finally {
+                clearTimeout(showTimeout);
+            }
         }
         let timeoutHandle: ReturnType<typeof setTimeout> = null;
         const timeoutPromise = new Promise<never>((_, reject) => {
