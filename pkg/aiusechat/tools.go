@@ -161,6 +161,7 @@ func GenerateTabStateAndTools(ctx context.Context, tabid string, widgetAccess bo
 	// for debugging
 	// log.Printf("TABPROMPT %s\n", tabState)
 	var tools []uctypes.ToolDefinition
+	var tsunamiTools []uctypes.ToolDefinition
 	if widgetAccess {
 		// Only add screenshot tool for:
 		// - openai-responses API type
@@ -185,8 +186,7 @@ func GenerateTabStateAndTools(ctx context.Context, tabid string, widgetAccess bo
 			}
 			viewTypes[viewType] = true
 			if viewType == "tsunami" {
-				blockTools := generateToolsForTsunamiBlock(block)
-				tools = append(tools, blockTools...)
+				tsunamiTools = append(tsunamiTools, generateToolsForTsunamiBlock(block)...)
 			}
 		}
 		if viewTypes["term"] {
@@ -204,6 +204,10 @@ func GenerateTabStateAndTools(ctx context.Context, tabid string, widgetAccess bo
 	// the agent tools touch the local machine.
 	if widgetAccess {
 		tools = waveadapter.AppendAgentTools(tools)
+		// Per-block tsunami app tools go last so that if a provider's tool-count
+		// cap forces trimming, these expendable app-specific tools are dropped
+		// before the base, file, term/web, and agent tools.
+		tools = append(tools, tsunamiTools...)
 	}
 	return tabState, tools, nil
 }
