@@ -167,7 +167,7 @@ func GenerateTabStateAndTools(ctx context.Context, tabid string, widgetAccess bo
 		// - openai-responses API type
 		// - google-gemini API type with Gemini 3+ models
 		if chatOpts.Config.APIType == uctypes.APIType_OpenAIResponses ||
-		   (chatOpts.Config.APIType == uctypes.APIType_GoogleGemini && aiutil.GeminiSupportsImageToolResults(chatOpts.Config.Model)) {
+			(chatOpts.Config.APIType == uctypes.APIType_GoogleGemini && aiutil.GeminiSupportsImageToolResults(chatOpts.Config.Model)) {
 			tools = append(tools, GetCaptureScreenshotToolDefinition(tabid))
 		}
 		tools = append(tools, GetReadTextFileToolDefinition())
