@@ -8,8 +8,7 @@ import { useWaveEnv } from "@/app/waveenv/waveenv";
 import { useAtomValue } from "jotai";
 import { memo, useMemo } from "react";
 import { WaveAIModel } from "./waveai-model";
-import croweMark from "@/app/asset/crowe-mark.png";
-import croweWordmark from "@/app/asset/crowe-wordmark.svg";
+import { CroweArcMark, CroweWordmark } from "@/app/element/crowemarks";
 
 export const AIPanelHeader = memo(() => {
     const model = WaveAIModel.getInstance();
@@ -55,11 +54,11 @@ export const AIPanelHeader = memo(() => {
                     title="Open crowelogic.com"
                 >
                     <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-[2px] border border-[#bfa669]/30 bg-[#0b0b0c]">
-                        <img src={croweMark} alt="" className="h-full w-full object-cover" />
+                        <CroweArcMark className="h-full w-full p-1" />
                     </div>
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                            <img src={croweWordmark} alt="Crowe Logic" className="h-4 w-auto flex-shrink-0" />
+                            <CroweWordmark className="h-4 w-[72px] flex-shrink-0" />
                             <span
                                 className={cn(
                                     "h-1.5 w-1.5 rounded-[1px] bg-[#bfa669]/45",
