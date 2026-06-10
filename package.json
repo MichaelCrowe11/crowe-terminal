@@ -7,7 +7,7 @@
     "productName": "Crowe Terminal",
     "description": "Crowe Terminal: AI-native multi-pane terminal with browser, file, and CroweLM chat panes. Part of the Crowe Logic platform.",
     "license": "Apache-2.0",
-    "version": "0.1.0",
+    "version": "0.15.0",
     "homepage": "https://crowelogic.com",
     "build": {
         "appId": "io.crowelogic.terminal"
