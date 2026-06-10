@@ -22,7 +22,27 @@ import (
 
 const (
 	OpenAIChatDefaultMaxTokens = 4096
+
+	// OpenAI-compatible chat completions reject a request carrying more than
+	// 128 tool definitions. We trim from the tail of the assembled list, which
+	// (by the assembly order in GenerateTabStateAndTools) drops the most
+	// expendable per-block tsunami app tools first, then the agent-registry tail.
+	maxOpenAIChatTools = 128
 )
+
+// capToolsForModel enforces the OpenAI-compatible 128-tool limit. Only the
+// OpenAI-compat backend calls this; the Anthropic and Gemini paths leave their
+// tool lists untrimmed, so the effective cap is model-aware.
+func capToolsForModel(tools []uctypes.ToolDefinition, model string) []uctypes.ToolDefinition {
+	if len(tools) <= maxOpenAIChatTools {
+		return tools
+	}
+	if wavebase.IsDevMode() {
+		log.Printf("openaichat: capping tools %d -> %d for model %s (dropped %d from tail)\n",
+			len(tools), maxOpenAIChatTools, model, len(tools)-maxOpenAIChatTools)
+	}
+	return tools[:maxOpenAIChatTools]
+}
 
 // appendToLastUserMessage appends text to the last user message in the messages slice
 func appendToLastUserMessage(messages []ChatRequestMessage, text string) {
@@ -121,6 +141,7 @@ func buildChatHTTPRequest(ctx context.Context, messages []ChatRequestMessage, ch
 	if opts.HasCapability(uctypes.AICapabilityTools) {
 		allTools = append(allTools, chatOpts.Tools...)
 		allTools = append(allTools, chatOpts.TabTools...)
+		allTools = capToolsForModel(allTools, opts.Model)
 		if len(allTools) > 0 {
 			reqBody.Tools = convertToolDefinitions(allTools, opts.Capabilities)
 		}

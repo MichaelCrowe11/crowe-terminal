@@ -110,6 +110,8 @@ interface AIMessagePartProps {
     isStreaming: boolean;
 }
 
+const ErrorTextRegex = /^\s*\[error[::]/i;
+
 const AIMessagePart = memo(({ part, role, isStreaming }: AIMessagePartProps) => {
     const model = WaveAIModel.getInstance();
 
@@ -118,16 +120,22 @@ const AIMessagePart = memo(({ part, role, isStreaming }: AIMessagePartProps) => 
 
         if (role === "user") {
             return <div className="whitespace-pre-wrap break-words">{content}</div>;
-        } else {
+        }
+        if (ErrorTextRegex.test(content)) {
             return (
-                <WaveStreamdown
-                    text={content}
-                    parseIncompleteMarkdown={isStreaming}
-                    className="text-gray-100"
-                    codeBlockMaxWidthAtom={model.codeBlockMaxWidth}
-                />
+                <div className="text-xs text-red-400/80 border border-red-400/20 bg-red-950/20 rounded-[2px] px-2 py-1.5 whitespace-pre-wrap break-words">
+                    {content}
+                </div>
             );
         }
+        return (
+            <WaveStreamdown
+                text={content}
+                parseIncompleteMarkdown={isStreaming}
+                className="text-gray-100"
+                codeBlockMaxWidthAtom={model.codeBlockMaxWidth}
+            />
+        );
     }
 
     return null;

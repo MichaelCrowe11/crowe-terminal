@@ -63,7 +63,6 @@ func CombineConsecutiveSameRoleMessages(uiChat *uctypes.UIChat) *uctypes.UIChat 
 	}
 }
 
-
 // ConvertAIChatToUIChat converts an AIChat to a UIChat by routing to the appropriate
 // provider-specific converter based on APIType, then combining consecutive same-role messages.
 func ConvertAIChatToUIChat(aiChat *uctypes.AIChat) (*uctypes.UIChat, error) {

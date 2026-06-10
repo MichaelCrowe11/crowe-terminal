@@ -10,7 +10,10 @@ import (
 	"strings"
 )
 
-const DefaultAIEndpoint = "https://cfapi.waveterm.dev/api/waveai"
+// Official Crowe Terminal builds keep default AI traffic on-machine: the app
+// spawns the foundry-bridge locally and all default chat routes through it.
+// Operators can still point elsewhere via WAVETERM_WAVEAI_ENDPOINT or mode config.
+const DefaultAIEndpoint = "http://127.0.0.1:8011/v1/chat/completions"
 const WaveAIEndpointEnvName = "WAVETERM_WAVEAI_ENDPOINT"
 const DefaultAnthropicModel = "claude-sonnet-4-5"
 const DefaultOpenAIModel = "gpt-5-mini"

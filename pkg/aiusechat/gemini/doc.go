@@ -13,7 +13,8 @@
 // # API Type
 //
 // The Gemini backend uses the API type constant:
-//   uctypes.APIType_GoogleGemini = "google-gemini"
+//
+//	uctypes.APIType_GoogleGemini = "google-gemini"
 //
 // # Supported Features
 //
@@ -29,33 +30,33 @@
 //
 // The backend is automatically registered and can be obtained via:
 //
-//   backend, err := aiusechat.GetBackendByAPIType(uctypes.APIType_GoogleGemini)
+//	backend, err := aiusechat.GetBackendByAPIType(uctypes.APIType_GoogleGemini)
 //
 // To use the Gemini API, you need:
-//   1. A Google AI API key
-//   2. Configure the chat with APIType_GoogleGemini
-//   3. Set the Model (e.g., "gemini-2.0-flash-exp")
-//   4. Provide the API key in the Config.APIToken field
+//  1. A Google AI API key
+//  2. Configure the chat with APIType_GoogleGemini
+//  3. Set the Model (e.g., "gemini-2.0-flash-exp")
+//  4. Provide the API key in the Config.APIToken field
 //
 // # Configuration Example
 //
-//   chatOpts := uctypes.WaveChatOpts{
-//       ChatId:   "my-chat-id",
-//       ClientId: "my-client-id",
-//       Config: uctypes.AIOptsType{
-//           APIType:      uctypes.APIType_GoogleGemini,
-//           Model:        "gemini-2.0-flash-exp",
-//           APIToken:     "your-google-api-key",
-//           MaxTokens:    8192,
-//           Capabilities: []string{
-//               uctypes.AICapabilityTools,
-//               uctypes.AICapabilityImages,
-//               uctypes.AICapabilityPdfs,
-//           },
-//       },
-//       Tools:        []uctypes.ToolDefinition{...},
-//       SystemPrompt: []string{"You are a helpful assistant."},
-//   }
+//	chatOpts := uctypes.WaveChatOpts{
+//	    ChatId:   "my-chat-id",
+//	    ClientId: "my-client-id",
+//	    Config: uctypes.AIOptsType{
+//	        APIType:      uctypes.APIType_GoogleGemini,
+//	        Model:        "gemini-2.0-flash-exp",
+//	        APIToken:     "your-google-api-key",
+//	        MaxTokens:    8192,
+//	        Capabilities: []string{
+//	            uctypes.AICapabilityTools,
+//	            uctypes.AICapabilityImages,
+//	            uctypes.AICapabilityPdfs,
+//	        },
+//	    },
+//	    Tools:        []uctypes.ToolDefinition{...},
+//	    SystemPrompt: []string{"You are a helpful assistant."},
+//	}
 //
 // # Message Format
 //
@@ -75,7 +76,8 @@
 // # API Endpoint
 //
 // By default, the backend uses:
-//   https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent
+//
+//	https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent
 //
 // You can override this by setting Config.BaseURL.
 //
