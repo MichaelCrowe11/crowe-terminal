@@ -115,7 +115,7 @@
         "isomorphic-git": "^1.38.5",
         "jotai": "2.9.3",
         "mapbox-gl": "^3.25.0",
-        "mermaid": "^11.12.3",
+        "mermaid": "^11.16.0",
         "monaco-editor": "^0.55.1",
         "monaco-yaml": "^5.4.0",
         "node-hid": "^3.3.0",
