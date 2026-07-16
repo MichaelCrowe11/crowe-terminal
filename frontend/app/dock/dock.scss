@@ -1,0 +1,632 @@
+// Copyright 2026, Command Line Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+// Right utility dock: a 44px icon rail pinned to the workspace's right edge with
+// a resizable drawer that overlays content to its left. Colors/blur come from the
+// shared glass + token layer (crowe-tokens.css / crowe-glass.css).
+
+.crowe-dock-root {
+    position: relative;
+    display: flex;
+    height: 100%;
+    flex-shrink: 0;
+    z-index: 30;
+}
+
+.crowe-dock-rail {
+    width: var(--dock-rail-width, 44px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 0;
+    border-left: 1px solid var(--glass-hairline-chrome);
+
+    .crowe-dock-btn {
+        position: relative;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-md, 3px);
+        color: var(--text-dim);
+        background: transparent;
+        border: 1px solid transparent;
+        transition:
+            color 0.18s ease,
+            background-color 0.18s ease,
+            border-color 0.18s ease,
+            box-shadow 0.25s ease;
+
+        .crowe-dock-glyph {
+            display: block;
+            transition:
+                transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+                filter 0.25s ease;
+        }
+
+        &:hover {
+            color: var(--text);
+            background: var(--wash-accent-faint);
+            border-color: var(--hairline-faint);
+
+            .crowe-dock-glyph {
+                transform: scale(1.08);
+            }
+        }
+    }
+
+    .crowe-dock-btn-active {
+        color: var(--accent);
+        background: radial-gradient(120% 120% at 50% 30%, var(--wash-accent-mid), var(--wash-accent-faint));
+        border-color: var(--crowe-gold-25);
+        box-shadow:
+            inset 0 1px 0 var(--wash-light-06),
+            0 0 14px -3px var(--crowe-gold-25);
+
+        .crowe-dock-glyph {
+            filter: drop-shadow(0 0 5px var(--crowe-gold-40));
+            animation: crowe-colonize 3.6s ease-in-out infinite;
+        }
+    }
+
+    .crowe-dock-sep {
+        width: 20px;
+        height: 1px;
+        margin: 3px 0;
+        background: var(--hairline);
+        flex-shrink: 0;
+    }
+
+    .crowe-dock-indicator {
+        position: absolute;
+        left: -8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 2px;
+        height: 18px;
+        border-radius: 2px;
+        background: var(--accent);
+    }
+
+    .crowe-dock-badge {
+        position: absolute;
+        top: 1px;
+        right: 1px;
+        min-width: 14px;
+        height: 14px;
+        padding: 0 3px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 14px;
+        text-align: center;
+    }
+}
+
+.crowe-dock-drawer {
+    position: absolute;
+    top: 0;
+    right: var(--dock-rail-width, 44px);
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--glass-hairline-chrome);
+    border-right: 1px solid var(--glass-hairline-chrome);
+    box-shadow: var(--shadow-card-strong);
+    overflow: hidden;
+
+    .crowe-dock-resize {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        cursor: col-resize;
+        background: transparent;
+        transition: background-color 0.15s ease;
+
+        &:hover {
+            background: var(--wash-accent-mid);
+        }
+    }
+
+    .crowe-dock-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--hairline);
+        flex-shrink: 0;
+
+        .crowe-dock-title {
+            font-family: var(--font-serif);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.01em;
+        }
+
+        .crowe-dock-close {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            border-radius: var(--radius-sm, 2px);
+
+            &:hover {
+                color: var(--text);
+                background: var(--wash-accent-faint);
+            }
+        }
+    }
+
+    .crowe-dock-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        min-height: 0;
+    }
+}
+
+// --- Shared panel primitives ----------------------------------------------
+
+.crowe-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 12px;
+    font-family: var(--font-sans);
+    color: var(--text);
+    font-size: 12px;
+}
+
+.crowe-panel-hint {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-eyebrow, 0.16em);
+    color: var(--text-dim);
+}
+
+.crowe-empty {
+    padding: 12px;
+    border: 1px dashed var(--hairline);
+    border-radius: var(--radius-md, 3px);
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+// --- Telemetry -------------------------------------------------------------
+
+.crowe-status-line {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+
+    .crowe-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--text-dim);
+    }
+
+    &.crowe-status-running .crowe-status-dot {
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--glow-gold);
+        animation: crowe-pulse 1.1s ease-in-out infinite;
+    }
+
+    &.crowe-status-done .crowe-status-dot {
+        background: var(--crowe-cache-glow);
+    }
+
+    &.crowe-status-error .crowe-status-dot {
+        background: var(--crowe-error);
+    }
+
+    .crowe-status-src {
+        margin-left: auto;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        padding: 1px 5px;
+        border: 1px solid var(--hairline);
+        border-radius: 999px;
+        color: var(--text-dim);
+    }
+}
+
+.crowe-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    .crowe-metric {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px;
+        border: 1px solid var(--hairline);
+        border-top-color: var(--hair-top);
+        border-radius: var(--radius-md, 3px);
+        background: var(--wash-accent-faint);
+
+        .crowe-metric-val {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .crowe-metric-lbl {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+        }
+    }
+}
+
+.crowe-spark {
+    width: 100%;
+    height: 40px;
+    display: block;
+
+    polyline {
+        stroke: var(--accent);
+        stroke-width: 1.5;
+        vector-effect: non-scaling-stroke;
+    }
+
+    &.crowe-spark-empty {
+        border-bottom: 1px solid var(--hairline);
+    }
+}
+
+// --- Model picker ----------------------------------------------------------
+
+.crowe-model-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .crowe-model-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px;
+        text-align: left;
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-md, 3px);
+        background: transparent;
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            border-color: var(--hairline-strong);
+            background: var(--wash-accent-faint);
+        }
+    }
+
+    .crowe-model-item-active {
+        border-color: var(--accent);
+        background: var(--wash-accent);
+    }
+
+    .crowe-model-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .crowe-model-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .crowe-model-check {
+            color: var(--accent);
+            font-size: 12px;
+        }
+    }
+
+    .crowe-model-desc {
+        font-size: 11px;
+        color: var(--text-dim);
+        line-height: 1.4;
+        white-space: pre-line;
+    }
+
+    .crowe-model-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+
+        span {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+            padding: 1px 5px;
+            border: 1px solid var(--hairline);
+            border-radius: 999px;
+        }
+    }
+}
+
+// --- Thinking --------------------------------------------------------------
+
+.crowe-think {
+    align-items: center;
+    text-align: center;
+    padding-top: 28px;
+
+    .crowe-think-glyph {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        border: 2px solid var(--hairline-strong);
+        background: radial-gradient(circle at 35% 30%, var(--wash-accent-strong), transparent 70%);
+    }
+
+    .crowe-think-glyph-live {
+        border-color: var(--accent);
+        box-shadow: 0 0 18px var(--glow-gold);
+        animation: crowe-spin 2.4s linear infinite;
+    }
+
+    .crowe-think-verb {
+        font-family: var(--font-serif);
+        font-size: 17px;
+        color: var(--text);
+    }
+
+    .crowe-think-dots span {
+        animation: crowe-blink 1.4s infinite both;
+
+        &:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        &:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+    }
+
+    .crowe-think-timer {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--accent);
+    }
+}
+
+// --- Design review ---------------------------------------------------------
+
+.crowe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .crowe-input {
+        width: 100%;
+        padding: 7px 8px;
+        background: var(--surface-sunken);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-sm, 2px);
+        color: var(--text);
+        font-family: var(--font-sans);
+        font-size: 12px;
+        outline: none;
+
+        &:focus {
+            border-color: var(--accent);
+        }
+    }
+
+    .crowe-textarea {
+        min-height: 56px;
+        resize: vertical;
+    }
+}
+
+.crowe-btn {
+    padding: 7px 10px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm, 2px);
+    background: var(--wash-accent);
+    color: var(--accent-text);
+    font-weight: 600;
+    font-size: 12px;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background: var(--wash-accent-mid);
+    }
+}
+
+.crowe-note {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 9px 10px;
+    border: 1px solid var(--hairline);
+    border-left: 2px solid var(--text-dim);
+    border-radius: var(--radius-sm, 2px);
+    background: var(--wash-accent-faint);
+
+    &.crowe-note-blocker {
+        border-left-color: var(--crowe-error);
+    }
+
+    &.crowe-note-usability {
+        border-left-color: var(--syntax-warn);
+    }
+
+    &.crowe-note-polish {
+        border-left-color: var(--accent);
+    }
+
+    &.crowe-note-resolved {
+        opacity: 0.55;
+    }
+
+    .crowe-note-head {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+
+        .crowe-sev {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 1px 5px;
+            border-radius: 999px;
+            color: var(--accent-ink);
+        }
+
+        .crowe-sev-blocker {
+            background: var(--crowe-error);
+        }
+
+        .crowe-sev-usability {
+            background: var(--syntax-warn);
+        }
+
+        .crowe-sev-polish {
+            background: var(--accent);
+        }
+
+        .crowe-note-target {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+    }
+
+    .crowe-note-body {
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--text);
+    }
+
+    .crowe-note-actions {
+        display: flex;
+        gap: 12px;
+
+        .crowe-link {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 11px;
+            color: var(--text-dim);
+
+            &:hover {
+                color: var(--accent);
+            }
+        }
+
+        .crowe-link-danger:hover {
+            color: var(--crowe-error);
+        }
+    }
+}
+
+// --- Mycelium graph --------------------------------------------------------
+
+.crowe-graph {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: block;
+
+    .crowe-edge {
+        stroke: var(--hairline-strong);
+        stroke-width: 0.5;
+    }
+
+    .crowe-node {
+        fill: var(--surface-raised);
+        stroke: var(--accent);
+        stroke-width: 0.8;
+    }
+
+    .crowe-node-center {
+        fill: var(--accent);
+    }
+
+    .crowe-node-label {
+        fill: var(--text-dim);
+        font-family: var(--font-mono);
+        font-size: 4px;
+    }
+}
+
+.crowe-graph-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+}
+
+// --- Keyframes -------------------------------------------------------------
+
+@keyframes crowe-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}
+
+@keyframes crowe-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes crowe-blink {
+    0%,
+    100% {
+        opacity: 0.2;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+// Active dock glyph breathes like a colonizing tip — the "this is alive" cue.
+@keyframes crowe-colonize {
+    0%,
+    100% {
+        filter: drop-shadow(0 0 4px var(--crowe-gold-25));
+    }
+    50% {
+        filter: drop-shadow(0 0 9px var(--crowe-gold-45));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crowe-status-running .crowe-status-dot,
+    .crowe-think-glyph-live,
+    .crowe-think-dots span,
+    .crowe-dock-btn-active .crowe-dock-glyph {
+        animation: none;
+    }
+}

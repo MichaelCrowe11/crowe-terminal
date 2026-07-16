@@ -13,6 +13,7 @@ import { useWaveEnv } from "@/app/waveenv/waveenv";
 import { checkKeyPressed, keydownWrapper } from "@/util/keyutil";
 import { isMacOS, isWindows } from "@/util/platformutil";
 import { cn } from "@/util/util";
+import { TelemetryModel } from "@/app/dock/telemetry-model";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import * as jotai from "jotai";
@@ -109,8 +110,8 @@ const AIWelcomeMessage = memo(() => {
 
     const promptHints = widgetAccess ? TOOLS_PROMPT_HINTS : SANDBOX_PROMPT_HINTS;
     const stateLine = widgetAccess
-        ? { dollar: "text-[#bfa669]", text: "text-foreground/90", label: "ready · tools on" }
-        : { dollar: "text-zinc-500", text: "text-zinc-400", label: "ready · sandboxed" };
+        ? { dollar: "text-[var(--accent)]", text: "text-[var(--text)]", label: "ready · tools on" }
+        : { dollar: "text-[var(--text-dim)]", text: "text-[var(--text-dim)]", label: "ready · sandboxed" };
 
     const insertPrompt = (hint: PromptHint) => {
         globalStore.set(model.inputAtom, hint.insert);
@@ -135,7 +136,7 @@ const AIWelcomeMessage = memo(() => {
             <div className={`mt-1 font-mono text-[13px] ${stateLine.text}`}>
                 <span className={stateLine.dollar}>$</span> {stateLine.label}
             </div>
-            <p className="mt-3 text-[13px] leading-relaxed text-zinc-400">
+            <p className="mt-3 text-[13px] leading-relaxed text-[var(--text-dim)]">
                 {widgetAccess
                     ? "Ask for the next concrete action. CroweLM can use terminal context, files, browser blocks, and editor tools."
                     : "Ask a text-only question, or turn tools on in the header when this workspace should use files and terminal context."}
@@ -151,14 +152,14 @@ const AIWelcomeMessage = memo(() => {
                         <span className="font-mono text-[12px] text-[#bfa669] truncate">
                             {hint.label}
                         </span>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500 group-hover:text-[#bfa669] transition-colors">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--text-dim)] group-hover:text-[#bfa669] transition-colors">
                             insert &rarr;
                         </span>
                     </button>
                 ))}
             </div>
 
-            <div className="mt-6 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+            <div className="mt-6 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--text-dim)]">
                 <span>{modKey} K new</span>
                 <span>{modKey} ⇧ A toggle</span>
                 <span>{focusKeys} focus</span>
@@ -176,11 +177,11 @@ const AIBuilderWelcomeMessage = memo(() => {
                 <img src={croweMark} alt="" className="h-10 w-10 object-contain rounded-[2px] ring-1 ring-[#bfa669]/30" />
                 <div>
                     <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">crowe logic</div>
-                    <div className="font-semibold text-foreground text-[15px] -mt-0.5">app builder</div>
+                    <div className="font-semibold text-[var(--text)] text-[15px] -mt-0.5">app builder</div>
                 </div>
             </div>
-            <p className="text-[13px] leading-relaxed text-zinc-400">
-                Build custom widgets that integrate directly into Crowe Terminal. Describe the widget you want and Crowe Logic will scaffold it.
+            <p className="text-[13px] leading-relaxed text-[var(--text-dim)]">
+                Build custom widgets that integrate directly into Hypheus. Describe the widget you want and Crowe Logic will scaffold it.
             </p>
         </div>
     );
@@ -197,10 +198,10 @@ const AIErrorMessage = memo(() => {
     }
 
     return (
-        <div className="px-4 py-2 text-red-400 bg-red-900/20 border-l-4 border-red-500 mx-2 mb-2 relative">
+        <div className="px-4 py-2 text-[var(--crowe-error)] bg-[var(--crowe-error-15)] border-l-4 border-[var(--crowe-error)] mx-2 mb-2 relative">
             <button
                 onClick={() => model.clearError()}
-                className="absolute top-2 right-2 text-red-400 hover:text-red-300 cursor-pointer z-10"
+                className="absolute top-2 right-2 text-[var(--crowe-error)] hover:brightness-110 cursor-pointer z-10"
                 aria-label="Close error"
             >
                 <i className="fa fa-times text-sm"></i>
@@ -209,7 +210,7 @@ const AIErrorMessage = memo(() => {
                 {errorMessage}
                 <button
                     onClick={() => model.clearChat()}
-                    className="ml-2 text-xs text-red-300 hover:text-red-200 cursor-pointer underline"
+                    className="ml-2 text-xs text-[var(--crowe-error)] hover:brightness-110 cursor-pointer underline"
                 >
                     New Chat
                 </button>
@@ -296,6 +297,41 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
     useEffect(() => {
         globalStore.set(model.isAIStreaming, status === "streaming" || status === "submitted");
     }, [status]);
+
+    useEffect(() => {
+        TelemetryModel.getInstance().connect();
+    }, []);
+
+    // Drive the dock telemetry panel: mark run boundaries off the chat status.
+    useEffect(() => {
+        const telemetry = TelemetryModel.getInstance();
+        if (status === "submitted") {
+            telemetry.onSubmit();
+        } else if (status === "ready") {
+            telemetry.finish(false);
+        } else if (status === "error") {
+            telemetry.finish(true);
+        }
+    }, [status]);
+
+    // Feed streamed character count to telemetry so TTFT / tok/s reflect the real
+    // stream (tokens are estimated from chars; the panel labels them as such).
+    useEffect(() => {
+        if (status !== "streaming" && status !== "submitted") {
+            return;
+        }
+        const last = messages[messages.length - 1];
+        if (last?.role !== "assistant") {
+            return;
+        }
+        let chars = 0;
+        for (const part of last.parts ?? []) {
+            if (part.type === "text" && typeof (part as any).text === "string") {
+                chars += (part as any).text.length;
+            }
+        }
+        TelemetryModel.getInstance().recordChars(chars);
+    }, [messages, status]);
 
     useEffect(() => {
         const keyHandler = keydownWrapper(handleKeyDown);
@@ -537,9 +573,9 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
             ref={containerRef}
             data-waveai-panel="true"
             className={cn(
-                "@container bg-[#0b0b0c]/92 flex flex-col relative",
+                "@container bg-[var(--surface)] flex flex-col relative",
                 model.inBuilder ? "mt-0 h-full" : "mt-1 h-[calc(100%-4px)]",
-                (isDragOver || isReactDndDragOver) && "bg-[#15151a] border-[#bfa669]",
+                (isDragOver || isReactDndDragOver) && "bg-[var(--surface-raised-hover)] border-[var(--accent)]",
                 isFocused && !borderColor ? "border-2 border-accent" : "border-2 border-transparent"
             )}
             style={{

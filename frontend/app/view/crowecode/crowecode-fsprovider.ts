@@ -9,7 +9,7 @@ import { TabRpcClient } from "@/app/store/wshrpcutil";
 import { base64ToString, stringToBase64 } from "@/util/util";
 
 // RpcBackedFile is a RegisteredFile whose read/write/size operations are
-// routed through Crowe Terminal's wshrpc file commands. This is how VS Code
+// routed through Hypheus's wshrpc file commands. This is how VS Code
 // services (language servers, search, diagnostics) discover and operate on
 // files that live on disk via the Go backend's scope-checked file I/O.
 //

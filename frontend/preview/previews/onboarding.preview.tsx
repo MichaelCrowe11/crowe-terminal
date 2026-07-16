@@ -59,7 +59,7 @@ function UpgradeOnboardingPatchV() {
                                 <Logo />
                             </div>
                             <div className="text-center text-[25px] font-normal text-foreground">
-                                Crowe Terminal {version.version} Update
+                                Hypheus {version.version} Update
                             </div>
                         </header>
                         <div className="flex-1">{version.content()}</div>

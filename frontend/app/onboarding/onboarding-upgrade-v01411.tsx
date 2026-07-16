@@ -6,7 +6,7 @@ const UpgradeOnboardingModal_v0_14_11_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Crowe Terminal is becoming <strong className="text-foreground">Crowe Code</strong>, the
+                    Hypheus is becoming <strong className="text-foreground">Crowe Code</strong>, the
                     Crowe Logic IDE. This is the last update that will arrive automatically.
                 </p>
             </div>
@@ -22,7 +22,7 @@ const UpgradeOnboardingModal_v0_14_11_Content = () => {
                     <div className="text-secondary leading-5">
                         Crowe Code v1.0.0 will ship as a separate application. Because it is a new app, your
                         current install will not auto-update into it. You will download Crowe Code once when it
-                        is released, and this Crowe Terminal install can stay as long as you like.
+                        is released, and this Hypheus install can stay as long as you like.
                     </div>
                 </div>
             </div>

@@ -51,7 +51,7 @@ export function loadMonaco(): Promise<void> {
         // productConfiguration wires the gallery service to Open VSX, the
         // Eclipse-hosted marketplace used by every non-Microsoft VS Code
         // distribution. That's where users install Prettier, ESLint, Rust
-        // Analyzer, Vim, etc. from inside Crowe Terminal.
+        // Analyzer, Vim, etc. from inside Hypheus.
         await initializeVscodeServices(
             {
                 ...getFilesServiceOverride(),

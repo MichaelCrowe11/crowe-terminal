@@ -139,7 +139,7 @@ export class WaveAIModel {
         });
 
         this.defaultModeAtom = jotai.atom((get) => {
-            // Crowe Terminal: local Foundry agent is always available, so
+            // Hypheus: local Foundry agent is always available, so
             // we don't gate on telemetry like upstream Wave (which needed
             // telemetry consent for wavecloud). Builder modes ship their
             // own waveaibuilder@default which routes through Foundry too.
@@ -147,7 +147,7 @@ export class WaveAIModel {
                 return "waveaibuilder@default";
             }
             const aiModeConfigs = get(this.aiModeConfigs);
-            // Crowe Terminal fallback: regardless of "premium" status, land
+            // Hypheus fallback: regardless of "premium" status, land
             // on the local Foundry-routed CroweLM Auto mode. Upstream Wave's
             // waveai@balanced / waveai@quick names referenced wavecloud
             // configs that never shipped in this fork — would resolve to

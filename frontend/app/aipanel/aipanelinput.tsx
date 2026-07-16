@@ -143,8 +143,8 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
     return (
         <div
             className={cn(
-                "border-t bg-[#0b0b0c]/40 transition-colors",
-                isFocused ? "border-[#bfa669]/40" : "border-[#bfa669]/15"
+                "border-t bg-[var(--glass-tint-chrome)] backdrop-blur-2xl transition-colors",
+                isFocused ? "border-[var(--crowe-gold-40)]" : "border-[var(--hairline-faint)]"
             )}
         >
             <input
@@ -163,10 +163,10 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                         className={cn(
                             "absolute left-2 top-2 font-mono text-[13px] select-none transition-colors",
                             !widgetAccess
-                                ? "text-zinc-500"
+                                ? "text-[var(--text-dim)]"
                                 : isFocused
-                                  ? "text-[#bfa669]"
-                                  : "text-[#bfa669]/50"
+                                  ? "text-[var(--accent)]"
+                                  : "text-[var(--crowe-gold-50)]"
                         )}
                     >
                         $
@@ -180,7 +180,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                         onBlur={handleBlur}
                         placeholder={placeholder}
                         className={cn(
-                            "w-full text-foreground/95 placeholder-zinc-500 pl-4 pr-12 py-2 focus:outline-none resize-none overflow-auto bg-transparent"
+                            "w-full text-[var(--text)] placeholder-[var(--crowe-parchment-40)] pl-4 pr-12 py-2 focus:outline-none resize-none overflow-auto bg-transparent"
                         )}
                         style={{ fontSize: "13px" }}
                         rows={2}
@@ -190,7 +190,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                             type="button"
                             onClick={handleUploadClick}
                             className={cn(
-                                "w-6 h-6 rounded-[2px] transition-colors flex items-center justify-center text-zinc-500 hover:text-[#bfa669] cursor-pointer"
+                                "w-6 h-6 rounded-[var(--radius-sm)] transition-colors flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--accent)] cursor-pointer"
                             )}
                         >
                             <i className="fa fa-paperclip text-[12px]"></i>
@@ -202,8 +202,8 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                                 type="button"
                                 onClick={() => model.stopResponse()}
                                 className={cn(
-                                    "w-6 h-6 rounded-[2px] transition-colors flex items-center justify-center cursor-pointer",
-                                    "text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                    "w-6 h-6 rounded-[var(--radius-sm)] transition-colors flex items-center justify-center cursor-pointer",
+                                    "text-[var(--crowe-error)] hover:brightness-110 hover:bg-[var(--crowe-error-15)]"
                                 )}
                             >
                                 <i className="fa fa-square text-[12px]"></i>
@@ -215,10 +215,10 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                                 type="submit"
                                 disabled={status !== "ready" || !input.trim()}
                                 className={cn(
-                                    "w-6 h-6 rounded-[2px] transition-colors flex items-center justify-center",
+                                    "w-6 h-6 rounded-[var(--radius-sm)] transition-colors flex items-center justify-center",
                                     status !== "ready" || !input.trim()
-                                        ? "text-zinc-600 cursor-default"
-                                        : "text-[#bfa669] hover:text-[#bfa669] hover:bg-[#bfa669]/10 cursor-pointer"
+                                        ? "text-[var(--crowe-parchment-40)] cursor-default"
+                                        : "text-[var(--accent)] hover:bg-[var(--wash-accent-mid)] cursor-pointer"
                                 )}
                             >
                                 <i className="fa fa-arrow-up text-[12px]"></i>

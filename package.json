@@ -1,16 +1,16 @@
 {
-    "name": "crowe-terminal",
+    "name": "hypheus",
     "author": {
         "name": "Crowe Logic, Inc.",
         "email": "michael@crowelogic.com"
     },
-    "productName": "Crowe Terminal",
-    "description": "Crowe Terminal: AI-native multi-pane terminal with browser, file, and CroweLM chat panes. Part of the Crowe Logic platform.",
+    "productName": "Hypheus",
+    "description": "Hypheus: a multi-pane terminal where your shell, browser, files, and a CroweLM operator panel branch from one root. A surface of the Crowe Logic platform.",
     "license": "Apache-2.0",
     "version": "0.1.0",
     "homepage": "https://crowelogic.com",
     "build": {
-        "appId": "io.crowelogic.terminal"
+        "appId": "io.crowelogic.hypheus"
     },
     "private": true,
     "main": "./dist/main/index.js",
@@ -80,6 +80,9 @@
         "@codingame/monaco-vscode-theme-service-override": "^32.0.2",
         "@codingame/monaco-vscode-typescript-basics-default-extension": "^32.0.2",
         "@floating-ui/react": "^0.27.16",
+        "@fontsource-variable/fraunces": "^5.2.9",
+        "@fontsource-variable/inter": "^5.2.8",
+        "@fontsource-variable/jetbrains-mono": "^5.2.8",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@napi-rs/canvas": "^1.0.1",
         "@observablehq/plot": "^0.6.17",

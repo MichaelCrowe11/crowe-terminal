@@ -17,7 +17,7 @@ const chatConfigs: ChatConfig[] = [
             "Check out ~/Projects/crowe-terminal and summarize the project, including what it does and how it's organized.",
         toolName: "read_dir",
         toolDescription: 'reading directory "~/Projects/crowe-terminal"',
-        markdownResponse: `Here's a quick, file-structure–driven overview of this repo (Crowe Terminal):
+        markdownResponse: `Here's a quick, file-structure–driven overview of this repo (Hypheus):
 
 ## What it is
 - Electron + React front end with a Go backend ("wavesrv"). Provides a terminal with GUI widgets, previews, web, and AI. (README.md)

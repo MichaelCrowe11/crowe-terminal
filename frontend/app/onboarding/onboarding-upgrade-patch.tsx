@@ -271,7 +271,7 @@ const UpgradeOnboardingPatch = ({ isReleaseNotes = false }: UpgradeOnboardingPat
                             <Logo />
                         </div>
                         <div className="text-center text-[25px] font-normal text-foreground">
-                            Crowe Terminal {currentVersion.version} Update
+                            Hypheus {currentVersion.version} Update
                         </div>
                     </header>
                     <OverlayScrollbarsComponent

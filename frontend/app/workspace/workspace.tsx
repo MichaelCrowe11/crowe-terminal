@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AIPanel } from "@/app/aipanel/aipanel";
+import { UtilityDock } from "@/app/dock/utilitydock";
 import { ErrorBoundary } from "@/app/element/errorboundary";
 import { CenteredDiv } from "@/app/element/quickelems";
 import { ModalsRenderer } from "@/app/modals/modalsrenderer";
@@ -112,6 +113,7 @@ const WorkspaceElem = memo(() => {
             {!(showLeftTabBar && isMacOS()) && <TabBar key={ws.oid} workspace={ws} noTabs={showLeftTabBar} />}
             {showLeftTabBar && isMacOS() && <MacOSTabBarSpacer />}
             <div ref={panelContainerRef} className="flex flex-row flex-grow overflow-hidden">
+                <div className="relative flex-grow min-w-0 h-full overflow-hidden">
                 <ErrorBoundary key={tabId}>
                     <PanelGroup
                         direction="horizontal"
@@ -166,6 +168,8 @@ const WorkspaceElem = memo(() => {
                     </PanelGroup>
                     <ModalsRenderer />
                 </ErrorBoundary>
+                </div>
+                <UtilityDock />
             </div>
         </div>
     );

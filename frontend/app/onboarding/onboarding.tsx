@@ -85,7 +85,7 @@ const InitPage = ({
                 <div className={`${isCompact ? "" : "mb-2.5"} flex justify-center`}>
                     <Logo />
                 </div>
-                <div className="text-center text-[25px] font-normal text-foreground">Welcome to Crowe Terminal</div>
+                <div className="text-center text-[25px] font-normal text-foreground">Welcome to Hypheus</div>
             </header>
             <OverlayScrollbarsComponent
                 className="flex-1 overflow-y-auto min-h-0"
@@ -234,7 +234,7 @@ const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
                 <div className={`flex justify-center`}>
                     <Logo />
                 </div>
-                <div className="text-center text-[25px] font-normal text-foreground">Telemetry Disabled ✓</div>
+                <div className="text-center text-[25px] font-normal text-foreground">Telemetry Disabled</div>
             </header>
             <OverlayScrollbarsComponent
                 className="flex-1 overflow-y-auto min-h-0"
@@ -244,8 +244,8 @@ const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
                     <div className="text-center text-secondary leading-relaxed max-w-md">
                         <p className="mb-4">No problem, we respect your privacy.</p>
                         <p className="mb-4">
-                            But, without usage data, we're flying blind. A GitHub star helps us know Crowe Terminal is useful and
-                            worth maintaining.
+                            But, without usage data, we're flying blind. A GitHub star helps us know Hypheus is
+                            useful and worth maintaining.
                         </p>
                     </div>
                 </div>
@@ -253,7 +253,7 @@ const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
             <footer className={`unselectable flex-shrink-0 mt-2`}>
                 <div className="flex flex-row items-center justify-center gap-2.5 [&>button]:!px-5 [&>button]:!py-2 [&>button]:text-sm [&>button]:!h-[37px]">
                     <Button className="outlined green font-[600]" onClick={handleStarClick}>
-                        ⭐ Star on GitHub
+                        <i className="fa-solid fa-star mr-2"></i>Star on GitHub
                     </Button>
                     <Button className="outlined grey font-[600]" onClick={handleMaybeLater}>
                         Maybe Later

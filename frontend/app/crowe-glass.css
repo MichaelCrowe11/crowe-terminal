@@ -1,0 +1,144 @@
+/* Liquid Glass material system — ported from Cortex (src/styles/glass.css) and
+ * graded up for the Terminal chrome. Load AFTER crowe-tokens.css: the themed
+ * halves (--glass-tint-*, --glass-hairline-*, --glass-scrim) live in the tokens
+ * semantic tier; this file owns only the theme-invariant optics (blur, saturate,
+ * grade, specular, sheen, grain) and the .glass-* tier classes.
+ *
+ *   .glass-chrome  → nav surfaces (tab bar, block headers, docks)
+ *   .glass-raised  → cards / sheets / blocks, with a parchment top glint
+ *   .glass-overlay → modals / menus, heaviest blur + dim scrim
+ *
+ * Modifiers (opt-in, layout-safe — no pseudo-elements):
+ *   .glass-grain     → adds a faint tactile film so glass reads as a real pane
+ *   .glass-fruiting  → warm gold rim-glow for "attention has ripened" states
+ */
+
+:root {
+  --glass-blur-chrome: 28px;
+  --glass-blur-raised: 22px;
+  --glass-blur-overlay: 46px;
+  --glass-saturate: 1.7;
+
+  /* Color grading pushed THROUGH the pane. contrast + brightness lift the
+   * content behind the glass so it refracts instead of just frosting — the
+   * difference between a curved lens and a sheet of wax paper. */
+  --glass-contrast: 1.08;
+  --glass-brightness: 1.04;
+
+  --glass-highlight-raised: inset 0 1px 0 var(--crowe-parchment-04);
+
+  /* Liquid-glass specular: crisp lit top edge, a soft sheen pooling just under
+   * it, a faint inner shade near the base (curvature), and a bottom rim light.
+   * Four layers is what separates "curved glass" from "flat frosted film". */
+  --glass-specular: inset 0 1px 0 var(--wash-light-15), inset 0 8px 16px -10px var(--wash-light-06),
+    inset 0 -10px 22px -16px var(--shadow-ink-25), inset 0 -1px 0 var(--wash-light-02);
+
+  /* Lit-from-above sheen painted over the tint. */
+  --glass-sheen: linear-gradient(180deg, var(--wash-light-06) 0%, transparent 32%, transparent 100%);
+  /* Faint warm bloom bleeding down from the top edge (the gold light source). */
+  --glass-bloom-gold: radial-gradient(140% 90% at 50% -24%, var(--crowe-gold-07), transparent 58%);
+
+  /* Tactile film — fractal noise baked into a data-URI, blended low so it reads
+   * as grain in the glass rather than TV static. */
+  --glass-grain-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* Fruiting glow — gold rim + soft outer halo, the "ripened attention" cue. */
+  --glass-fruiting-glow: 0 0 0 1px var(--crowe-gold-25), 0 0 18px -2px var(--crowe-gold-20),
+    var(--glass-specular);
+
+  --glass-fade-extent: 24px;
+}
+
+.glass-chrome {
+  background-color: var(--glass-tint-chrome);
+  background-image: var(--glass-sheen);
+  -webkit-backdrop-filter: blur(var(--glass-blur-chrome)) saturate(var(--glass-saturate))
+    contrast(var(--glass-contrast)) brightness(var(--glass-brightness));
+  backdrop-filter: blur(var(--glass-blur-chrome)) saturate(var(--glass-saturate)) contrast(var(--glass-contrast))
+    brightness(var(--glass-brightness));
+  border: 1px solid var(--glass-hairline-chrome);
+  box-shadow: var(--glass-specular);
+}
+
+.glass-raised {
+  background-color: var(--glass-tint-raised);
+  background-image: var(--glass-bloom-gold), var(--glass-sheen);
+  -webkit-backdrop-filter: blur(var(--glass-blur-raised)) saturate(var(--glass-saturate))
+    contrast(var(--glass-contrast)) brightness(var(--glass-brightness));
+  backdrop-filter: blur(var(--glass-blur-raised)) saturate(var(--glass-saturate)) contrast(var(--glass-contrast))
+    brightness(var(--glass-brightness));
+  border: 1px solid var(--glass-hairline-raised);
+  border-top-color: var(--hair-top);
+  box-shadow: var(--glass-specular), var(--glass-highlight-raised), var(--elev-2);
+}
+
+.glass-overlay {
+  background-color: var(--glass-tint-overlay);
+  background-image: var(--glass-bloom-gold), var(--glass-sheen);
+  -webkit-backdrop-filter: blur(var(--glass-blur-overlay)) saturate(var(--glass-saturate))
+    contrast(var(--glass-contrast)) brightness(var(--glass-brightness));
+  backdrop-filter: blur(var(--glass-blur-overlay)) saturate(var(--glass-saturate)) contrast(var(--glass-contrast))
+    brightness(var(--glass-brightness));
+  border: 1px solid var(--glass-hairline-overlay);
+  box-shadow: var(--glass-specular), var(--elev-3);
+}
+
+/* Tactile grain — stacked as an extra background layer (blended), so no
+ * pseudo-element and no positioning requirement on the host. */
+.glass-grain {
+  background-image: var(--glass-grain-tex), var(--glass-sheen);
+  background-size: 140px 140px, auto;
+  background-blend-mode: overlay, normal;
+}
+.glass-grain.glass-raised,
+.glass-grain.glass-overlay {
+  background-image: var(--glass-grain-tex), var(--glass-bloom-gold), var(--glass-sheen);
+  background-size: 140px 140px, auto, auto;
+  background-blend-mode: overlay, normal, normal;
+}
+
+.glass-fruiting {
+  box-shadow: var(--glass-fruiting-glow);
+  border-color: var(--crowe-gold-30);
+}
+
+.glass-scrim {
+  background-color: var(--glass-scrim);
+}
+
+.glass-static,
+.glass-static.glass-chrome,
+.glass-static.glass-raised,
+.glass-static.glass-overlay {
+  background-color: var(--surface-raised);
+  background-image: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-chrome,
+  .glass-raised,
+  .glass-overlay {
+    background-color: var(--surface-raised);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .glass-grain {
+    background-image: none;
+  }
+
+  .glass-scrim {
+    background-color: var(--surface);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-chrome,
+  .glass-raised,
+  .glass-overlay {
+    background-color: var(--surface-raised);
+  }
+}

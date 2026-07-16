@@ -83,7 +83,7 @@ export const AIPanelMessages = memo(({ messages, status, onContextMenu }: AIPane
 
     return (
         <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-2 space-y-4" onContextMenu={onContextMenu}>
-            <div className="mb-2 border border-[#bfa669]/14 bg-[#bfa669]/[0.025] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/70">
+            <div className="mb-2 rounded-[var(--radius-sm)] border border-[var(--hairline-faint)] bg-[var(--wash-accent-faint)] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--crowe-gold-65)]">
                 CroweLM managed workspace
             </div>
             {messages.map((message, index) => {

@@ -93,8 +93,8 @@ export class Updater {
             // Display the update banner and create a system notification
             this.status = "ready";
             const updateNotification = new Notification({
-                title: "Crowe Terminal",
-                body: "A new version of Crowe Terminal is ready to install.",
+                title: "Hypheus",
+                body: "A new version of Hypheus is ready to install.",
             });
             updateNotification.on("click", () => {
                 fireAndForget(this.promptToInstallUpdate.bind(this));

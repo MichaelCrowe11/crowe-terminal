@@ -13,17 +13,17 @@
     --color-muted-foreground: rgb(195, 200, 194);
     --color-secondary: rgb(195, 200, 194);
     --color-muted: rgb(140, 145, 140);
-    /* Crowe Logic gold accent palette (#bfa669 anchor). */
-    --color-accent-50: rgb(255, 247, 223);
-    --color-accent-100: rgb(244, 232, 188);
-    --color-accent-200: rgb(232, 213, 145);
-    --color-accent-300: rgb(216, 192, 137);
-    --color-accent-400: rgb(191, 166, 105); /* main accent color — Crowe gold */
-    --color-accent-500: rgb(170, 142, 80);
-    --color-accent-600: rgb(143, 117, 60);
-    --color-accent-700: rgb(115, 92, 45);
-    --color-accent-800: rgb(86, 68, 32);
-    --color-accent-900: rgb(58, 45, 21);
+    /* Hypheus blue accent palette (#2a5090 anchor). */
+    --color-accent-50: rgb(233, 239, 247);
+    --color-accent-100: rgb(206, 219, 238);
+    --color-accent-200: rgb(157, 182, 216);
+    --color-accent-300: rgb(110, 147, 206);
+    --color-accent-400: rgb(61, 107, 176); /* bright Hypheus blue */
+    --color-accent-500: rgb(42, 80, 144); /* anchor Hypheus blue */
+    --color-accent-600: rgb(30, 58, 107);
+    --color-accent-700: rgb(22, 42, 79);
+    --color-accent-800: rgb(15, 30, 56);
+    --color-accent-900: rgb(10, 20, 38);
     --color-error: rgb(229, 77, 46);
     --color-warning: rgb(224, 185, 86);
     --color-success: rgb(78, 154, 6);
@@ -31,14 +31,15 @@
     --color-hover: rgba(255, 255, 255, 0.1);
     --color-border: rgba(191, 166, 105, 0.16);
     --color-modalbg: #1a1d24;
-    --color-accentbg: rgba(191, 166, 105, 0.5);
+    --color-accentbg: rgba(42, 80, 144, 0.5);
     --color-hoverbg: rgba(255, 255, 255, 0.2);
     --color-highlightbg: rgba(255, 255, 255, 0.2);
-    --color-accent: rgb(191, 166, 105);
-    --color-accenthover: rgb(216, 192, 137);
+    --color-accent: rgb(42, 80, 144);
+    --color-accenthover: rgb(61, 107, 176);
 
-    --font-sans: "Inter", sans-serif;
-    --font-mono: "JetBrains Mono", "Hack", monospace;
+    --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    --font-serif: "Fraunces Variable", "Fraunces", Georgia, "Times New Roman", serif;
+    --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     --font-markdown:
         -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji",
         "Segoe UI Emoji";

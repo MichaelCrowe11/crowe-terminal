@@ -60,28 +60,27 @@ export const CroweChannelPanel = memo(({ compact = false }: { compact?: boolean 
     };
 
     return (
-        <section
-            className={cn(
-                "border border-[#bfa669]/20 bg-[#0b0b0c]/80",
-                "shadow-[inset_0_1px_0_rgba(191,166,105,0.08)]",
-                compact ? "p-3" : "p-4"
-            )}
-        >
+        <section className={cn("glass-raised rounded-[var(--radius-md)]", compact ? "p-3" : "p-4")}>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <div className="inline-flex items-center gap-2 border border-[#bfa669]/30 bg-[#bfa669]/[0.04] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em] text-[#bfa669]">
-                        <span className="h-1 w-1 animate-pulse bg-[#bfa669]" />
+                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--crowe-gold-30)] bg-[var(--wash-accent-faint)] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--accent)]">
+                        <span className="h-1 w-1 rounded-full animate-pulse bg-[var(--accent)]" />
                         Signed workspace
                     </div>
-                    <div className="mt-2 text-[15px] font-semibold text-[#e8e2cf]">CroweLM channels</div>
-                    <p className="mt-1 text-[12px] leading-relaxed text-[#e8e2cf]/55">
+                    <div
+                        className="mt-2 text-[16px] font-semibold text-[var(--text)]"
+                        style={{ fontFamily: "var(--font-serif)" }}
+                    >
+                        CroweLM channels
+                    </div>
+                    <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-dim)]">
                         Pick the work lane. Crowe Logic handles routing, context, and tool access behind the workspace.
                     </p>
                 </div>
                 <button
                     type="button"
                     onClick={() => model.openCroweAccount()}
-                    className="shrink-0 border border-[#bfa669]/35 bg-[#bfa669]/[0.06] px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669] transition-colors hover:border-[#bfa669]/70 hover:bg-[#bfa669]/[0.12]"
+                    className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--crowe-gold-35)] bg-[var(--wash-accent)] px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--accent)] transition-colors hover:border-[var(--crowe-gold-60)] hover:bg-[var(--wash-accent-mid)] cursor-pointer"
                 >
                     Sign in
                 </button>
@@ -93,22 +92,22 @@ export const CroweChannelPanel = memo(({ compact = false }: { compact?: boolean 
                         key={channel.id}
                         type="button"
                         onClick={() => insertChannelPrompt(channel)}
-                        className="group min-h-[72px] border border-[#bfa669]/14 bg-[#bfa669]/[0.025] p-3 text-left transition-colors hover:border-[#bfa669]/45 hover:bg-[#bfa669]/[0.07]"
+                        className="group min-h-[72px] rounded-[var(--radius-md)] border border-[var(--hairline-faint)] bg-[var(--wash-accent-faint)] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--crowe-gold-40)] hover:bg-[var(--wash-accent)] hover:shadow-[var(--glass-fruiting-glow)] cursor-pointer"
                     >
                         <div className="flex items-center justify-between gap-3">
-                            <span className="font-mono text-[10px] uppercase tracking-[0.20em] text-[#bfa669]">
+                            <span className="font-mono text-[10px] uppercase tracking-[0.20em] text-[var(--accent)]">
                                 {channel.name}
                             </span>
-                            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#e8e2cf]/0 transition-colors group-hover:text-[#bfa669]/70">
-                                use
+                            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-transparent transition-colors group-hover:text-[var(--crowe-gold-65)]">
+                                use →
                             </span>
                         </div>
-                        <div className="mt-2 text-[12px] leading-relaxed text-[#e8e2cf]/55">{channel.scope}</div>
+                        <div className="mt-2 text-[12px] leading-relaxed text-[var(--text-dim)]">{channel.scope}</div>
                     </button>
                 ))}
             </div>
 
-            <div className="mt-3 flex items-center justify-between border-t border-[#bfa669]/12 pt-3 font-mono text-[9px] uppercase tracking-[0.18em] text-[#e8e2cf]/38">
+            <div className="mt-3 flex items-center justify-between border-t border-[var(--hairline-faint)] pt-3 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--crowe-parchment-40)]">
                 <span>{widgetAccess ? "tools live" : "text only"}</span>
                 <span>no keys · no provider setup</span>
             </div>

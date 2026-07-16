@@ -55,23 +55,12 @@ const WaveAIButton = memo(({ divRef }: { divRef?: React.RefObject<HTMLDivElement
         WorkspaceLayoutModel.getInstance().setAIPanelVisible(!currentVisible);
     };
 
-    if (hideAiButton) {
-        return null;
-    }
-
-    return (
-        <Tooltip
-            content="Toggle Crowe Logic Panel"
-            placement="bottom"
-            hideOnClick
-            divClassName={`flex h-[22px] px-3.5 justify-end mb-1 items-center rounded-md mr-1 box-border cursor-pointer bg-hover hover:bg-hoverbg transition-colors text-[12px] ${aiPanelOpen ? "text-accent" : "text-secondary"}`}
-            divStyle={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-            divOnClick={onClick}
-            divRef={divRef}
-        >
-            <i className="fa fa-sparkles" />
-        </Tooltip>
-    );
+    // The sparkle toggle was removed from the tab bar; assistant + tools now
+    // live on the right-side mycelium dock rail (UtilityDock).
+    void aiPanelOpen;
+    void onClick;
+    void hideAiButton;
+    return null;
 });
 WaveAIButton.displayName = "WaveAIButton";
 

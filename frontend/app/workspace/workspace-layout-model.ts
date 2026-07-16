@@ -67,7 +67,7 @@ class WorkspaceLayoutModel {
         this.aiPanelWrapperRef = null;
         this.vtabPanelWrapperRef = null;
         this.inResize = false;
-        // AI panel defaults to OPEN for Crowe Terminal (unlike upstream Wave) —
+        // AI panel defaults to OPEN for Hypheus (unlike upstream Wave) —
         // the AI agent is the headline feature so first-launch tabs should
         // surface it. initializeFromMeta() below still respects whatever the
         // user explicitly set per-tab via waveai:panelopen, so closing the

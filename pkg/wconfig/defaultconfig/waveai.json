@@ -100,7 +100,7 @@
         "ai:switchcompat": [
             "openai"
         ],
-        "ai:apitoken": "local-gateway-no-auth"
+        "ai:apitokensecretname": "NIMBUS_GATEWAY_TOKEN"
     },
     "waveai@deepparallel-reason": {
         "display:name": "DeepParallel Reason",
@@ -117,7 +117,7 @@
         "ai:switchcompat": [
             "openai"
         ],
-        "ai:apitoken": "local-gateway-no-auth"
+        "ai:apitokensecretname": "NIMBUS_GATEWAY_TOKEN"
     },
     "waveai@deepparallel-flash": {
         "display:name": "DeepParallel Flash",
@@ -134,6 +134,6 @@
         "ai:switchcompat": [
             "openai"
         ],
-        "ai:apitoken": "local-gateway-no-auth"
+        "ai:apitokensecretname": "NIMBUS_GATEWAY_TOKEN"
     }
 }

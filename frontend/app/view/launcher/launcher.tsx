@@ -11,6 +11,7 @@ import { isBlank, makeIconClass } from "@/util/util";
 import clsx from "clsx";
 import { atom, useAtom, useAtomValue } from "jotai";
 import React, { useEffect, useLayoutEffect, useRef } from "react";
+import "./launcher.scss";
 
 function sortByDisplayOrder(wmap: { [key: string]: WidgetConfigType } | null | undefined): WidgetConfigType[] {
     if (!wmap) return [];
@@ -46,7 +47,7 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
         id: "crowecode-web",
         eyebrow: "Web IDE",
         name: "CroweCode Web",
-        tagline: "Run the live CroweCode workspace natively inside Crowe Terminal.",
+        tagline: "Run the live CroweCode workspace natively inside Hypheus.",
         status: "native",
         blockdef: { meta: { view: "web", url: CROWE_WEB_IDE_URL } },
     },
@@ -108,7 +109,7 @@ export class LauncherViewModel implements ViewModel {
     tabModel: TabModel;
     viewType = "launcher";
     viewIcon = atom("shapes");
-    viewName = atom("Crowe Terminal");
+    viewName = atom("Hypheus");
     viewComponent = LauncherView;
     noHeader = atom(true);
     inputRef = { current: null } as React.RefObject<HTMLInputElement>;
@@ -300,34 +301,37 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
     }, [searchTerm]);
 
     return (
-        <div ref={containerRef} className="relative w-full h-full p-5 box-border flex flex-col items-center justify-center overflow-auto bg-[#0b0b0c]">
+        <div
+            ref={containerRef}
+            className="crowe-launcher relative w-full h-full p-6 box-border flex flex-col items-center justify-center overflow-auto"
+        >
             {showLogo && (
-                <div className="relative mb-5 flex flex-col items-center gap-3" style={{ width: logoWidth, maxWidth: 360 }}>
-                    <div className="inline-flex items-center gap-2 border border-[#bfa669]/30 bg-[#bfa669]/[0.04] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]">
-                        <span className="h-1 w-1 animate-pulse bg-[#bfa669]" />
-                        Signed workspace
+                <div
+                    className="relative mb-6 flex flex-col items-center gap-3"
+                    style={{ width: logoWidth, maxWidth: 360 }}
+                >
+                    <div className="crowe-launcher-eyebrow">
+                        <span className="crowe-launcher-live" />
+                        Operator console · signed workspace
                     </div>
                     <img src={croweWordmarkUrl} className="h-auto w-full max-w-[260px]" alt="Crowe Logic" />
-                    <img src={croweMarkUrl} className="h-auto w-full max-w-[58px]" alt="" />
-                    <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/60">
-                        {getGreeting()} · terminal · code · CroweLM
-                    </div>
+                    <img src={croweMarkUrl} className="h-auto w-full max-w-[54px]" alt="" />
+                    <div className="crowe-launcher-greeting">{getGreeting()}, operator</div>
+                    <div className="crowe-launcher-subhead">Terminal, code, research, and grow ops on one managed workspace.</div>
                 </div>
             )}
 
-            <div className="relative mb-6 w-full max-w-md">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs text-[#bfa669]/70">
-                    {">"}
-                </span>
+            <div className="relative mb-7 w-full max-w-md">
+                <span className="crowe-launcher-prompt-glyph">{">"}</span>
                 <input
                     ref={model.inputRef}
                     type="text"
                     value={searchTerm}
                     onKeyDown={keydownWrapper(model.keyDownHandler.bind(model))}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="SEARCH TOOLS AND WORKSPACES"
+                    placeholder="RUN A CHANNEL OR SEARCH TOOLS"
                     aria-label="Search widgets"
-                    className="w-full border border-[#bfa669]/20 bg-[#0b0b0c]/70 py-2.5 pl-8 pr-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[#e8e2cf] placeholder:text-[#e8e2cf]/35 focus:border-[#bfa669]/55 focus:outline-none focus:ring-2 focus:ring-[#bfa669]/15 transition-colors"
+                    className="crowe-launcher-cmd"
                 />
             </div>
 
@@ -337,43 +341,32 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                         key={p.id}
                         type="button"
                         onClick={() => model.handleProductSelect(p.blockdef)}
-                        className="group flex cursor-pointer flex-col items-start gap-2 border border-[#bfa669]/15 bg-[#bfa669]/[0.025] p-4 text-left transition-colors hover:border-[#bfa669]/45 hover:bg-[#bfa669]/[0.06]"
+                        className="crowe-launcher-card glass-raised group cursor-pointer text-left"
                     >
                         <div className="flex w-full items-center justify-between">
-                            <span className="font-mono text-[10px] uppercase tracking-[0.20em] text-[#bfa669]">
-                                {p.eyebrow}
-                            </span>
-                            <span
-                                className={clsx(
-                                    "inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-[0.18em]",
-                                    "text-[#bfa669]/70"
-                                )}
-                            >
+                            <span className="crowe-launcher-card-eyebrow">{p.eyebrow}</span>
+                            <span className="crowe-launcher-card-status">
                                 <span
                                     className={clsx(
-                                        "h-1 w-1",
-                                        p.status === "secure" ? "bg-[#e8e2cf]/65" : "bg-[#bfa669] animate-pulse"
+                                        "crowe-launcher-dot",
+                                        p.status !== "secure" && "crowe-launcher-dot-live"
                                     )}
                                 />
                                 {p.status}
                             </span>
                         </div>
-                        <span className="text-[14px] font-bold text-[#e8e2cf]">{p.name}</span>
-                        <span className="text-[12px] leading-relaxed text-[#e8e2cf]/55">{p.tagline}</span>
-                        <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/0 transition-colors group-hover:text-[#bfa669]/80">
-                            open →
-                        </span>
+                        <span className="crowe-launcher-card-name">{p.name}</span>
+                        <span className="crowe-launcher-card-tagline">{p.tagline}</span>
+                        <span className="crowe-launcher-card-open">open →</span>
                     </button>
                 ))}
             </div>
 
             {filteredWidgets.length > 0 && (
                 <div className="relative mb-3 flex items-center gap-3">
-                    <span className="h-px w-12 bg-[#bfa669]/20" />
-                    <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/55">
-                        Or jump to a tool
-                    </span>
-                    <span className="h-px w-12 bg-[#bfa669]/20" />
+                    <span className="crowe-launcher-rule" />
+                    <span className="crowe-launcher-divider">Or jump to a tool</span>
+                    <span className="crowe-launcher-rule" />
                 </div>
             )}
 
@@ -389,11 +382,8 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                         onClick={() => model.handleWidgetSelect(widget)}
                         title={widget.description || widget.label}
                         className={clsx(
-                            "flex flex-col items-center justify-center cursor-pointer p-2 text-center",
-                            "border transition-colors duration-150",
-                            index === selectedIndex
-                                ? "border-[#bfa669]/60 bg-[#bfa669]/[0.12] text-[#e8e2cf]"
-                                : "border-[#bfa669]/15 bg-[#bfa669]/[0.03] text-[#e8e2cf]/70 hover:border-[#bfa669]/40 hover:bg-[#bfa669]/[0.07] hover:text-[#e8e2cf]"
+                            "crowe-launcher-tile cursor-pointer",
+                            index === selectedIndex && "crowe-launcher-tile-active"
                         )}
                         style={{
                             width: finalTileWidth,
@@ -416,18 +406,16 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                 ))}
             </div>
 
-            <div className="relative mt-8 grid w-full max-w-2xl grid-cols-2 gap-4 border-t border-[#bfa669]/10 pt-5 md:grid-cols-4">
+            <div className="crowe-launcher-stats relative mt-8 grid w-full max-w-2xl grid-cols-2 gap-4 pt-5 md:grid-cols-4">
                 {STATS.map((s) => (
                     <div key={s.label} className="flex flex-col items-center gap-0.5 text-center">
-                        <span className="font-mono text-[16px] font-bold tracking-tight text-[#bfa669]">{s.value}</span>
-                        <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#e8e2cf]/40">
-                            {s.label}
-                        </span>
+                        <span className="crowe-launcher-stat-val">{s.value}</span>
+                        <span className="crowe-launcher-stat-lbl">{s.label}</span>
                     </div>
                 ))}
             </div>
 
-            <div className="relative mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-[#e8e2cf]/40">
+            <div className="crowe-launcher-hint relative mt-4">
                 {filteredWidgets.length === 0 ? (
                     <span>no widgets found · esc to clear</span>
                 ) : (

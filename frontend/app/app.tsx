@@ -33,6 +33,19 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { AppBackground } from "./app-bg";
 import { CenteredDiv } from "./element/quickelems";
 
+// Platform typefaces (Fraunces editorial / Inter UI / JetBrains mono). Fontsource
+// registers these as "<Name> Variable", which is what the --font-* stacks in
+// crowe-tokens.css reference.
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
+
+// crowe-tokens.css must load before app.scss/theme.scss so the shared Crowe Logic
+// primitives are defined before any stylesheet consumes them via var()
+import "./crowe-tokens.css";
+// crowe-glass.css layers the liquid-glass optics (blur/specular/tiers) onto those tokens
+import "./crowe-glass.css";
+
 import "./app.scss";
 
 // tailwindsetup.css should come *after* app.scss (don't remove the newline above otherwise prettier will reorder these imports)

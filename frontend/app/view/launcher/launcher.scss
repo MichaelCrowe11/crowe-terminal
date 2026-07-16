@@ -1,0 +1,257 @@
+// Copyright 2026, Crowe Logic Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+// The opening: a Crowe operator console, on the shared token + glass system so
+// it matches the Cortex operator surface and the rest of the app. No hardcoded
+// hex — every value resolves through crowe-tokens.css.
+
+.crowe-launcher {
+    color: var(--text);
+    background:
+        radial-gradient(120% 70% at 50% -10%, var(--crowe-gold-06), transparent 55%),
+        var(--surface);
+
+    .crowe-launcher-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 4px 10px;
+        border: 1px solid var(--crowe-gold-30);
+        background: var(--wash-accent-faint);
+        border-radius: var(--radius-pill);
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: var(--tracking-eyebrow);
+        color: var(--accent);
+    }
+
+    .crowe-launcher-live {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--glow-gold);
+        animation: crowe-launcher-pulse 1.6s ease-in-out infinite;
+    }
+
+    .crowe-launcher-greeting {
+        font-family: var(--font-serif);
+        font-size: 30px;
+        font-weight: 500;
+        line-height: 1.05;
+        letter-spacing: -0.01em;
+        color: var(--text);
+        text-align: center;
+    }
+
+    .crowe-launcher-subhead {
+        max-width: 340px;
+        text-align: center;
+        font-family: var(--font-sans);
+        font-size: 12.5px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+
+    .crowe-launcher-prompt-glyph {
+        pointer-events: none;
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--crowe-gold-65);
+    }
+
+    .crowe-launcher-cmd {
+        width: 100%;
+        padding: 11px 12px 11px 30px;
+        background: var(--surface-sunken);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--text);
+        outline: none;
+        transition:
+            border-color 0.15s ease,
+            box-shadow 0.15s ease;
+
+        &::placeholder {
+            color: var(--crowe-parchment-40);
+        }
+
+        &:focus {
+            border-color: var(--crowe-gold-55);
+            box-shadow: 0 0 0 3px var(--crowe-gold-12);
+        }
+    }
+
+    .crowe-launcher-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 15px;
+        border-radius: var(--radius-md);
+        transition:
+            transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+            box-shadow 0.25s ease,
+            border-color 0.2s ease;
+
+        &:hover {
+            transform: translateY(-2px);
+            border-color: var(--crowe-gold-40);
+            box-shadow: var(--glass-fruiting-glow);
+        }
+    }
+
+    .crowe-launcher-card-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--accent);
+    }
+
+    .crowe-launcher-card-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--crowe-gold-65);
+    }
+
+    .crowe-launcher-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--crowe-parchment-45);
+    }
+
+    .crowe-launcher-dot-live {
+        background: var(--accent);
+        animation: crowe-launcher-pulse 1.6s ease-in-out infinite;
+    }
+
+    .crowe-launcher-card-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .crowe-launcher-card-tagline {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-dim);
+    }
+
+    .crowe-launcher-card-open {
+        margin-top: 2px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: transparent;
+        transition: color 0.18s ease;
+    }
+
+    .crowe-launcher-card:hover .crowe-launcher-card-open {
+        color: var(--crowe-gold-65);
+    }
+
+    .crowe-launcher-rule {
+        height: 1px;
+        width: 48px;
+        background: var(--hairline);
+    }
+
+    .crowe-launcher-divider {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--crowe-gold-55);
+    }
+
+    .crowe-launcher-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        text-align: center;
+        border: 1px solid var(--hairline-faint);
+        border-radius: var(--radius-md);
+        background: var(--wash-accent-faint);
+        color: var(--text-dim);
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease,
+            color 0.15s ease;
+
+        &:hover {
+            border-color: var(--crowe-gold-40);
+            background: var(--wash-accent);
+            color: var(--text);
+        }
+    }
+
+    .crowe-launcher-tile-active {
+        border-color: var(--crowe-gold-60);
+        background: var(--wash-accent-mid);
+        color: var(--text);
+    }
+
+    .crowe-launcher-stats {
+        border-top: 1px solid var(--hairline-faint);
+    }
+
+    .crowe-launcher-stat-val {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--accent);
+    }
+
+    .crowe-launcher-stat-lbl {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--crowe-parchment-40);
+    }
+
+    .crowe-launcher-hint {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--crowe-parchment-40);
+    }
+}
+
+@keyframes crowe-launcher-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crowe-launcher .crowe-launcher-live,
+    .crowe-launcher .crowe-launcher-dot-live {
+        animation: none;
+    }
+}

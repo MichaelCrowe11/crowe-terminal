@@ -280,7 +280,7 @@ electronApp.on("before-quit", (e) => {
             type: "question",
             buttons: ["Cancel", "Quit"],
             title: "Confirm Quit",
-            message: "Are you sure you want to quit Crowe Terminal?",
+            message: "Are you sure you want to quit Hypheus?",
             defaultId: 0,
             cancelId: 0,
         });

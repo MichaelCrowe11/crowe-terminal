@@ -44,7 +44,7 @@ export const AIPanelHeader = memo(() => {
 
     return (
         <div
-            className="py-2 pl-3 pr-2 flex items-center justify-between min-w-0 border-b border-[#bfa669]/18 bg-[#0b0b0c]/90"
+            className="py-2 pl-3 pr-2 flex items-center justify-between min-w-0 border-b border-[var(--hairline)] bg-[var(--glass-tint-chrome)] backdrop-blur-2xl"
             onContextMenu={handleContextMenu}
         >
             <div className="min-w-0 flex items-center gap-2.5">
@@ -54,7 +54,7 @@ export const AIPanelHeader = memo(() => {
                     className="group min-w-0 flex items-center gap-2.5 cursor-pointer"
                     title="Open crowelogic.com"
                 >
-                    <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-[2px] border border-[#bfa669]/30 bg-[#0b0b0c]">
+                    <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--hairline-strong)] bg-[var(--surface-sunken)]">
                         <img src={croweMark} alt="" className="h-full w-full object-cover" />
                     </div>
                     <div className="min-w-0">
@@ -62,15 +62,15 @@ export const AIPanelHeader = memo(() => {
                             <img src={croweWordmarkUrl} alt="Crowe Logic" className="h-4 w-auto flex-shrink-0" />
                             <span
                                 className={cn(
-                                    "h-1.5 w-1.5 rounded-[1px] bg-[#bfa669]/45",
-                                    isStreaming && "animate-pulse bg-[#bfa669]"
+                                    "h-1.5 w-1.5 rounded-full bg-[var(--crowe-gold-45)]",
+                                    isStreaming && "animate-pulse bg-[var(--accent)] shadow-[0_0_8px_var(--glow-gold)]"
                                 )}
                             />
                         </div>
                         <div
                             className={cn(
-                                "truncate text-[11px] mt-0.5 group-hover:text-[#bfa669]",
-                                activeLabel ? "font-mono text-[#bfa669]/85" : "text-[#e8e2cf]/48"
+                                "truncate text-[11px] mt-0.5 group-hover:text-[var(--accent)]",
+                                activeLabel ? "font-mono text-[var(--crowe-gold-65)]" : "text-[var(--text-dim)]"
                             )}
                             title={activeEditor?.filePath ?? "Managed workspace"}
                         >
@@ -85,7 +85,7 @@ export const AIPanelHeader = memo(() => {
                     <button
                         type="button"
                         onClick={() => model.openCroweAccount()}
-                        className="border border-[#bfa669]/28 bg-[#bfa669]/[0.04] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#bfa669]/85 transition-colors hover:border-[#bfa669]/60 hover:bg-[#bfa669]/[0.10]"
+                        className="rounded-[var(--radius-sm)] border border-[var(--crowe-gold-30)] bg-[var(--wash-accent-faint)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--crowe-gold-65)] transition-colors hover:border-[var(--crowe-gold-60)] hover:bg-[var(--wash-accent)] cursor-pointer"
                         title="Sign in to your Crowe Logic account"
                     >
                         Sign in
@@ -96,18 +96,18 @@ export const AIPanelHeader = memo(() => {
                         onClick={toggleContext}
                         title={
                             widgetAccess
-                                ? "Tools are ON. The AI can read your terminal, files, and use editor.* tools. Click to sandbox."
-                                : "Tools are OFF (sandboxed). The AI is text-only and cannot reach files or the terminal. Click to enable."
+                                ? "Tools are ON. The agent can read your terminal, files, and use editor.* tools. Click to sandbox."
+                                : "Tools are OFF (sandboxed). The agent is text-only and cannot reach files or the terminal. Click to enable."
                         }
-                        className={`group flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 border transition-colors cursor-pointer ${
+                        className={`group flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 border rounded-[var(--radius-sm)] transition-colors cursor-pointer ${
                             widgetAccess
-                                ? "text-[#bfa669] border-[#bfa669]/40 bg-[#bfa669]/[0.08] hover:bg-[#bfa669]/[0.14]"
-                                : "text-zinc-400 border-zinc-700 bg-transparent hover:border-zinc-500 hover:text-zinc-300"
+                                ? "text-[var(--accent)] border-[var(--crowe-gold-40)] bg-[var(--wash-accent)] hover:bg-[var(--wash-accent-mid)]"
+                                : "text-[var(--text-dim)] border-[var(--hairline)] bg-transparent hover:border-[var(--hairline-strong)] hover:text-[var(--text)]"
                         }`}
                     >
                         <span
-                            className={`inline-block h-1.5 w-1.5 rounded-[1px] ${
-                                widgetAccess ? "bg-[#bfa669]" : "bg-zinc-500"
+                            className={`inline-block h-1.5 w-1.5 rounded-full ${
+                                widgetAccess ? "bg-[var(--accent)]" : "bg-[var(--text-dim)]"
                             }`}
                         />
                         <span>tools: {widgetAccess ? "on" : "off"}</span>
@@ -116,7 +116,7 @@ export const AIPanelHeader = memo(() => {
 
                 <button
                     onClick={handleKebabClick}
-                    className="text-zinc-400 hover:text-[#bfa669] cursor-pointer transition-colors p-1 flex-shrink-0 focus:outline-none"
+                    className="text-[var(--text-dim)] hover:text-[var(--accent)] cursor-pointer transition-colors p-1 flex-shrink-0 focus:outline-none"
                     title="More options"
                 >
                     <i className="fa fa-ellipsis-vertical"></i>

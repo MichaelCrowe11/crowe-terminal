@@ -11,8 +11,11 @@
     width: 100vw;
     -webkit-app-region: drag;
     height: max(33px, calc(33px * var(--zoomfactor-inv)));
-    backdrop-filter: blur(20px);
-    background: rgba(0, 0, 0, 0.35);
+    -webkit-backdrop-filter: blur(var(--glass-blur-chrome)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur-chrome)) saturate(var(--glass-saturate));
+    background: var(--glass-tint-chrome);
+    border-bottom: 1px solid var(--glass-hairline-chrome);
+    box-shadow: var(--glass-specular);
     flex-shrink: 0;
 
     button {
