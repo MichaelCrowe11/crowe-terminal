@@ -37,7 +37,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
     } else if (model.inBuilder) {
         placeholder = "What would you like to build...";
     } else {
-        placeholder = "Ask Crowe Logic anything...";
+        placeholder = "Ask Hypheus anything...";
     }
 
     const resizeTextarea = useCallback(() => {
@@ -140,13 +140,10 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
         }
     };
 
+    const canSend = status === "ready" && !!input.trim();
+
     return (
-        <div
-            className={cn(
-                "border-t bg-[var(--glass-tint-chrome)] backdrop-blur-2xl transition-colors",
-                isFocused ? "border-[var(--crowe-gold-40)]" : "border-[var(--hairline-faint)]"
-            )}
-        >
+        <div className="border-t border-[var(--hairline-faint)] bg-[var(--glass-tint-chrome)] px-2.5 pb-2.5 pt-2 backdrop-blur-2xl [box-shadow:inset_0_1px_0_var(--hair-top)]">
             <input
                 ref={fileInputRef}
                 type="file"
@@ -156,75 +153,87 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                 className="hidden"
             />
             <form onSubmit={onSubmit}>
-                <div className="relative pl-3">
-                    <span
-                        aria-hidden="true"
-                        title={widgetAccess ? "tools on" : "tools off (sandboxed)"}
-                        className={cn(
-                            "absolute left-2 top-2 font-mono text-[13px] select-none transition-colors",
-                            !widgetAccess
-                                ? "text-[var(--text-dim)]"
-                                : isFocused
-                                  ? "text-[var(--accent)]"
-                                  : "text-[var(--crowe-gold-50)]"
-                        )}
-                    >
-                        $
-                    </span>
-                    <textarea
-                        ref={textareaRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
-                        placeholder={placeholder}
-                        className={cn(
-                            "w-full text-[var(--text)] placeholder-[var(--crowe-parchment-40)] pl-4 pr-12 py-2 focus:outline-none resize-none overflow-auto bg-transparent"
-                        )}
-                        style={{ fontSize: "13px" }}
-                        rows={2}
-                    />
-                    <Tooltip content="Attach files" placement="top" divClassName="absolute bottom-6.5 right-1.5">
-                        <button
-                            type="button"
-                            onClick={handleUploadClick}
+                <div
+                    className={cn(
+                        "rounded-[var(--radius-md)] border bg-[var(--surface-sunken)] transition-all duration-150",
+                        isFocused
+                            ? "border-[var(--crowe-gold-45)] shadow-[0_0_0_3px_var(--crowe-gold-12)]"
+                            : "border-[var(--hairline)] hover:border-[var(--hairline-strong)]"
+                    )}
+                >
+                    <div className="relative">
+                        <span
+                            aria-hidden="true"
+                            title={widgetAccess ? "tools on" : "tools off (sandboxed)"}
                             className={cn(
-                                "w-6 h-6 rounded-[var(--radius-sm)] transition-colors flex items-center justify-center text-[var(--text-dim)] hover:text-[var(--accent)] cursor-pointer"
+                                "absolute left-2.5 top-2 select-none font-mono text-[13px] transition-colors",
+                                !widgetAccess
+                                    ? "text-[var(--text-dim)]"
+                                    : isFocused
+                                      ? "text-[var(--accent)]"
+                                      : "text-[var(--crowe-gold-50)]"
                             )}
                         >
-                            <i className="fa fa-paperclip text-[12px]"></i>
-                        </button>
-                    </Tooltip>
-                    {status === "streaming" ? (
-                        <Tooltip content="Stop Response" placement="top" divClassName="absolute bottom-1.5 right-1.5">
+                            $
+                        </span>
+                        <textarea
+                            ref={textareaRef}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            onFocus={handleFocus}
+                            onBlur={handleBlur}
+                            placeholder={placeholder}
+                            className="w-full resize-none overflow-auto bg-transparent py-2 pl-6 pr-3 text-[var(--text)] placeholder-[var(--crowe-parchment-40)] focus:outline-none"
+                            style={{ fontSize: "13px" }}
+                            rows={2}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 px-1.5 pb-1.5">
+                        <Tooltip content="Attach files" placement="top">
                             <button
                                 type="button"
-                                onClick={() => model.stopResponse()}
-                                className={cn(
-                                    "w-6 h-6 rounded-[var(--radius-sm)] transition-colors flex items-center justify-center cursor-pointer",
-                                    "text-[var(--crowe-error)] hover:brightness-110 hover:bg-[var(--crowe-error-15)]"
-                                )}
+                                onClick={handleUploadClick}
+                                aria-label="Attach files"
+                                className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-dim)] transition-colors hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer"
                             >
-                                <i className="fa fa-square text-[12px]"></i>
+                                <i className="fa fa-paperclip text-[12px]"></i>
                             </button>
                         </Tooltip>
-                    ) : (
-                        <Tooltip content="Send (Enter)" placement="top" divClassName="absolute bottom-1.5 right-1.5">
-                            <button
-                                type="submit"
-                                disabled={status !== "ready" || !input.trim()}
-                                className={cn(
-                                    "w-6 h-6 rounded-[var(--radius-sm)] transition-colors flex items-center justify-center",
-                                    status !== "ready" || !input.trim()
-                                        ? "text-[var(--crowe-parchment-40)] cursor-default"
-                                        : "text-[var(--accent)] hover:bg-[var(--wash-accent-mid)] cursor-pointer"
-                                )}
-                            >
-                                <i className="fa fa-arrow-up text-[12px]"></i>
-                            </button>
-                        </Tooltip>
-                    )}
+                        <div className="flex items-center gap-2">
+                            <span className="hidden select-none font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--crowe-parchment-40)] @[300px]:inline">
+                                {status === "streaming" ? "streaming" : "enter to send"}
+                            </span>
+                            {status === "streaming" ? (
+                                <Tooltip content="Stop response" placement="top">
+                                    <button
+                                        type="button"
+                                        onClick={() => model.stopResponse()}
+                                        aria-label="Stop response"
+                                        className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--crowe-error-15)] text-[var(--crowe-error)] transition-all hover:brightness-110 cursor-pointer"
+                                    >
+                                        <i className="fa fa-stop text-[11px]"></i>
+                                    </button>
+                                </Tooltip>
+                            ) : (
+                                <Tooltip content="Send (Enter)" placement="top">
+                                    <button
+                                        type="submit"
+                                        disabled={!canSend}
+                                        aria-label="Send"
+                                        className={cn(
+                                            "flex h-7 w-7 items-center justify-center rounded-full transition-all duration-150",
+                                            canSend
+                                                ? "bg-[var(--accent)] text-[var(--accent-ink)] shadow-[0_0_10px_-2px_var(--glow-gold)] hover:brightness-110 cursor-pointer"
+                                                : "bg-[var(--wash-accent-faint)] text-[var(--crowe-parchment-40)] cursor-default"
+                                        )}
+                                    >
+                                        <i className="fa fa-arrow-up text-[11px]"></i>
+                                    </button>
+                                </Tooltip>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>

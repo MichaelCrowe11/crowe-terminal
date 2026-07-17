@@ -1,7 +1,6 @@
 // Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { AIPanel } from "@/app/aipanel/aipanel";
 import { UtilityDock } from "@/app/dock/utilitydock";
 import { ErrorBoundary } from "@/app/element/errorboundary";
 import { CenteredDiv } from "@/app/element/quickelems";
@@ -46,7 +45,6 @@ const WorkspaceElem = memo(() => {
     const ws = useAtomValue(atoms.workspace);
     const tabBarPosition = useAtomValue(getSettingsKeyAtom("app:tabbar")) ?? "top";
     const showLeftTabBar = tabBarPosition === "left";
-    const aiPanelVisible = useAtomValue(workspaceLayoutModel.panelVisibleAtom);
     const widgetsSidebarVisible = useAtomValue(workspaceLayoutModel.widgetsSidebarVisibleAtom);
     const windowWidth = window.innerWidth;
     const leftGroupInitialPct = workspaceLayoutModel.getLeftGroupInitialPercentage(windowWidth, showLeftTabBar);
@@ -103,10 +101,11 @@ const WorkspaceElem = memo(() => {
         return () => window.removeEventListener("focus", handleFocus);
     }, []);
 
-    const innerHandleVisible = showLeftTabBar && aiPanelVisible;
-    const innerHandleClass = `bg-transparent hover:bg-zinc-500/20 transition-colors ${innerHandleVisible ? "w-0.5" : "w-0 pointer-events-none"}`;
-    const outerHandleVisible = showLeftTabBar || aiPanelVisible;
-    const outerHandleClass = `bg-transparent hover:bg-zinc-500/20 transition-colors ${outerHandleVisible ? "w-0.5" : "w-0 pointer-events-none"}`;
+    // The AI panel now lives in the right-side utility dock, not the left group,
+    // so the inner (vtab/ai) handle is gone and the outer handle only resizes the
+    // vertical tab bar.
+    const innerHandleClass = "bg-transparent w-0 pointer-events-none";
+    const outerHandleClass = `bg-transparent hover:bg-zinc-500/20 transition-colors ${showLeftTabBar ? "w-0.5" : "w-0 pointer-events-none"}`;
 
     return (
         <div className="flex flex-col w-full flex-grow overflow-hidden">
@@ -145,12 +144,7 @@ const WorkspaceElem = memo(() => {
                                     order={1}
                                     className="overflow-hidden"
                                 >
-                                    <div
-                                        ref={aiPanelWrapperRef}
-                                        className={`w-full h-full pr-0.5 ${aiPanelVisible ? "" : "opacity-0"}`}
-                                    >
-                                        {tabId !== "" && <AIPanel roundTopLeft={showLeftTabBar} />}
-                                    </div>
+                                    <div ref={aiPanelWrapperRef} className="w-full h-full" />
                                 </Panel>
                             </PanelGroup>
                         </Panel>

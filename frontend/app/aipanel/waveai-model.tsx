@@ -227,7 +227,7 @@ export class WaveAIModel {
 
     async addFileFromRemoteUri(draggedFile: DraggedFile): Promise<void> {
         if (draggedFile.isDir) {
-            this.setError("Cannot add directories to Crowe Logic. Please select a file.");
+            this.setError("Cannot add directories to Hypheus. Please select a file.");
             return;
         }
 
@@ -238,7 +238,7 @@ export class WaveAIModel {
                 return;
             }
             if (fileInfo.isdir) {
-                this.setError("Cannot add directories to Crowe Logic. Please select a file.");
+                this.setError("Cannot add directories to Hypheus. Please select a file.");
                 return;
             }
 
@@ -661,7 +661,7 @@ export class WaveAIModel {
     async openCroweAccount() {
         const blockDef: BlockDef = {
             meta: {
-                view: "webview",
+                view: "web",
                 url: "https://crowecode.com/account",
             },
         };

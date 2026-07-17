@@ -157,7 +157,7 @@ const QuickTips = () => {
                             <KeyBinding keyDecl="Cmd:n" />
                         </div>
                         <div className="flex flex-col gap-0.5 p-2 rounded-md hover:bg-white/5 transition-colors">
-                            <span className="text-[15px]">Open Crowe Logic Panel</span>
+                            <span className="text-[15px]">Open Operator Panel</span>
                             <KeyBinding keyDecl="Cmd:Shift:a" />
                         </div>
                     </div>
@@ -193,7 +193,7 @@ const QuickTips = () => {
                             <KeyBinding keyDecl="Ctrl:Shift:Digit" />
                         </div>
                         <div className="flex flex-col gap-0.5 p-2 rounded-md hover:bg-white/5 transition-colors">
-                            <span className="text-[15px]">Focus Crowe Logic</span>
+                            <span className="text-[15px]">Focus Operator</span>
                             <KeyBinding keyDecl="Ctrl:Shift:0" />
                         </div>
                     </div>

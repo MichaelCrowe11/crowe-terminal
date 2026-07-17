@@ -1,13 +1,15 @@
 // Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { AIPanel } from "@/app/aipanel/aipanel";
+import { WaveAIModel } from "@/app/aipanel/waveai-model";
 import { WorkspaceLayoutModel } from "@/app/workspace/workspace-layout-model";
 import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo, useCallback, useEffect, useRef } from "react";
 import { AssistantIcon, CloseIcon, HyphaeIcon, NetworkIcon, NibIcon, SporeIcon, VitalsIcon } from "./crowe-icons";
 import { DesignReviewModel } from "./designreview-model";
-import { DOCK_DEFAULT_WIDTH, DOCK_RAIL_WIDTH, DockModel, DockToolId } from "./dock-model";
+import { CHAT_DEFAULT_WIDTH, DOCK_DEFAULT_WIDTH, DOCK_RAIL_WIDTH, DockModel, DockToolId } from "./dock-model";
 import "./dock.scss";
 import { DesignPanel, ModelPanel, MyceliumPanel, TelemetryPanel, ThinkingPanel } from "./dockpanels";
 
@@ -41,32 +43,46 @@ const UtilityDockElem = memo(() => {
     const activeTool = useAtomValue(model.activeToolAtom);
     const collapsed = useAtomValue(model.collapsedAtom);
     const width = useAtomValue(model.widthAtom);
+    const chatWidth = useAtomValue(model.chatWidthAtom);
     const chatOpen = useAtomValue(layout.panelVisibleAtom);
-    const dragging = useRef(false);
+    const waveAI = WaveAIModel.getInstance();
+    const aiMode = useAtomValue(waveAI.currentAIMode);
+    const aiConfigs = useAtomValue(waveAI.aiModeConfigs);
+    const modelLabel = aiConfigs?.[aiMode]?.["display:name"] ?? "Model";
+    const dragMode = useRef<"tool" | "chat" | null>(null);
 
     const toggleChat = useCallback(() => {
         layout.setAIPanelVisible(!layout.getAIPanelVisible());
     }, [layout]);
 
-    const onResizeDown = useCallback((e: React.MouseEvent) => {
+    const onToolResizeDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
-        dragging.current = true;
+        dragMode.current = "tool";
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+    }, []);
+
+    const onChatResizeDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        dragMode.current = "chat";
         document.body.style.cursor = "col-resize";
         document.body.style.userSelect = "none";
     }, []);
 
     useEffect(() => {
         const onMove = (e: MouseEvent) => {
-            if (!dragging.current) {
-                return;
+            const px = window.innerWidth - e.clientX - DOCK_RAIL_WIDTH;
+            if (dragMode.current === "tool") {
+                model.setWidth(px);
+            } else if (dragMode.current === "chat") {
+                model.setChatWidth(px);
             }
-            model.setWidth(window.innerWidth - e.clientX - DOCK_RAIL_WIDTH);
         };
         const onUp = () => {
-            if (!dragging.current) {
+            if (dragMode.current == null) {
                 return;
             }
-            dragging.current = false;
+            dragMode.current = null;
             document.body.style.cursor = "";
             document.body.style.userSelect = "";
         };
@@ -80,17 +96,61 @@ const UtilityDockElem = memo(() => {
 
     const activeDef = !collapsed && activeTool ? DOCK_TOOLS.find((t) => t.id === activeTool) : null;
     const ActivePanel = activeDef?.Panel;
+    // Tool drawers slide out to the LEFT of the chat drawer when it's open so the
+    // two floating panels never stack on top of each other.
+    const toolRight = chatOpen ? DOCK_RAIL_WIDTH + chatWidth : DOCK_RAIL_WIDTH;
 
     return (
         <div className="crowe-dock-root">
+            <aside
+                className={cn(
+                    "crowe-dock-drawer crowe-chat-drawer glass-chrome glass-grain",
+                    !chatOpen && "crowe-chat-drawer-closed"
+                )}
+                style={{ width: chatOpen ? chatWidth : 0 }}
+                aria-hidden={!chatOpen}
+            >
+                <div
+                    className="crowe-dock-resize crowe-dock-resize-grip"
+                    role="separator"
+                    aria-orientation="vertical"
+                    title="Drag to resize, double-click to reset"
+                    onMouseDown={onChatResizeDown}
+                    onDoubleClick={() => model.setChatWidth(CHAT_DEFAULT_WIDTH)}
+                />
+                <div className="crowe-dock-head crowe-chat-head">
+                    <button
+                        type="button"
+                        className="crowe-chat-model cursor-pointer"
+                        onClick={() => model.toggle("model")}
+                        title="Switch model"
+                    >
+                        <span className="crowe-chat-model-dot" />
+                        <span className="crowe-chat-model-name">{modelLabel}</span>
+                        <i className="fa fa-angle-down crowe-chat-model-caret" />
+                    </button>
+                    <button
+                        type="button"
+                        className="crowe-dock-close cursor-pointer"
+                        onClick={() => layout.setAIPanelVisible(false)}
+                        title="Close assistant"
+                        aria-label="Close assistant"
+                    >
+                        <CloseIcon />
+                    </button>
+                </div>
+                <div className="crowe-chat-body">
+                    <AIPanel roundTopLeft={false} />
+                </div>
+            </aside>
             {activeDef && ActivePanel && (
-                <aside className="crowe-dock-drawer glass-chrome glass-grain" style={{ width }}>
+                <aside className="crowe-dock-drawer glass-chrome glass-grain" style={{ width, right: toolRight }}>
                     <div
                         className="crowe-dock-resize"
                         role="separator"
                         aria-orientation="vertical"
                         title="Drag to resize, double-click to reset"
-                        onMouseDown={onResizeDown}
+                        onMouseDown={onToolResizeDown}
                         onDoubleClick={() => model.setWidth(DOCK_DEFAULT_WIDTH)}
                     />
                     <div className="crowe-dock-head">

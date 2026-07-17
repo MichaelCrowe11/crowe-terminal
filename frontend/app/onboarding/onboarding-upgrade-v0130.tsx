@@ -31,7 +31,7 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
                                 <strong>CroweLM Channels</strong> - Code, research, workspace, and grow operations
                             </li>
                             <li>
-                                <strong>No Provider Setup</strong> - Crowe Logic handles routing and model access
+                                <strong>No Provider Setup</strong> - Hypheus handles routing and model access
                             </li>
                         </ul>
                     </div>

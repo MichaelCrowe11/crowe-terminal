@@ -28,7 +28,8 @@ import { AIRateLimitStrip } from "./airatelimitstrip";
 import { WaveUIMessage } from "./aitypes";
 import { CroweChannelPanel } from "./crowechannelpanel";
 import { WaveAIModel } from "./waveai-model";
-import croweMark from "@/app/asset/crowe-mark.png";
+import croweMark from "@/app/asset/hypheus-mark.png";
+import "./aipanel.scss";
 
 const AIBlockMask = memo(() => {
     return (
@@ -71,95 +72,53 @@ const AIDragOverlay = memo(() => {
 
 AIDragOverlay.displayName = "AIDragOverlay";
 
-type PromptHint = {
-    label: string;
-    insert: string;
-    // placeholder, if set, is a substring inside `insert` that gets selected
-    // after the prompt drops into the input. The user's first keystroke then
-    // overwrites the placeholder. Use for prompts that need a fill-in like a
-    // file path or strain name.
-    placeholder?: string;
-};
-
-// Sandbox prompts work without widget context (text-only conversational tasks).
-// Shown when widgetAccess is OFF so users never click a prompt that the AI
-// can't actually fulfill in the current configuration.
-const SANDBOX_PROMPT_HINTS: PromptHint[] = [
-    { label: "tighten this note", insert: "Tighten the following into a clear operator note:\n\n" },
-    { label: "explain a concept", insert: "Explain the concept of ", placeholder: "<concept>" },
-    { label: "draft a plan", insert: "Draft a concise execution plan for ", placeholder: "<work to plan>" },
-];
-
-// Tool-needing prompts require widgetAccess so the AI has access to editor.*,
-// terminal, and filesystem tools. Shown when widgetAccess is ON.
-const TOOLS_PROMPT_HINTS: PromptHint[] = [
-    { label: "read current terminal", insert: "Explain what just happened in this terminal and what I should do next." },
-    {
-        label: "open file in Crowe Code",
-        insert: "Open the file at /Users/crowelogic/Projects/crowe-terminal/README.md as a new Crowe Code block.",
-        placeholder: "/Users/crowelogic/Projects/crowe-terminal/README.md",
-    },
-    { label: "audit current directory", insert: "Audit the current directory. Focus on project shape, recent edits, and risky drift." },
-];
-
 const AIWelcomeMessage = memo(() => {
     const modKey = isMacOS() ? "⌘" : "Alt";
     const focusKeys = isWindows() ? "Alt 0" : "Ctrl Shift 0";
     const model = WaveAIModel.getInstance();
     const widgetAccess = jotai.useAtomValue(model.widgetAccessAtom);
 
-    const promptHints = widgetAccess ? TOOLS_PROMPT_HINTS : SANDBOX_PROMPT_HINTS;
-    const stateLine = widgetAccess
-        ? { dollar: "text-[var(--accent)]", text: "text-[var(--text)]", label: "ready · tools on" }
-        : { dollar: "text-[var(--text-dim)]", text: "text-[var(--text-dim)]", label: "ready · sandboxed" };
-
-    const insertPrompt = (hint: PromptHint) => {
-        globalStore.set(model.inputAtom, hint.insert);
-        model.focusInput();
-        if (hint.placeholder) {
-            const start = hint.insert.indexOf(hint.placeholder);
-            if (start >= 0) {
-                // Defer one tick so the textarea has the new value rendered
-                // before we ask it to select inside that value.
-                setTimeout(() => model.selectInputRange(start, start + hint.placeholder!.length), 0);
-            }
-        }
-    };
-
     return (
-        <div className="px-4 py-6 max-w-xl mx-auto">
+        <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-8">
+            <div className="flex flex-col items-center gap-3 text-center">
+                <img
+                    src={croweMark}
+                    alt=""
+                    className="h-12 w-12 rounded-[var(--radius-md)] border border-[var(--crowe-gold-30)] object-contain shadow-[0_0_24px_-6px_var(--glow-gold)]"
+                />
+                <div>
+                    <div
+                        className="text-[22px] leading-none text-[var(--text)]"
+                        style={{ fontFamily: "var(--font-serif)" }}
+                    >
+                        Hypheus
+                    </div>
+                    <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--crowe-gold-65)]">
+                        Crowe Logic operator
+                    </div>
+                </div>
+                <p className="text-[13px] leading-relaxed text-[var(--text-dim)]">
+                    One operator for terminal, code, research, and grow ops. It reads your workspace, uses your
+                    tools, and moves the work forward.
+                </p>
+                <div className="flex items-center gap-2 font-mono text-[11px]">
+                    <span
+                        className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            widgetAccess
+                                ? "bg-[var(--accent)] shadow-[0_0_6px_var(--glow-gold)]"
+                                : "bg-[var(--text-dim)]"
+                        )}
+                    />
+                    <span className={widgetAccess ? "text-[var(--text)]" : "text-[var(--text-dim)]"}>
+                        ready · {widgetAccess ? "tools on" : "sandboxed"}
+                    </span>
+                </div>
+            </div>
+
             <CroweChannelPanel />
 
-            <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">
-                operator prompt
-            </div>
-            <div className={`mt-1 font-mono text-[13px] ${stateLine.text}`}>
-                <span className={stateLine.dollar}>$</span> {stateLine.label}
-            </div>
-            <p className="mt-3 text-[13px] leading-relaxed text-[var(--text-dim)]">
-                {widgetAccess
-                    ? "Ask for the next concrete action. CroweLM can use terminal context, files, browser blocks, and editor tools."
-                    : "Ask a text-only question, or turn tools on in the header when this workspace should use files and terminal context."}
-            </p>
-
-            <div className="mt-5 border-t border-[#bfa669]/15">
-                {promptHints.map((hint) => (
-                    <button
-                        key={hint.label}
-                        onClick={() => insertPrompt(hint)}
-                        className="group w-full flex items-center justify-between gap-3 py-2.5 border-b border-[#bfa669]/10 text-left cursor-pointer hover:bg-[#bfa669]/[0.06] transition-colors px-1"
-                    >
-                        <span className="font-mono text-[12px] text-[#bfa669] truncate">
-                            {hint.label}
-                        </span>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--text-dim)] group-hover:text-[#bfa669] transition-colors">
-                            insert &rarr;
-                        </span>
-                    </button>
-                ))}
-            </div>
-
-            <div className="mt-6 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--text-dim)]">
+            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--crowe-parchment-40)]">
                 <span>{modKey} K new</span>
                 <span>{modKey} ⇧ A toggle</span>
                 <span>{focusKeys} focus</span>
@@ -174,14 +133,20 @@ const AIBuilderWelcomeMessage = memo(() => {
     return (
         <div className="px-4 py-8 max-w-md mx-auto">
             <div className="flex items-center gap-3 mb-4">
-                <img src={croweMark} alt="" className="h-10 w-10 object-contain rounded-[2px] ring-1 ring-[#bfa669]/30" />
+                <img
+                    src={croweMark}
+                    alt=""
+                    className="h-10 w-10 rounded-[var(--radius-sm)] object-contain ring-1 ring-[var(--crowe-gold-30)]"
+                />
                 <div>
-                    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#bfa669]/70">crowe logic</div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--crowe-gold-65)]">
+                        crowe logic
+                    </div>
                     <div className="font-semibold text-[var(--text)] text-[15px] -mt-0.5">app builder</div>
                 </div>
             </div>
             <p className="text-[13px] leading-relaxed text-[var(--text-dim)]">
-                Build custom widgets that integrate directly into Hypheus. Describe the widget you want and Crowe Logic will scaffold it.
+                Build custom widgets that integrate directly into Hypheus. Describe the widget you want and Hypheus will scaffold it.
             </p>
         </div>
     );
@@ -604,7 +569,7 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
             <div key="main-content" className="flex-1 flex flex-col min-h-0">
                 {messages.length === 0 && initialLoadDone ? (
                     <div
-                        className="flex-1 overflow-y-auto p-2 relative"
+                        className="crowe-scroll-thin relative flex-1 overflow-y-auto p-2"
                         onContextMenu={(e) => handleWaveAIContextMenu(e, true)}
                     >
                         {model.inBuilder ? <AIBuilderWelcomeMessage /> : <AIWelcomeMessage />}

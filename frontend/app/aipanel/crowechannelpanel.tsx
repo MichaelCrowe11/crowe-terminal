@@ -47,7 +47,7 @@ const CHANNELS: CroweChannel[] = [
     },
 ];
 
-export const CroweChannelPanel = memo(({ compact = false }: { compact?: boolean }) => {
+export const CroweChannelPanel = memo(() => {
     const model = WaveAIModel.getInstance();
     const widgetAccess = useAtomValue(model.widgetAccessAtom);
 
@@ -60,56 +60,39 @@ export const CroweChannelPanel = memo(({ compact = false }: { compact?: boolean 
     };
 
     return (
-        <section className={cn("glass-raised rounded-[var(--radius-md)]", compact ? "p-3" : "p-4")}>
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--crowe-gold-30)] bg-[var(--wash-accent-faint)] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.22em] text-[var(--accent)]">
-                        <span className="h-1 w-1 rounded-full animate-pulse bg-[var(--accent)]" />
-                        Signed workspace
-                    </div>
-                    <div
-                        className="mt-2 text-[16px] font-semibold text-[var(--text)]"
-                        style={{ fontFamily: "var(--font-serif)" }}
-                    >
-                        CroweLM channels
-                    </div>
-                    <p className="mt-1 text-[12px] leading-relaxed text-[var(--text-dim)]">
-                        Pick the work lane. Crowe Logic handles routing, context, and tool access behind the workspace.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => model.openCroweAccount()}
-                    className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--crowe-gold-35)] bg-[var(--wash-accent)] px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--accent)] transition-colors hover:border-[var(--crowe-gold-60)] hover:bg-[var(--wash-accent-mid)] cursor-pointer"
-                >
-                    Sign in
-                </button>
+        <section className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em]">
+                <span className="text-[var(--crowe-parchment-45)]">Start a lane</span>
+                <span className="flex items-center gap-1.5 text-[var(--crowe-parchment-40)]">
+                    <span
+                        className={cn(
+                            "h-1 w-1 rounded-full",
+                            widgetAccess ? "bg-[var(--accent)]" : "bg-[var(--text-dim)]"
+                        )}
+                    />
+                    {widgetAccess ? "tools live" : "text only"}
+                </span>
             </div>
 
-            <div className={cn("grid gap-2", compact ? "mt-3 grid-cols-1" : "mt-4 grid-cols-1 @lg:grid-cols-2")}>
+            <div className="grid grid-cols-1 gap-1.5">
                 {CHANNELS.map((channel) => (
                     <button
                         key={channel.id}
                         type="button"
                         onClick={() => insertChannelPrompt(channel)}
-                        className="group min-h-[72px] rounded-[var(--radius-md)] border border-[var(--hairline-faint)] bg-[var(--wash-accent-faint)] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--crowe-gold-40)] hover:bg-[var(--wash-accent)] hover:shadow-[var(--glass-fruiting-glow)] cursor-pointer"
+                        className="group flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--hairline-faint)] bg-[var(--surface-sunken)] px-3 py-2.5 text-left transition-all duration-200 [box-shadow:inset_0_1px_0_var(--hair-top)] hover:-translate-y-px hover:border-[var(--crowe-gold-40)] hover:bg-[var(--wash-accent-faint)] hover:shadow-[var(--glass-fruiting-glow)] cursor-pointer"
                     >
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="font-mono text-[10px] uppercase tracking-[0.20em] text-[var(--accent)]">
+                        <div className="min-w-0">
+                            <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--accent)]">
                                 {channel.name}
-                            </span>
-                            <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-transparent transition-colors group-hover:text-[var(--crowe-gold-65)]">
-                                use →
-                            </span>
+                            </div>
+                            <div className="mt-1 truncate text-[12px] leading-relaxed text-[var(--text-dim)]">
+                                {channel.scope}
+                            </div>
                         </div>
-                        <div className="mt-2 text-[12px] leading-relaxed text-[var(--text-dim)]">{channel.scope}</div>
+                        <i className="fa fa-arrow-right flex-shrink-0 text-[11px] text-[var(--crowe-parchment-32)] transition-all group-hover:translate-x-0.5 group-hover:text-[var(--crowe-gold-65)]" />
                     </button>
                 ))}
-            </div>
-
-            <div className="mt-3 flex items-center justify-between border-t border-[var(--hairline-faint)] pt-3 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--crowe-parchment-40)]">
-                <span>{widgetAccess ? "tools live" : "text only"}</span>
-                <span>no keys · no provider setup</span>
             </div>
         </section>
     );

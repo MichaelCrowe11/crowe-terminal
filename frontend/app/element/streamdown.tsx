@@ -29,7 +29,7 @@ function CodePlain({ className = "", isCodeBlock, text }: { className?: string; 
     return (
         <code
             className={cn(
-                "font-mono text-[12.5px] rounded-sm px-1.5 py-0.5 bg-accent/10 text-accent-200 border border-accent/15",
+                "rounded-[var(--radius-xs)] border border-[var(--hairline-faint)] bg-[var(--surface-sunken)] px-1.5 py-0.5 font-mono text-[12.5px] text-[var(--crowe-gold-bright)]",
                 className
             )}
         >
@@ -157,7 +157,7 @@ const CodeBlock = ({ children, onClickExecute, codeBlockMaxWidthAtom }: CodeBloc
     return (
         <div
             className={cn(
-                "rounded-[2px] overflow-hidden bg-[#14161c] border border-accent/15 my-4",
+                "my-4 overflow-hidden rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--surface-sunken)] [box-shadow:var(--shadow-card)]",
                 codeBlockMaxWidth && "max-w-full"
             )}
             style={
@@ -166,8 +166,10 @@ const CodeBlock = ({ children, onClickExecute, codeBlockMaxWidthAtom }: CodeBloc
                     : undefined
             }
         >
-            <div className="flex items-center justify-between pl-3 pr-2 pt-2 pb-1.5 border-b border-accent/10">
-                <span className="text-[11px] font-mono uppercase tracking-wide text-accent/70">{language}</span>
+            <div className="flex items-center justify-between border-b border-[var(--hairline-faint)] bg-[var(--surface-raised)] pb-1.5 pl-3 pr-2 pt-2 [box-shadow:inset_0_1px_0_var(--hair-top)]">
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--crowe-gold-65)]">
+                    {language}
+                </span>
                 <div className="flex items-center gap-2">
                     <CopyButton onClick={handleCopy} title="Copy" />
                     {onClickExecute && (
@@ -181,7 +183,7 @@ const CodeBlock = ({ children, onClickExecute, codeBlockMaxWidthAtom }: CodeBloc
                     )}
                 </div>
             </div>
-            <pre className="px-4 pb-2 pt-0 overflow-x-auto m-0 text-secondary max-w-full">{children}</pre>
+            <pre className="m-0 max-w-full overflow-x-auto px-4 pb-3 pt-2 text-secondary">{children}</pre>
         </div>
     );
 };

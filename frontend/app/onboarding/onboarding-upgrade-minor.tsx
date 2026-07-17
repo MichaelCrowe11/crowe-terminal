@@ -41,7 +41,7 @@ const UpgradeMinorWelcomePage = ({ onStarClick, onAlreadyStarred, onMaybeLater }
                         <div className="flex flex-row gap-4 items-center">
                             <div className="flex h-[52px] px-3 items-center rounded-lg bg-hover text-accent text-[24px]">
                                 <i className="fa fa-sparkles" />
-                                <span className="font-bold ml-2 font-mono">Crowe Logic</span>
+                                <span className="font-bold ml-2 font-mono">Hypheus</span>
                             </div>
                             <div className="flex h-[52px] px-3 items-center rounded-lg bg-hover text-[18px]">
                                 <i className="fa-sharp fa-solid fa-shield text-sky-500" />
@@ -50,7 +50,7 @@ const UpgradeMinorWelcomePage = ({ onStarClick, onAlreadyStarred, onMaybeLater }
                         </div>
                         <div className="text-secondary leading-relaxed max-w-[600px] text-left">
                             <p className="mb-4">
-                                Crowe Logic is your terminal assistant with full context. It can read your terminal output,
+                                Hypheus is your terminal operator with full context. It can read your terminal output,
                                 analyze widgets, read and write files, and help you solve problems&nbsp;faster.
                             </p>
                             <p className="mb-4">

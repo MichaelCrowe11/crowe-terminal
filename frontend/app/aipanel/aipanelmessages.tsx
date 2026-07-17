@@ -82,9 +82,15 @@ export const AIPanelMessages = memo(({ messages, status, onContextMenu }: AIPane
     }, [status]);
 
     return (
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-2 space-y-4" onContextMenu={onContextMenu}>
-            <div className="mb-2 rounded-[var(--radius-sm)] border border-[var(--hairline-faint)] bg-[var(--wash-accent-faint)] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--crowe-gold-65)]">
-                CroweLM managed workspace
+        <div
+            ref={messagesContainerRef}
+            className="crowe-scroll-thin flex-1 space-y-4 overflow-y-auto p-2"
+            onContextMenu={onContextMenu}
+        >
+            <div className="mb-1 flex items-center gap-3 px-1 text-[var(--crowe-parchment-40)]">
+                <span className="h-px flex-1 bg-[var(--hairline-faint)]" />
+                <span className="font-mono text-[9px] uppercase tracking-[0.2em]">CroweLM · managed workspace</span>
+                <span className="h-px flex-1 bg-[var(--hairline-faint)]" />
             </div>
             {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
