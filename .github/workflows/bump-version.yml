@@ -24,9 +24,14 @@ on:
                 default: true
 env:
     NODE_VERSION: 22
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
     bump-version:
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         steps:
             - name: Get App Token
               uses: actions/create-github-app-token@v3

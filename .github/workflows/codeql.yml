@@ -36,6 +36,10 @@ env:
     NODE_VERSION: 22
     GO_VERSION: "1.25.6"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
     analyze:
         name: Analyze
