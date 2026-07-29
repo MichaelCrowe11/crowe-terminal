@@ -3,7 +3,14 @@
 
 // Utility to abstract the fetch function so the Electron net module can be used when available.
 
-let net: Electron.Net;
+// Structurally typed rather than Electron.Net so this module needs no Electron
+// types. The dynamic import below is deliberate and stays: it only resolves in the
+// main process, where Chromium's network stack is preferable to global fetch.
+type HostNet = {
+    fetch(url: string, init?: RequestInit): Promise<Response>;
+};
+
+let net: HostNet;
 
 if (typeof window === "undefined") {
     try {

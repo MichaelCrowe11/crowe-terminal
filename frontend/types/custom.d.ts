@@ -77,10 +77,25 @@ declare global {
         windowId: string;
     };
 
+    // Geometry types for the host boundary. Declared here rather than reusing the
+    // equivalents from Electron's ambient types so the frontend carries no
+    // dependency on them; the shapes are identical and platform-neutral.
+    type HostPoint = {
+        x: number;
+        y: number;
+    };
+
+    type HostRect = {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+
     type ElectronApi = {
         getAuthKey(): string; // get-auth-key
         getIsDev(): boolean; // get-is-dev
-        getCursorPoint: () => Electron.Point; // get-cursor-point
+        getCursorPoint: () => HostPoint; // get-cursor-point
         getPlatform: () => NodeJS.Platform; // get-platform
         getEnv: (varName: string) => string; // get-env
         getUserName: () => string; // get-user-name
@@ -91,12 +106,11 @@ declare global {
         getWebviewPreload: () => string; // get-webview-preload
         getAboutModalDetails: () => AboutModalDetails; // get-about-modal-details
         getZoomFactor: () => number; // get-zoom-factor
+        openNewWindow: () => void; // open-new-window
         showWorkspaceAppMenu: (workspaceId: string) => void; // workspace-appmenu-show
         showBuilderAppMenu: (builderId: string) => void; // builder-appmenu-show
         showContextMenu: (workspaceId: string, menu: ElectronContextMenuItem[]) => void; // contextmenu-show
         onContextMenuClick: (callback: (id: string | null) => void) => void; // contextmenu-click
-        onNavigate: (callback: (url: string) => void) => void;
-        onIframeNavigate: (callback: (url: string) => void) => void;
         downloadFile: (path: string) => void; // download
         openExternal: (url: string) => void; // open-external
         onFullScreenChange: (callback: (isFullScreen: boolean) => void) => void; // fullscreen-change
@@ -123,7 +137,7 @@ declare global {
         sendLog: (log: string) => void; // fe-log
         onQuicklook: (filePath: string) => void; // quicklook
         openNativePath(filePath: string): void; // open-native-path
-        captureScreenshot(rect: Electron.Rectangle): Promise<string>; // capture-screenshot
+        captureScreenshot(rect: HostRect): Promise<string>; // capture-screenshot
         setKeyboardChordMode: () => void; // set-keyboard-chord-mode
         clearWebviewStorage: (webContentsId: number) => Promise<void>; // clear-webview-storage
         setWaveAIOpen: (isOpen: boolean) => void; // set-waveai-open

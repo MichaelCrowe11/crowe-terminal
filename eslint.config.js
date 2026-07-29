@@ -94,5 +94,27 @@ export default [
         },
     },
 
+    // The frontend reaches the host only through WaveEnv, which is what lets this
+    // tree run under the preview server's mock host and, later, a non-Electron
+    // shell. A type-only import is enough to recouple the build, so both value and
+    // type imports are banned here.
+    {
+        files: ["frontend/**/*.{ts,tsx}"],
+        rules: {
+            "@typescript-eslint/no-restricted-imports": [
+                "error",
+                {
+                    paths: [
+                        {
+                            name: "electron",
+                            message:
+                                "frontend/ must not import electron. Use the host API via WaveEnv (env.electron) and declare host-boundary types in frontend/app/waveenv/.",
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+
     eslintConfigPrettier,
 ];
