@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Hypheus">
+  <title>Hypheus</title>
+  <polygon points="32,4 55,18 55,46 32,60 9,46 9,18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  <g fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 45 Q31 37 47 17"/>
+    <path d="M30.4 33.6 Q25.6 28 26 20.5"/>
+    <path d="M21 40.5 Q19.4 37.5 20 34.5"/>
+  </g>
+  <circle cx="47.3" cy="15.9" r="2.9" fill="currentColor"/>
+  <circle cx="26" cy="19" r="2" fill="currentColor"/>
+</svg>

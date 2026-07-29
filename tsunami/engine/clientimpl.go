@@ -167,7 +167,7 @@ func (c *ClientImpl) getFaviconPath() string {
 			}
 		}
 	}
-	return "/wave-logo-256.png"
+	return "/hypheus-mark.png"
 }
 
 func (c *ClientImpl) makeBackendOpts() *rpctypes.VDomBackendOpts {

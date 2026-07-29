@@ -34,7 +34,7 @@ var WorkspaceColors = [...]string{
 }
 
 var WorkspaceIcons = [...]string{
-	"custom@wave-logo-solid",
+	"hexagon-nodes",
 	"triangle",
 	"star",
 	"heart",

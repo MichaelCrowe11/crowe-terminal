@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Hypheus">
+  <title>Hypheus</title>
+  <defs>
+    <mask id="hytl-knock">
+      <polygon points="32,4 55,18 55,46 32,60 9,46 9,18" fill="#fff"/>
+      <g fill="none" stroke="#000" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 45 Q31 37 47 17"/>
+      </g>
+      <circle cx="47.3" cy="15.9" r="4.3" fill="#000"/>
+    </mask>
+  </defs>
+  <polygon points="32,4 55,18 55,46 32,60 9,46 9,18" fill="#f4edda" mask="url(#hytl-knock)"/>
+  <polygon points="32,4 55,18 55,46 32,60 9,46 9,18" fill="none" stroke="#f4edda" stroke-width="2.6" stroke-linejoin="round"/>
+</svg>
