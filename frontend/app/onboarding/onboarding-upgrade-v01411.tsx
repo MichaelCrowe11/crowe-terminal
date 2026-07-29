@@ -35,7 +35,7 @@ const UpgradeOnboardingModal_v0_14_11_Content = () => {
                         Open and yours
                     </div>
                     <div className="text-secondary leading-5">
-                        Hypheus is open source, built on Wave. Follow releases and docs at{" "}
+                        Hypheus is built in the open. Follow releases at{" "}
                         <a
                             target="_blank"
                             href="https://hypheus.com"

@@ -105,10 +105,10 @@ const InitPage = ({
                             </a>
                         </div>
                         <div className="flex flex-col items-start gap-1 flex-1">
-                            <div className="text-foreground text-base leading-[18px]">Support us on GitHub</div>
+                            <div className="text-foreground text-base leading-[18px]">Source and releases</div>
                             <div className="text-secondary leading-5">
-                                We're <i>open source</i>, <i>open-model</i>, and committed to providing a free terminal
-                                for individual users. Please show your support by giving us a star on{" "}
+                                Hypheus is built in the open. Read the source, track releases, and see what is
+                                changing at{" "}
                                 <a
                                     target="_blank"
                                     href="https://github.com/MichaelCrowe11/crowe-terminal?ref=install"
@@ -125,26 +125,25 @@ const InitPage = ({
                         <div>
                             <a
                                 target="_blank"
-                                href="https://discord.gg/XfvZ334gwU"
+                                href="https://github.com/MichaelCrowe11/crowe-terminal/issues"
                                 rel="noopener"
                                 className="text-accent"
                             >
-                                <i className="text-[25px] text-white/50 fa-solid fa-people-group"></i>
+                                <i className="text-[25px] text-white/50 fa-solid fa-life-ring"></i>
                             </a>
                         </div>
                         <div className="flex flex-col items-start gap-1 flex-1">
-                            <div className="text-foreground text-base leading-[18px]">Join our Community</div>
+                            <div className="text-foreground text-base leading-[18px]">Getting help</div>
                             <div className="text-secondary leading-5">
-                                Get help, submit feature requests, report bugs, or just chat with fellow terminal
-                                enthusiasts.
+                                Report a bug, request a feature, or ask a question.
                                 <br />
                                 <a
                                     target="_blank"
-                                    href="https://discord.gg/XfvZ334gwU"
+                                    href="https://github.com/MichaelCrowe11/crowe-terminal/issues"
                                     rel="noopener"
                                     className="text-accent"
                                 >
-                                    Join the Crowe Logic Discord
+                                    Open an issue on GitHub
                                 </a>
                             </div>
                         </div>

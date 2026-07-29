@@ -284,15 +284,15 @@ const QuickTips = () => {
                 <div className="grid grid-cols-1 @sm:grid-cols-2 gap-2">
                     <div className="flex items-center gap-3 p-3 rounded-md bg-black/20 hover:bg-black/30 transition-colors cursor-pointer">
                         <IconBox variant="secondary">
-                            <i className="fa-brands fa-discord fa-fw" />
+                            <i className="fa-brands fa-github fa-fw" />
                         </IconBox>
                         <a
                             target="_blank"
-                            href="https://discord.gg/XfvZ334gwU"
+                            href="https://github.com/MichaelCrowe11/crowe-terminal/issues"
                             rel="noopener"
                             className="hover:text-accent-400 hover:underline transition-colors font-medium"
                         >
-                            Join Our Discord
+                            Open an Issue
                         </a>
                     </div>
                     <div className="flex items-center gap-3 p-3 rounded-md bg-black/20 hover:bg-black/30 transition-colors cursor-pointer">

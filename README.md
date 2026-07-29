@@ -1,139 +1,150 @@
-     <p align="center">
-       <picture>
-         <img alt="Crowe Terminal" src="./frontend/app/asset/logo.png" width="180">
-       </picture>
-     </p>
+<p align="center">
+  <picture>
+    <img alt="Hypheus" src="./frontend/app/asset/logo.png" width="180">
+  </picture>
+</p>
 
-     <h1 align="center">Crowe Terminal</h1>
+<h1 align="center">Hypheus</h1>
 
-     <p align="center">
-       <strong>The terminal with CroweLM Supreme built in.</strong><br/>
-       An AI-native terminal powered by the Crowe Logic Foundry agent.<br/>
-       macOS · Linux · Windows
-     </p>
+<p align="center">
+  <strong>A multi-pane terminal where your shell, browser, files, and a CroweLM operator panel branch from one root.</strong><br/>
+  A surface of the Crowe Logic platform.<br/>
+  macOS · Linux · Windows
+</p>
 
-     <p align="center">
-       <a href="https://github.com/MichaelCrowe11/crowe-terminal/releases/latest"><b>Download for macOS</b></a>
-       &nbsp;·&nbsp;
-       <a href="https://crowelogic.com">crowelogic.com</a>
-     </p>
+<p align="center">
+  <a href="https://hypheus.com">hypheus.com</a>
+  &nbsp;·&nbsp;
+  <a href="https://crowelogic.com">crowelogic.com</a>
+</p>
 
-     <p align="center">
-       <em>Crowe Terminal is becoming Crowe Code. v1.0.0 will ship as a separate app and will not auto-update from v0.14.x. Watch <a href="https://www.crowelogic.com">crowelogic.com</a> for the release.</em>
-     </p>
+---
 
-     ---
+## What is this?
 
-     ## What is this?
+Hypheus is a terminal built around blocks: split panes, an embedded browser, SSH
+sessions, a file tree, and a CroweLM operator panel, all in one dynamic layout.
+It is wired to the [Crowe Logic Foundry](https://github.com/MichaelCrowe11/crowe-logic-foundry)
+agent, which runs on your machine.
 
-     Crowe Terminal is an AI-native terminal from Crowe Logic, wired directly to the [Crowe Logic Foundry](https://github.com/MichaelCrowe11/crowe-logic-foundry) agent.
+Out of the box you get:
 
-     Out of the box you get:
+- **Five CroweLM models** in the operator panel: Auto (router), Supreme (flagship
+  reasoning), Apex (peak performance), Titan (long-context), Oracle (deep foresight)
+- **Local agent bridge**, so the Foundry agent runs locally behind an
+  OpenAI-compatible API at `127.0.0.1:8011`. Your code stays on your machine;
+  only model calls leave it
+- **The block foundation**: split panes, browser block, SSH sessions, themes,
+  dynamic layout
 
-     - **Five CroweLM models** in the AI block: Auto (router), Supreme (flagship reasoning), Apex (peak performance), Titan (long-context), Oracle (deep foresight)
-     - **Local agent bridge** — the Foundry agent runs on your machine via a local OpenAI-compatible API at `127.0.0.1:8011`. Your code stays local; only model calls leave the machine
-     - **Crowe Terminal foundation** — split panes, browser block, SSH sessions, themes, dynamic layout
+## Install (macOS)
 
-     ## Install (macOS)
+Releases are signed with `Developer ID Application: Michael Crowe (6QLMV9UCPP)`
+and notarized by Apple, so the disk image opens without a Gatekeeper bypass.
 
-     > Releases are signed with `Developer ID Application: Michael Crowe (6QLMV9UCPP)` and notarized by Apple. The DMG opens cleanly on macOS 10.15 and later.
-     >
-     > 1. Download the `.dmg` for your CPU from [releases](https://github.com/MichaelCrowe11/crowe-terminal/releases/latest):
-     >    - `Crowe.Terminal-darwin-arm64-*.dmg` for Apple Silicon (M1, M2, M3, M4)
-     >    - `Crowe.Terminal-darwin-x64-*.dmg` for Intel Macs
-     > 2. Open the `.dmg`, drag **Crowe Terminal** to **Applications**.
-     > 3. Double-click **Crowe Terminal** in Applications. No Gatekeeper bypass required.
+Current release, macOS Apple Silicon:
 
-     ## How the agent works
+```
+https://releases.hypheus.com/hypheus/Hypheus-darwin-arm64-0.2.0.dmg
+```
 
-     The terminal expects to find the [Foundry repo](https://github.com/MichaelCrowe11/crowe-logic-foundry) on your machine. On launch it:
+Open the disk image, drag **Hypheus** to **Applications**, and launch it.
 
-     1. Probes `127.0.0.1:8011` — if a bridge is already running, reuses it
-     2. Else looks for the foundry at `$CROWE_FOUNDRY_PATH` or `~/Projects/crowe-logic-foundry`
-     3. Spawns `python -m cli.openai_bridge` with the foundry's venv if found
-     4. Skips silently if no foundry is found — the manual AI config still works
+Builds are published to `releases.hypheus.com`, not to GitHub releases. The
+releases listed on this repository are from the earlier Crowe Terminal line and
+carry higher version numbers than the current Hypheus builds; ignore them.
 
-     Set up the Foundry locally:
+## How the agent works
 
-     ```bash
-     git clone https://github.com/MichaelCrowe11/crowe-logic-foundry ~/Projects/crowe-logic-foundry
-     cd ~/Projects/crowe-logic-foundry
-     python3 -m venv .venv
-     .venv/bin/pip install -r requirements.txt
-     ```
+Hypheus expects to find the [Foundry repo](https://github.com/MichaelCrowe11/crowe-logic-foundry)
+on your machine. On launch it:
 
-     Restart Crowe Terminal — the AI block will show CroweLM models.
+1. Probes `127.0.0.1:8011` and reuses the bridge if one is already running
+2. Otherwise looks for the foundry at `$CROWE_FOUNDRY_PATH` or `~/Projects/crowe-logic-foundry`
+3. Spawns `python -m cli.openai_bridge` with the foundry's venv if found
+4. Skips silently if no foundry is present, leaving manual model config working
 
-     ## What CroweLM can do — the agent tool surface
+Set up the Foundry locally:
 
-     Out of the box, CroweLM has 21 native tools that operate inside your Crowe
-     Terminal window:
+```bash
+git clone https://github.com/MichaelCrowe11/crowe-logic-foundry ~/Projects/crowe-logic-foundry
+cd ~/Projects/crowe-logic-foundry
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
 
-     - **`system.*`** — `metrics` (CPU/RAM/processes), `run_applescript`,
-       `tell_app` (macOS UI automation)
-     - **`terminal.*`** — `exec_safe` (read-only commands), `propose_command`
-       (mutating commands typed into a visible terminal block, awaits Enter),
-       `list_blocks`
-     - **`browser.in_window.*`** — `navigate`, `read`, `click`, `type`,
-       `screenshot`, `eval`, `wait_for`, `scroll`, `hover`, `get_attr`,
-       `select_option`, `list_links` — drive the in-window webview block
-     - **`allowlist.*`** — `check`, `list`, `add` patterns that skip the
-       approval gate
+Restart Hypheus and the operator panel will show CroweLM models.
 
-     Plus four opt-in outbound MCP families (set the env var, restart):
+## The agent tool surface
 
-     | Env var | Adds |
-     |---|---|
-     | `CROWE_AGENT_PLAYWRIGHT=1` | Full headless Playwright as `browser.*` |
-     | `CROWE_AGENT_FS=1` + `CROWE_AGENT_FS_ROOTS=...` | Filesystem MCP as `fs.*` |
-     | `CROWE_AGENT_FETCH=1` | HTTP fetch MCP as `fetch.*` |
-     | `CROWE_AGENT_GITHUB=1` + `GITHUB_PERSONAL_ACCESS_TOKEN=...` | GitHub MCP as `github.*` |
+CroweLM has 21 native tools that operate inside your Hypheus window:
 
-     The same registry is also exposed via the standalone `crowe-mcp` binary so
-     Claude Desktop / Cursor / any MCP-aware client can use the same tools.
+- **`system.*`**: `metrics` (CPU, RAM, processes), `run_applescript`, `tell_app`
+  (macOS UI automation)
+- **`terminal.*`**: `exec_safe` (read-only commands), `propose_command`
+  (mutating commands typed into a visible terminal block, awaiting Enter),
+  `list_blocks`
+- **`browser.in_window.*`**: `navigate`, `read`, `click`, `type`, `screenshot`,
+  `eval`, `wait_for`, `scroll`, `hover`, `get_attr`, `select_option`,
+  `list_links`, which drive the in-window webview block
+- **`allowlist.*`**: `check`, `list`, `add` patterns that skip the approval gate
 
-     Full reference + safety story: **[docs/agent/USER_GUIDE.md](./docs/agent/USER_GUIDE.md)**.
+Plus four opt-in outbound MCP families. Set the env var and restart:
 
-     ## Pricing
+| Env var | Adds |
+|---|---|
+| `CROWE_AGENT_PLAYWRIGHT=1` | Full headless Playwright as `browser.*` |
+| `CROWE_AGENT_FS=1` + `CROWE_AGENT_FS_ROOTS=...` | Filesystem MCP as `fs.*` |
+| `CROWE_AGENT_FETCH=1` | HTTP fetch MCP as `fetch.*` |
+| `CROWE_AGENT_GITHUB=1` + `GITHUB_PERSONAL_ACCESS_TOKEN=...` | GitHub MCP as `github.*` |
 
-     The terminal is free and open-source (Apache 2.0 — fork it, redistribute it, do what you want).
+The same registry is exposed through the standalone `crowe-mcp` binary, so
+Claude Desktop, Cursor, or any MCP-aware client can use the same tools.
 
-     The **Crowe Logic agent** behind it follows the [Crowe Logic pricing](https://crowelogic.com/pricing):
+Full reference and safety model: **[docs/agent/USER_GUIDE.md](./docs/agent/USER_GUIDE.md)**.
 
-     | Tier | Price | What you get |
-     |---|---|---|
-     | BYOK | $19/mo | Bring your own provider API keys, agent runs locally, full feature set |
-     | Personal | $29/mo | Hosted CroweLM Auto/Apex/Titan, 750 credits/mo, no key management |
-     | Pro | $99/mo | Adds Supreme/Oracle/Sovereign, unmetered dual-mode, 5h session memory |
-     | Team | $49/seat/mo | Pooled credits, shared workspace, admin cost reporting (3+ seats) |
+## Pricing
 
-     ## Portfolio integration (optional)
+The terminal itself is Apache 2.0. Fork it, redistribute it, do what you want.
 
-     If you also run [`crowe-portfolio`](https://github.com/MichaelCrowe11/crowe-portfolio) (the unified knowledge plane across all your repos), Crowe Terminal will pass two env vars through to the Foundry bridge:
+The Crowe Logic agent behind it is a paid service. Current tiers are listed at
+[crowelogic.com/pricing](https://crowelogic.com/pricing).
 
-     ```bash
-     export CROWE_PORTFOLIO_URL=https://your-portfolio-host
-     export CROWE_PORTFOLIO_TOKEN=<bearer>
-     ```
+## Portfolio integration (optional)
 
-     The bridge then exposes `search_code` to the agent, so you can ask the AI block portfolio-wide questions like *"find every Stripe webhook handler across my repos"* and get ranked code citations across canonical repos.
+If you also run [`crowe-portfolio`](https://github.com/MichaelCrowe11/crowe-portfolio),
+the unified knowledge plane across your repos, Hypheus passes two env vars
+through to the Foundry bridge:
 
-     ## Build from source
+```bash
+export CROWE_PORTFOLIO_URL=https://your-portfolio-host
+export CROWE_PORTFOLIO_TOKEN=<bearer>
+```
 
-     ```bash
-     brew install go go-task
-     git clone https://github.com/MichaelCrowe11/crowe-terminal
-     cd crowe-terminal
-     npm install
-     task package
-     ```
+The bridge then exposes `search_code` to the agent, so you can ask
+portfolio-wide questions such as *"find every Stripe webhook handler across my
+repos"* and get ranked code citations.
 
-     Output: `make/Crowe Terminal-darwin-{arch}-{version}.dmg`
+## Build from source
 
-     ## Acknowledgments
+```bash
+brew install go go-task
+git clone https://github.com/MichaelCrowe11/crowe-terminal
+cd crowe-terminal
+npm install
+task package
+```
 
-     Crowe Terminal builds on [Wave Terminal](https://github.com/wavetermdev/waveterm) by Command Line Inc. (Apache 2.0). The terminal core, layout system, and SSH/browser blocks are upstream Wave; the Crowe Logic agent integration, branding, and themes are this fork's contribution. See [`NOTICE`](./NOTICE) for full attribution.
+Output: `make/Hypheus-darwin-{arch}-{version}.dmg`
 
-     ## License
+## Acknowledgments
 
-     Apache License 2.0 — see [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
+Hypheus builds on [Wave Terminal](https://github.com/wavetermdev/waveterm) by
+Command Line Inc. (Apache 2.0). The terminal core, layout system, and SSH and
+browser blocks are upstream Wave; the Crowe Logic agent integration, branding,
+and themes are this fork's contribution. See [`NOTICE`](./NOTICE) for full
+attribution.
+
+## License
+
+Apache License 2.0. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).

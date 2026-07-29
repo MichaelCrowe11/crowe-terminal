@@ -6,7 +6,6 @@ import { InitPage, NoTelemetryStarPage } from "@/app/onboarding/onboarding";
 import { OnboardingGradientBg } from "@/app/onboarding/onboarding-common";
 import { DurableSessionPage } from "@/app/onboarding/onboarding-durable";
 import { FilesPage, MagnifyBlocksPage, WaveAIPage } from "@/app/onboarding/onboarding-features";
-import { StarAskPage } from "@/app/onboarding/onboarding-starask";
 import { UpgradeMinorWelcomePage } from "@/app/onboarding/onboarding-upgrade-minor";
 import { UpgradeOnboardingFooter, UpgradeOnboardingVersions } from "@/app/onboarding/onboarding-upgrade-patch";
 
@@ -88,15 +87,6 @@ function UpgradeOnboardingMinorV() {
     );
 }
 
-function StarAskV() {
-    const noop = () => {};
-    return (
-        <OnboardingModalWrapper width="w-[500px]">
-            <StarAskPage onClose={noop} />
-        </OnboardingModalWrapper>
-    );
-}
-
 export function OnboardingPreview() {
     return (
         <div className="w-full max-w-[1300px] py-10 px-4 flex flex-col gap-8">
@@ -104,9 +94,7 @@ export function OnboardingPreview() {
             <OnboardingFeaturesV />
             <div className="text-sm font-mono text-muted mt-6">Onboarding minor upgrade</div>
             <UpgradeOnboardingMinorV />
-            <div className="text-sm font-mono text-muted mt-6">Onboarding star ask</div>
-            <StarAskV />
-            <div className="text-sm font-mono text-muted mt-6">Onboarding patch updates</div>
+            <div className="text-sm font-mono text-muted mt-6">Onboarding star ask</div>            <div className="text-sm font-mono text-muted mt-6">Onboarding patch updates</div>
             <UpgradeOnboardingPatchV />
         </div>
     );
