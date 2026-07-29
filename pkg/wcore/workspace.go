@@ -34,7 +34,7 @@ var WorkspaceColors = [...]string{
 }
 
 var WorkspaceIcons = [...]string{
-	"hexagon-nodes",
+	"hexagon",
 	"triangle",
 	"star",
 	"heart",
