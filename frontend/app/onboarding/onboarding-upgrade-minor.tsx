@@ -18,12 +18,10 @@ import { useEffect, useRef, useState } from "react";
 import { debounce } from "throttle-debounce";
 
 type UpgradeMinorWelcomePageProps = {
-    onStarClick: () => void;
-    onAlreadyStarred: () => void;
     onMaybeLater: () => void;
 };
 
-const UpgradeMinorWelcomePage = ({ onStarClick, onAlreadyStarred, onMaybeLater }: UpgradeMinorWelcomePageProps) => {
+const UpgradeMinorWelcomePage = ({ onMaybeLater }: UpgradeMinorWelcomePageProps) => {
     return (
         <div className="flex flex-col h-full">
             <header className="flex flex-col gap-2 border-b-0 p-0 mt-1 mb-4 w-full unselectable flex-shrink-0">
@@ -60,32 +58,17 @@ const UpgradeMinorWelcomePage = ({ onStarClick, onAlreadyStarred, onMaybeLater }
                             </p>
                             <p className="mb-4">
                                 <span className="font-semibold text-foreground">New in v0.14:</span> Durable SSH
-                                sessions survive network drops, laptop sleep, and restarts — all without tmux or screen.
+                                sessions survive network drops, laptop sleep, and restarts, with no tmux or screen.
                             </p>
                         </div>
                     </div>
 
-                    <div className="w-full max-w-[550px] border-t border-border my-2"></div>
-
-                    <div className="flex flex-col items-center gap-3 text-center max-w-[550px]">
-                        <div className="text-foreground text-base">Thanks for being an early Hypheus adopter! ⭐</div>
-                        <div className="text-secondary text-sm text-left">
-                            A GitHub star shows your support for Hypheus (and open-source) and helps us reach more
-                            developers.
-                        </div>
-                    </div>
                 </div>
             </OverlayScrollbarsComponent>
             <footer className="unselectable flex-shrink-0 mt-4">
                 <div className="flex flex-row items-center justify-center gap-2.5 [&>button]:!px-5 [&>button]:!py-2 [&>button]:text-sm [&>button]:!h-[37px]">
-                    <Button className="outlined grey font-[600]" onClick={onAlreadyStarred}>
-                        🙏 Already Starred
-                    </Button>
-                    <Button className="outlined green font-[600]" onClick={onStarClick}>
-                        ⭐ Star Now
-                    </Button>
-                    <Button className="outlined grey font-[600]" onClick={onMaybeLater}>
-                        Maybe Later
+                    <Button className="font-[600]" onClick={onMaybeLater}>
+                        Continue
                     </Button>
                 </div>
             </footer>
@@ -130,41 +113,6 @@ const UpgradeOnboardingMinor = () => {
         };
     }, []);
 
-    const handleStarClick = async () => {
-        RpcApi.RecordTEventCommand(
-            TabRpcClient,
-            {
-                event: "onboarding:githubstar",
-                props: { "onboarding:githubstar": "star", "onboarding:page": "minorupgrade" },
-            },
-            { noresponse: true }
-        );
-        const clientId = ClientModel.getInstance().clientId;
-        await RpcApi.SetMetaCommand(TabRpcClient, {
-            oref: WOS.makeORef("client", clientId),
-            meta: { "onboarding:githubstar": true },
-        });
-        window.open("https://github.com/MichaelCrowe11/crowe-terminal?ref=upgrade", "_blank");
-        setPageName("features");
-    };
-
-    const handleAlreadyStarred = async () => {
-        RpcApi.RecordTEventCommand(
-            TabRpcClient,
-            {
-                event: "onboarding:githubstar",
-                props: { "onboarding:githubstar": "already", "onboarding:page": "minorupgrade" },
-            },
-            { noresponse: true }
-        );
-        const clientId = ClientModel.getInstance().clientId;
-        await RpcApi.SetMetaCommand(TabRpcClient, {
-            oref: WOS.makeORef("client", clientId),
-            meta: { "onboarding:githubstar": true },
-        });
-        setPageName("features");
-    };
-
     const handleMaybeLater = async () => {
         RpcApi.RecordTEventCommand(
             TabRpcClient,
@@ -197,11 +145,7 @@ const UpgradeOnboardingMinor = () => {
     let pageComp: React.JSX.Element = null;
     if (pageName === "welcome") {
         pageComp = (
-            <UpgradeMinorWelcomePage
-                onStarClick={handleStarClick}
-                onAlreadyStarred={handleAlreadyStarred}
-                onMaybeLater={handleMaybeLater}
-            />
+            <UpgradeMinorWelcomePage onMaybeLater={handleMaybeLater} />
         );
     } else if (pageName === "features") {
         pageComp = <OnboardingFeatures onComplete={handleFeaturesComplete} />;

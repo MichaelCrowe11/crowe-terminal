@@ -192,24 +192,6 @@ const InitPage = ({
 const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
     const setPageName = useSetAtom(pageNameAtom);
 
-    const handleStarClick = async () => {
-        RpcApi.RecordTEventCommand(
-            TabRpcClient,
-            {
-                event: "onboarding:githubstar",
-                props: { "onboarding:githubstar": "star", "onboarding:page": "notelemetry" },
-            },
-            { noresponse: true }
-        );
-        const clientId = ClientModel.getInstance().clientId;
-        await RpcApi.SetMetaCommand(TabRpcClient, {
-            oref: WOS.makeORef("client", clientId),
-            meta: { "onboarding:githubstar": true },
-        });
-        window.open("https://github.com/MichaelCrowe11/crowe-terminal?ref=not", "_blank");
-        setPageName("features");
-    };
-
     const handleMaybeLater = async () => {
         RpcApi.RecordTEventCommand(
             TabRpcClient,
@@ -243,19 +225,16 @@ const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
                     <div className="text-center text-secondary leading-relaxed max-w-md">
                         <p className="mb-4">No problem, we respect your privacy.</p>
                         <p className="mb-4">
-                            But, without usage data, we're flying blind. A GitHub star helps us know Hypheus is
-                            useful and worth maintaining.
+                            You can turn this back on at any time under Settings. If something is broken or
+                            missing, an issue on GitHub reaches us directly.
                         </p>
                     </div>
                 </div>
             </OverlayScrollbarsComponent>
             <footer className={`unselectable flex-shrink-0 mt-2`}>
                 <div className="flex flex-row items-center justify-center gap-2.5 [&>button]:!px-5 [&>button]:!py-2 [&>button]:text-sm [&>button]:!h-[37px]">
-                    <Button className="outlined green font-[600]" onClick={handleStarClick}>
-                        <i className="fa-solid fa-star mr-2"></i>Star on GitHub
-                    </Button>
                     <Button className="outlined grey font-[600]" onClick={handleMaybeLater}>
-                        Maybe Later
+                        Continue
                     </Button>
                 </div>
             </footer>

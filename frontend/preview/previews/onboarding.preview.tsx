@@ -82,7 +82,7 @@ function UpgradeOnboardingMinorV() {
     const noop = () => {};
     return (
         <OnboardingModalWrapper width="w-[600px]">
-            <UpgradeMinorWelcomePage onStarClick={noop} onAlreadyStarred={noop} onMaybeLater={noop} />
+            <UpgradeMinorWelcomePage onMaybeLater={noop} />
         </OnboardingModalWrapper>
     );
 }
