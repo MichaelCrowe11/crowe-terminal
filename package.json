@@ -118,7 +118,6 @@
         "mermaid": "^11.12.3",
         "monaco-editor": "^0.55.1",
         "monaco-yaml": "^5.4.0",
-        "node-hid": "^3.3.0",
         "node-pty": "^1.1.0",
         "overlayscrollbars": "^2.14.0",
         "overlayscrollbars-react": "^0.5.6",
