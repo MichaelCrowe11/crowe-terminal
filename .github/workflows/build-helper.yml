@@ -54,6 +54,10 @@ jobs:
                   # `pack`. electron-builder only ships a prebuilt snap template for amd64,
                   # so arm64 shells out to `snapcraft snap` and fails on 9.x.
                   sudo snap install snapcraft --classic --channel=8.x
+                  # snapcraft shells out to an unprivileged `snap install core22` for the
+                  # base declared in electron-builder.config.cjs, which fails on the runner.
+                  # Installing it here with sudo means snapcraft finds it already present.
+                  sudo snap install core22
                   sudo snap install lxd
                   sudo lxd init --auto
                   sudo snap refresh
