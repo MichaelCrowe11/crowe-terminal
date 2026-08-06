@@ -10,7 +10,7 @@ const UpgradeOnboardingModal_v0_14_0_Content = () => {
             <div className="text-secondary leading-relaxed mb-4">
                 <p className="mb-0">
                     Hypheus v0.14 introduces Durable Sessions. Enable them to keep your remote sessions alive through
-                    network interruptions, computer sleep, and restarts — they'll automatically reconnect when your
+                    network interruptions, computer sleep, and restarts, reconnecting automatically when your
                     connection is restored.
                 </p>
             </div>
@@ -74,7 +74,7 @@ const UpgradeOnboardingModal_v0_14_0_Content = () => {
                     <i className="text-[24px] text-accent fa-solid fa-sparkles"></i>
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
-                    <div className="text-foreground text-base font-semibold leading-[18px]">Crowe Logic Updates</div>
+                    <div className="text-foreground text-base font-semibold leading-[18px]">Hypheus Updates</div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>

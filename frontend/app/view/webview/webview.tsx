@@ -9,19 +9,19 @@ import type { TabModel } from "@/app/store/tab-model";
 import { makeORef } from "@/app/store/wos";
 import { makeFeBlockRouteId } from "@/app/store/wshrouter";
 import { DefaultRouter, TabRpcClient } from "@/app/store/wshrpcutil";
-import { WebWshClient } from "@/app/view/webview/webview-wsh";
 import {
     BlockHeaderSuggestionControl,
     SuggestionControlNoData,
     SuggestionControlNoResults,
 } from "@/app/suggestion/suggestion";
+import { WebWshClient } from "@/app/view/webview/webview-wsh";
+import type { EmbeddedWebview } from "@/app/waveenv/embeddedwebview";
 import { MockBoundary } from "@/app/waveenv/mockboundary";
 import { useWaveEnv } from "@/app/waveenv/waveenv";
 import { openLink } from "@/store/global";
 import { adaptFromReactOrNativeKeyEvent, checkKeyPressed } from "@/util/keyutil";
 import { fireAndForget, useAtomValueSafe } from "@/util/util";
 import clsx from "clsx";
-import type { WebviewTag } from "electron";
 import { Atom, PrimitiveAtom, atom, useAtomValue, useSetAtom } from "jotai";
 import { Fragment, createRef, memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import "./webview.scss";
@@ -62,7 +62,7 @@ export class WebViewModel implements ViewModel {
     isLoading: PrimitiveAtom<boolean>;
     urlWrapperClassName: PrimitiveAtom<string>;
     refreshIcon: PrimitiveAtom<string>;
-    webviewRef: React.RefObject<WebviewTag>;
+    webviewRef: React.RefObject<EmbeddedWebview>;
     urlInputRef: React.RefObject<HTMLInputElement>;
     nodeModel: BlockNodeModel;
     endIconButtons?: Atom<IconButtonDecl[]>;
@@ -105,7 +105,7 @@ export class WebViewModel implements ViewModel {
         this.viewName = atom("Web");
         this.hideViewName = atom(true);
         this.urlInputRef = createRef<HTMLInputElement>();
-        this.webviewRef = createRef<WebviewTag>();
+        this.webviewRef = createRef<EmbeddedWebview>();
         this.domReady = atom(false);
         this.hideNav = this.env.getBlockMetaKeyAtom(blockId, "web:hidenav");
         this.typeaheadOpen = atom(false);

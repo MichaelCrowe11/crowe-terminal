@@ -23,8 +23,12 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/wstore"
 )
 
+// Rotation for new workspaces. Brand colours lead: Hypheus blue, then the gold
+// used by the starter workspace. The rest stay as a varied palette so users can
+// still tell workspaces apart at a glance.
 var WorkspaceColors = [...]string{
-	"#58C142", // Green (accent)
+	"#2A5090", // Hypheus blue (accent)
+	"#BFA669", // Hypheus gold
 	"#00FFDB", // Teal
 	"#429DFF", // Blue
 	"#BF55EC", // Purple
@@ -34,7 +38,7 @@ var WorkspaceColors = [...]string{
 }
 
 var WorkspaceIcons = [...]string{
-	"custom@wave-logo-solid",
+	"hexagon",
 	"triangle",
 	"star",
 	"heart",

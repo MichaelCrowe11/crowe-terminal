@@ -3,8 +3,12 @@
 
 import { contextBridge, ipcRenderer, Rectangle, webUtils, WebviewTag } from "electron";
 
-// update type in custom.d.ts (ElectronApi type)
-contextBridge.exposeInMainWorld("api", {
+// Typed as ElectronApi so this stays congruent with custom.d.ts in both
+// directions: a method declared there but missing here, or exposed here but
+// undeclared there, is a compile error rather than a runtime surprise. This is the
+// whole trust boundary, and the preview server's mock host implements the same
+// type, so the two hosts cannot drift apart silently.
+const api: ElectronApi = {
     getAuthKey: () => ipcRenderer.sendSync("get-auth-key"),
     getIsDev: () => ipcRenderer.sendSync("get-is-dev"),
     getPlatform: () => ipcRenderer.sendSync("get-platform"),
@@ -73,7 +77,9 @@ contextBridge.exposeInMainWorld("api", {
     getPathForFile: (file: File): string => webUtils.getPathForFile(file),
     saveTextFile: (fileName: string, content: string) => ipcRenderer.invoke("save-text-file", fileName, content),
     setIsActive: () => ipcRenderer.invoke("set-is-active"),
-});
+};
+
+contextBridge.exposeInMainWorld("api", api);
 
 // Custom event for "new-window"
 ipcRenderer.on("webview-new-window", (e, webContentsId, details) => {

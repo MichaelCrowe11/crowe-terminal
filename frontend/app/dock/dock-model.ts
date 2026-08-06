@@ -11,17 +11,25 @@ export const DOCK_MIN_WIDTH = 280;
 export const DOCK_MAX_WIDTH = 760;
 export const DOCK_RAIL_WIDTH = 44;
 
+// The chat drawer is the headline surface, so it gets its own (wider) width
+// track independent of the diagnostic tool drawers.
+export const CHAT_DEFAULT_WIDTH = 460;
+export const CHAT_MIN_WIDTH = 340;
+export const CHAT_MAX_WIDTH = 900;
+
 const StorageKey = "crowe.dock.v1";
 
 type DockPersisted = {
     activeTool: DockToolId | null;
     width: number;
+    chatWidth: number;
     collapsed: boolean;
 };
 
 const DefaultPersisted: DockPersisted = {
     activeTool: null,
     width: DOCK_DEFAULT_WIDTH,
+    chatWidth: CHAT_DEFAULT_WIDTH,
     collapsed: true,
 };
 
@@ -30,6 +38,13 @@ function clampWidth(px: number): number {
         return DOCK_DEFAULT_WIDTH;
     }
     return Math.min(DOCK_MAX_WIDTH, Math.max(DOCK_MIN_WIDTH, Math.round(px)));
+}
+
+function clampChatWidth(px: number): number {
+    if (!Number.isFinite(px)) {
+        return CHAT_DEFAULT_WIDTH;
+    }
+    return Math.min(CHAT_MAX_WIDTH, Math.max(CHAT_MIN_WIDTH, Math.round(px)));
 }
 
 function loadPersisted(): DockPersisted {
@@ -42,6 +57,7 @@ function loadPersisted(): DockPersisted {
         return {
             activeTool: parsed?.activeTool ?? null,
             width: clampWidth(parsed?.width ?? DOCK_DEFAULT_WIDTH),
+            chatWidth: clampChatWidth(parsed?.chatWidth ?? CHAT_DEFAULT_WIDTH),
             collapsed: parsed?.collapsed ?? true,
         };
     } catch {
@@ -54,12 +70,14 @@ export class DockModel {
     activeToolAtom: jotai.PrimitiveAtom<DockToolId | null>;
     collapsedAtom: jotai.PrimitiveAtom<boolean>;
     widthAtom: jotai.PrimitiveAtom<number>;
+    chatWidthAtom: jotai.PrimitiveAtom<number>;
 
     private constructor() {
         const p = loadPersisted();
         this.activeToolAtom = jotai.atom(p.activeTool) as jotai.PrimitiveAtom<DockToolId | null>;
         this.collapsedAtom = jotai.atom(p.collapsed);
         this.widthAtom = jotai.atom(p.width);
+        this.chatWidthAtom = jotai.atom(p.chatWidth);
     }
 
     static getInstance(): DockModel {
@@ -73,6 +91,7 @@ export class DockModel {
         const data: DockPersisted = {
             activeTool: globalStore.get(this.activeToolAtom),
             width: globalStore.get(this.widthAtom),
+            chatWidth: globalStore.get(this.chatWidthAtom),
             collapsed: globalStore.get(this.collapsedAtom),
         };
         try {
@@ -102,6 +121,11 @@ export class DockModel {
     setWidth(px: number) {
         globalStore.set(this.widthAtom, clampWidth(px));
         globalStore.set(this.collapsedAtom, false);
+        this.persistState();
+    }
+
+    setChatWidth(px: number) {
+        globalStore.set(this.chatWidthAtom, clampChatWidth(px));
         this.persistState();
     }
 }

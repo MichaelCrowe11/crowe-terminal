@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 160" fill="none" role="img" aria-label="Hypheus">
+  <!-- Hypheus wordmark: the blue hexagon mark (Crowe Logic cube-family
+       silhouette) with a gold branching hypha, paired with "Hypheus" set
+       in the brand serif. -->
+  <defs>
+    <linearGradient id="hw-hex" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#356299"/><stop offset="1" stop-color="#12294E"/>
+    </linearGradient>
+    <linearGradient id="hw-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ECD08C"/><stop offset="1" stop-color="#C79A46"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(24 22) scale(1.85)">
+    <polygon points="32,4 55,18 55,46 32,60 9,46 9,18" fill="url(#hw-hex)" stroke="#0F2347" stroke-width="1.3" stroke-linejoin="round"/>
+    <polyline points="9.6,18.3 32,5.2 54.4,18.3" fill="none" stroke="#6E93CE" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/>
+    <g fill="none" stroke="url(#hw-gold)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 45 Q31 37 47 17"/>
+      <path d="M30.4 33.6 Q25.6 28 26 20.5"/>
+      <path d="M21 40.5 Q19.4 37.5 20 34.5"/>
+    </g>
+    <circle cx="47.3" cy="15.9" r="2.9" fill="url(#hw-gold)"/>
+    <circle cx="26" cy="19" r="2" fill="url(#hw-gold)"/>
+  </g>
+  <text x="176" y="106" font-family="'Fraunces','Georgia','Times New Roman',serif"
+        font-weight="500" font-size="70" letter-spacing="1" fill="#d2ad62">Hypheus</text>
+</svg>

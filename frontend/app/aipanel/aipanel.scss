@@ -1,0 +1,70 @@
+// Copyright 2026, Crowe Logic Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+// Chat surface polish: thin on-brand scrollbars, a soft message entrance, and
+// the cognition-verb fade. Depth/color come from the shared token layer.
+
+.crowe-scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--hairline-strong) transparent;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        border-radius: var(--radius-pill);
+        background: var(--hairline-strong);
+        background-clip: padding-box;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: var(--crowe-gold-40);
+        background-clip: padding-box;
+    }
+
+    &::-webkit-scrollbar-corner {
+        background: transparent;
+    }
+}
+
+@keyframes crowe-msg-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.crowe-msg-enter {
+    animation: crowe-msg-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes crowe-verb-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.crowe-cognition-verb {
+    animation: crowe-verb-in 0.32s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crowe-msg-enter,
+    .crowe-cognition-verb {
+        animation: none;
+    }
+}

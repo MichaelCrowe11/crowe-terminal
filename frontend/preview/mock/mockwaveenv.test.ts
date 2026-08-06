@@ -47,7 +47,7 @@ describe("makeMockWaveEnv", () => {
             path: "/Users/mike",
         });
         expect(visibleHomeEntries.some((entry) => entry.name === ".bashrc")).toBe(false);
-        expect(visibleHomeEntries.some((entry) => entry.name === "waveterm")).toBe(true);
+        expect(visibleHomeEntries.some((entry) => entry.name === "hypheus")).toBe(true);
 
         const allHomeEntries = await env.rpc.FileListCommand(null as any, {
             path: "/Users/mike",
@@ -56,16 +56,16 @@ describe("makeMockWaveEnv", () => {
         expect(allHomeEntries.some((entry) => entry.name === ".bashrc")).toBe(true);
 
         const dirRead = await env.rpc.FileReadCommand(null as any, {
-            info: { path: "/Users/mike/waveterm" },
+            info: { path: "/Users/mike/hypheus" },
         });
         expect(dirRead.entries.some((entry) => entry.name === "docs" && entry.isdir)).toBe(true);
 
         const joined = await env.rpc.FileJoinCommand(null as any, [
             "wsh://local//Users/mike/Documents",
-            "../waveterm/docs",
+            "../hypheus/docs",
             "preview-notes.md",
         ]);
-        expect(joined.path).toBe("/Users/mike/waveterm/docs/preview-notes.md");
+        expect(joined.path).toBe("/Users/mike/hypheus/docs/preview-notes.md");
         expect(joined.mimetype).toBe("text/markdown");
     });
 

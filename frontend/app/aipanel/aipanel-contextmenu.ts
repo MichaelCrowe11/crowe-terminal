@@ -147,7 +147,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
         menu.push({ type: "separator" });
 
         menu.push({
-            label: "Hide Crowe Logic",
+            label: "Hide Operator",
             click: () => {
                 model.closeWaveAIPanel();
             },

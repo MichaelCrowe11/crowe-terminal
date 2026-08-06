@@ -1,8 +1,8 @@
 // Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import croweMarkUrl from "@/app/asset/crowe-mark.png?url";
-import croweWordmarkUrl from "@/app/asset/crowe-wordmark.svg?url";
+import croweMarkUrl from "@/app/asset/hypheus-mark.png?url";
+import croweWordmarkUrl from "@/app/asset/hypheus-wordmark.svg?url";
 import type { BlockNodeModel } from "@/app/block/blocktypes";
 import { atoms, globalStore, replaceBlock } from "@/app/store/global";
 import type { TabModel } from "@/app/store/tab-model";
@@ -314,7 +314,7 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                         <span className="crowe-launcher-live" />
                         Operator console · signed workspace
                     </div>
-                    <img src={croweWordmarkUrl} className="h-auto w-full max-w-[260px]" alt="Crowe Logic" />
+                    <img src={croweWordmarkUrl} className="h-auto w-full max-w-[260px]" alt="Hypheus" />
                     <img src={croweMarkUrl} className="h-auto w-full max-w-[54px]" alt="" />
                     <div className="crowe-launcher-greeting">{getGreeting()}, operator</div>
                     <div className="crowe-launcher-subhead">Terminal, code, research, and grow ops on one managed workspace.</div>

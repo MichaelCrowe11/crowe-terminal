@@ -176,6 +176,105 @@
     }
 }
 
+// The chat drawer reuses the floating-drawer shell with a thin head (active
+// model + collapse); the AI panel below supplies its own identity/input chrome.
+.crowe-chat-drawer {
+    transition:
+        width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.18s ease;
+
+    .crowe-chat-head {
+        padding: 6px 8px 6px 12px;
+        gap: 8px;
+    }
+
+    .crowe-chat-model {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 7px;
+        padding: 3px 8px 3px 7px;
+        border: 1px solid var(--hairline-faint);
+        border-radius: var(--radius-pill);
+        background: var(--wash-accent-faint);
+        transition:
+            border-color 0.15s ease,
+            background-color 0.15s ease;
+
+        &:hover {
+            border-color: var(--crowe-gold-40);
+            background: var(--wash-accent);
+
+            .crowe-chat-model-caret {
+                color: var(--accent);
+            }
+        }
+
+        .crowe-chat-model-dot {
+            width: 6px;
+            height: 6px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--glow-gold);
+        }
+
+        .crowe-chat-model-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.03em;
+            color: var(--text);
+        }
+
+        .crowe-chat-model-caret {
+            font-size: 10px;
+            color: var(--text-dim);
+            transition: color 0.15s ease;
+        }
+    }
+
+    .crowe-chat-body {
+        display: flex;
+        flex: 1 1 auto;
+        min-height: 0;
+        flex-direction: column;
+    }
+}
+
+.crowe-chat-drawer-closed {
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+    pointer-events: none;
+    opacity: 0;
+}
+
+// Visible grip so the chat drawer's resize edge reads as draggable.
+.crowe-dock-resize-grip::after {
+    content: "";
+    position: absolute;
+    left: 1px;
+    top: 50%;
+    height: 26px;
+    width: 2px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    background: var(--hairline-strong);
+    opacity: 0.55;
+    transition:
+        opacity 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.crowe-dock-resize-grip:hover::after {
+    opacity: 1;
+    background: var(--accent);
+}
+
 // --- Shared panel primitives ----------------------------------------------
 
 .crowe-panel {

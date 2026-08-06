@@ -128,10 +128,9 @@ const config = {
         fpm: ["--rpm-rpmbuild-define", "_build_id_links none"],
     },
     publish: {
-        provider: "github",
-        owner: "MichaelCrowe11",
-        repo: "crowe-terminal",
-        releaseType: "release",
+        provider: "generic",
+        url: "https://releases.hypheus.com/hypheus/",
+        channel: "latest",
     },
     afterPack: (context) => {
         // This is a workaround to restore file permissions to the wavesrv binaries on macOS after packaging the universal binary.

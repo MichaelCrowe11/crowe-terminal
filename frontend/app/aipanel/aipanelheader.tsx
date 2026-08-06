@@ -8,8 +8,8 @@ import { useWaveEnv } from "@/app/waveenv/waveenv";
 import { useAtomValue } from "jotai";
 import { memo, useMemo } from "react";
 import { WaveAIModel } from "./waveai-model";
-import croweMark from "@/app/asset/crowe-mark.png";
-import croweWordmarkUrl from "@/app/asset/crowe-wordmark.svg?url";
+import croweMark from "@/app/asset/hypheus-mark.png";
+import croweWordmarkUrl from "@/app/asset/hypheus-wordmark.svg?url";
 
 export const AIPanelHeader = memo(() => {
     const model = WaveAIModel.getInstance();
@@ -44,82 +44,81 @@ export const AIPanelHeader = memo(() => {
 
     return (
         <div
-            className="py-2 pl-3 pr-2 flex items-center justify-between min-w-0 border-b border-[var(--hairline)] bg-[var(--glass-tint-chrome)] backdrop-blur-2xl"
+            className="flex h-11 min-w-0 items-center justify-between gap-2 border-b border-[var(--hairline)] bg-[var(--glass-tint-chrome)] pl-3 pr-1.5 backdrop-blur-2xl [box-shadow:inset_0_1px_0_var(--hair-top)]"
             onContextMenu={handleContextMenu}
         >
-            <div className="min-w-0 flex items-center gap-2.5">
-                <button
-                    type="button"
-                    onClick={openCroweCode}
-                    className="group min-w-0 flex items-center gap-2.5 cursor-pointer"
-                    title="Open crowelogic.com"
-                >
-                    <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--hairline-strong)] bg-[var(--surface-sunken)]">
-                        <img src={croweMark} alt="" className="h-full w-full object-cover" />
-                    </div>
-                    <div className="min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <img src={croweWordmarkUrl} alt="Crowe Logic" className="h-4 w-auto flex-shrink-0" />
-                            <span
-                                className={cn(
-                                    "h-1.5 w-1.5 rounded-full bg-[var(--crowe-gold-45)]",
-                                    isStreaming && "animate-pulse bg-[var(--accent)] shadow-[0_0_8px_var(--glow-gold)]"
-                                )}
-                            />
-                        </div>
-                        <div
-                            className={cn(
-                                "truncate text-[11px] mt-0.5 group-hover:text-[var(--accent)]",
-                                activeLabel ? "font-mono text-[var(--crowe-gold-65)]" : "text-[var(--text-dim)]"
-                            )}
-                            title={activeEditor?.filePath ?? "Managed workspace"}
-                        >
-                            {activeLabel ?? "Managed workspace"}
-                        </div>
-                    </div>
-                </button>
-            </div>
+            <button
+                type="button"
+                onClick={openCroweCode}
+                className="group flex min-w-0 items-center gap-2 cursor-pointer"
+                title="Open crowelogic.com"
+            >
+                <div className="relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-[var(--radius-xs)] border border-[var(--hairline-strong)] bg-[var(--surface-sunken)]">
+                    <img src={croweMark} alt="" className="h-full w-full object-cover" />
+                </div>
+                <img src={croweWordmarkUrl} alt="Hypheus" className="h-[13px] w-auto flex-shrink-0 opacity-90" />
+                <span
+                    className={cn(
+                        "h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--crowe-gold-45)] transition-all",
+                        isStreaming && "animate-pulse bg-[var(--accent)] shadow-[0_0_8px_var(--glow-gold)]"
+                    )}
+                />
+                {activeLabel && (
+                    <span
+                        className="ml-1 min-w-0 truncate font-mono text-[10px] text-[var(--crowe-gold-65)] group-hover:text-[var(--accent)]"
+                        title={activeEditor?.filePath ?? undefined}
+                    >
+                        {activeLabel}
+                    </span>
+                )}
+            </button>
 
-            <div className="flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
+            <div className="flex flex-shrink-0 items-center gap-0.5 whitespace-nowrap">
+                {!inBuilder && (
+                    <button
+                        type="button"
+                        onClick={toggleContext}
+                        title={
+                            widgetAccess
+                                ? "Tools are on. The operator can read your terminal, files, and use editor tools. Click to sandbox."
+                                : "Tools are off (sandboxed). The operator is text-only and cannot reach files or the terminal. Click to enable."
+                        }
+                        aria-pressed={widgetAccess}
+                        className={cn(
+                            "flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors cursor-pointer",
+                            widgetAccess
+                                ? "border-[var(--crowe-gold-40)] bg-[var(--wash-accent)] text-[var(--accent)] hover:bg-[var(--wash-accent-mid)]"
+                                : "border-[var(--hairline)] bg-transparent text-[var(--text-dim)] hover:border-[var(--hairline-strong)] hover:text-[var(--text)]"
+                        )}
+                    >
+                        <span
+                            className={cn(
+                                "inline-block h-1.5 w-1.5 rounded-full",
+                                widgetAccess ? "bg-[var(--accent)] shadow-[0_0_6px_var(--glow-gold)]" : "bg-[var(--text-dim)]"
+                            )}
+                        />
+                        tools
+                    </button>
+                )}
                 {!inBuilder && (
                     <button
                         type="button"
                         onClick={() => model.openCroweAccount()}
-                        className="rounded-[var(--radius-sm)] border border-[var(--crowe-gold-30)] bg-[var(--wash-accent-faint)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--crowe-gold-65)] transition-colors hover:border-[var(--crowe-gold-60)] hover:bg-[var(--wash-accent)] cursor-pointer"
                         title="Sign in to your Crowe Logic account"
+                        aria-label="Sign in"
+                        className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-dim)] transition-colors hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer"
                     >
-                        Sign in
+                        <i className="fa fa-regular fa-circle-user text-[13px]"></i>
                     </button>
                 )}
-                {!inBuilder && (
-                    <button
-                        onClick={toggleContext}
-                        title={
-                            widgetAccess
-                                ? "Tools are ON. The agent can read your terminal, files, and use editor.* tools. Click to sandbox."
-                                : "Tools are OFF (sandboxed). The agent is text-only and cannot reach files or the terminal. Click to enable."
-                        }
-                        className={`group flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] px-2 py-1 border rounded-[var(--radius-sm)] transition-colors cursor-pointer ${
-                            widgetAccess
-                                ? "text-[var(--accent)] border-[var(--crowe-gold-40)] bg-[var(--wash-accent)] hover:bg-[var(--wash-accent-mid)]"
-                                : "text-[var(--text-dim)] border-[var(--hairline)] bg-transparent hover:border-[var(--hairline-strong)] hover:text-[var(--text)]"
-                        }`}
-                    >
-                        <span
-                            className={`inline-block h-1.5 w-1.5 rounded-full ${
-                                widgetAccess ? "bg-[var(--accent)]" : "bg-[var(--text-dim)]"
-                            }`}
-                        />
-                        <span>tools: {widgetAccess ? "on" : "off"}</span>
-                    </button>
-                )}
-
                 <button
+                    type="button"
                     onClick={handleKebabClick}
-                    className="text-[var(--text-dim)] hover:text-[var(--accent)] cursor-pointer transition-colors p-1 flex-shrink-0 focus:outline-none"
+                    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-dim)] transition-colors hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer focus:outline-none"
                     title="More options"
+                    aria-label="More options"
                 >
-                    <i className="fa fa-ellipsis-vertical"></i>
+                    <i className="fa fa-ellipsis-vertical text-[13px]"></i>
                 </button>
             </div>
         </div>

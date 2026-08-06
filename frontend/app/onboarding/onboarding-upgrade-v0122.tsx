@@ -6,7 +6,7 @@ const UpgradeOnboardingModal_v0_12_2_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Crowe Logic can now create and modify files with visual diff previews and easy rollback capabilities.
+                    Hypheus can now create and modify files with visual diff previews and easy rollback capabilities.
                     Plus performance improvements and bug fixes.
                 </p>
             </div>
@@ -16,11 +16,11 @@ const UpgradeOnboardingModal_v0_12_2_Content = () => {
                     <i className="text-[24px] text-accent fa-solid fa-file-pen"></i>
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
-                    <div className="text-foreground text-base font-semibold leading-[18px]">Crowe Logic File Editing</div>
+                    <div className="text-foreground text-base font-semibold leading-[18px]">Hypheus File Editing</div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>
-                                <strong>File Write Tool</strong> - Crowe Logic can now create and modify files with your
+                                <strong>File Write Tool</strong> - Hypheus can now create and modify files with your
                                 approval
                             </li>
                             <li>

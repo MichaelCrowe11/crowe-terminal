@@ -6,8 +6,8 @@ const UpgradeOnboardingModal_v0_14_11_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Hypheus is becoming <strong className="text-foreground">Crowe Code</strong>, the
-                    Crowe Logic IDE. This is the last update that will arrive automatically.
+                    You are running <strong className="text-foreground">Hypheus</strong>, the mycelial
+                    terminal. A surface of the Crowe Logic platform.
                 </p>
             </div>
 
@@ -17,12 +17,11 @@ const UpgradeOnboardingModal_v0_14_11_Content = () => {
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
                     <div className="text-foreground text-base font-semibold leading-[18px]">
-                        A new app, installed fresh
+                        One root, many panes
                     </div>
                     <div className="text-secondary leading-5">
-                        Crowe Code v1.0.0 will ship as a separate application. Because it is a new app, your
-                        current install will not auto-update into it. You will download Crowe Code once when it
-                        is released, and this Hypheus install can stay as long as you like.
+                        Your shell, a browser, your files, and an operator panel grow from one root and stay
+                        connected, so context travels with you instead of scattering across windows.
                     </div>
                 </div>
             </div>
@@ -33,17 +32,17 @@ const UpgradeOnboardingModal_v0_14_11_Content = () => {
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
                     <div className="text-foreground text-base font-semibold leading-[18px]">
-                        Nothing changes today
+                        Open and yours
                     </div>
                     <div className="text-secondary leading-5">
-                        Everything you use right now keeps working. We will announce the Crowe Code release at{" "}
+                        Hypheus is built in the open. Follow releases at{" "}
                         <a
                             target="_blank"
-                            href="https://www.crowelogic.com"
+                            href="https://hypheus.com"
                             rel="noopener"
                             className="text-accent"
                         >
-                            crowelogic.com
+                            hypheus.com
                         </a>
                         .
                     </div>

@@ -191,7 +191,11 @@ class WorkspaceLayoutModel {
 
     private computeLayout(windowWidth: number): { outer: number[]; inner: number[] } {
         const vtabW = this.vtabVisible ? this.getResolvedVTabWidth() : 0;
-        const aiW = this.aiPanelVisible ? this.getResolvedAIWidth(windowWidth) : 0;
+        // The AI panel moved to the right-side utility dock, so it no longer
+        // occupies the left group. Keep it at zero width here rather than ripping
+        // out the (now vtab-only) inner PanelGroup, which the ref registration and
+        // resize handlers still depend on.
+        const aiW = 0;
         const leftGroupW = vtabW + aiW;
 
         // outer: [leftGroupPct, contentPct]
@@ -231,45 +235,19 @@ class WorkspaceLayoutModel {
         const windowWidth = window.innerWidth;
         const newLeftGroupPx = (sizes[0] / 100) * windowWidth;
 
-        if (this.vtabVisible && this.aiPanelVisible) {
-            // vtab stays constant, aipanel absorbs the change
-            const vtabW = this.getResolvedVTabWidth();
-            this.aiPanelWidth = clampAIPanelWidth(newLeftGroupPx - vtabW, windowWidth);
-            this.debouncedPersistAIWidth();
-        } else if (this.vtabVisible) {
+        // The left group is vtab-only now (AI panel lives in the dock), so any
+        // outer-handle drag resizes the vertical tab bar.
+        if (this.vtabVisible) {
             this.vtabWidth = clampVTabWidth(newLeftGroupPx);
             this.debouncedPersistVTabWidth();
-        } else if (this.aiPanelVisible) {
-            this.aiPanelWidth = clampAIPanelWidth(newLeftGroupPx, windowWidth);
-            this.debouncedPersistAIWidth();
         }
 
         this.commitLayouts(windowWidth);
     }
 
-    handleInnerPanelLayout(sizes: number[]): void {
-        if (this.inResize) return;
-        if (!this.vtabVisible || !this.aiPanelVisible) return;
-
-        const windowWidth = window.innerWidth;
-        const vtabW = this.getResolvedVTabWidth();
-        const aiW = this.getResolvedAIWidth(windowWidth);
-        const leftGroupW = vtabW + aiW;
-
-        const newVTabW = (sizes[0] / 100) * leftGroupW;
-        const clampedVTab = clampVTabWidth(newVTabW);
-        const newAIW = clampAIPanelWidth(leftGroupW - clampedVTab, windowWidth);
-
-        if (clampedVTab !== this.vtabWidth) {
-            this.vtabWidth = clampedVTab;
-            this.debouncedPersistVTabWidth();
-        }
-        if (newAIW !== this.aiPanelWidth) {
-            this.aiPanelWidth = newAIW;
-            this.debouncedPersistAIWidth();
-        }
-
-        this.commitLayouts(windowWidth);
+    handleInnerPanelLayout(_sizes: number[]): void {
+        // The inner group no longer splits vtab against the AI panel (moved to the
+        // dock), so there is nothing to redistribute.
     }
 
     handleWindowResize(): void {
@@ -309,12 +287,10 @@ class WorkspaceLayoutModel {
     }
 
     private syncPanelCollapse(): void {
+        // The AI panel's inner slot is always empty now; keep it collapsed so the
+        // left group is sized purely by the vtab bar.
         if (this.aiPanelRef) {
-            if (this.aiPanelVisible) {
-                this.aiPanelRef.expand();
-            } else {
-                this.aiPanelRef.collapse();
-            }
+            this.aiPanelRef.collapse();
         }
         if (this.vtabPanelRef) {
             if (this.vtabVisible) {
@@ -367,14 +343,14 @@ class WorkspaceLayoutModel {
 
     getLeftGroupInitialPercentage(windowWidth: number, showLeftTabBar: boolean): number {
         const vtabW = showLeftTabBar && !isBuilderWindow() ? this.getResolvedVTabWidth() : 0;
-        const aiW = this.aiPanelVisible ? this.getResolvedAIWidth(windowWidth) : 0;
+        const aiW = 0;
         return ((vtabW + aiW) / windowWidth) * 100;
     }
 
     getInnerVTabInitialPercentage(windowWidth: number, showLeftTabBar: boolean): number {
         if (!showLeftTabBar || isBuilderWindow()) return 0;
         const vtabW = this.getResolvedVTabWidth();
-        const aiW = this.aiPanelVisible ? this.getResolvedAIWidth(windowWidth) : 0;
+        const aiW = 0;
         const total = vtabW + aiW;
         if (total === 0) return 50;
         return (vtabW / total) * 100;
@@ -382,7 +358,7 @@ class WorkspaceLayoutModel {
 
     getInnerAIPanelInitialPercentage(windowWidth: number, showLeftTabBar: boolean): number {
         const vtabW = showLeftTabBar && !isBuilderWindow() ? this.getResolvedVTabWidth() : 0;
-        const aiW = this.aiPanelVisible ? this.getResolvedAIWidth(windowWidth) : 0;
+        const aiW = 0;
         const total = vtabW + aiW;
         if (total === 0) return 50;
         return (aiW / total) * 100;

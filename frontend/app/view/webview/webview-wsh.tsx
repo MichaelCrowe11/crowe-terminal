@@ -8,7 +8,7 @@
 import { RpcResponseHelper, WshClient } from "@/app/store/wshclient";
 import { makeFeBlockRouteId } from "@/app/store/wshrouter";
 import type { WebViewModel } from "@/app/view/webview/webview";
-import type { WebviewTag } from "electron";
+import type { EmbeddedWebview } from "@/app/waveenv/embeddedwebview";
 
 export class WebWshClient extends WshClient {
     blockId: string;
@@ -24,7 +24,7 @@ export class WebWshClient extends WshClient {
         _rh: RpcResponseHelper,
         data: CommandWebExecuteJSData
     ): Promise<CommandWebExecuteJSRtnData> {
-        const webview = this.model.webviewRef.current as WebviewTag | null;
+        const webview = this.model.webviewRef.current as EmbeddedWebview | null;
         if (!webview) {
             return { error: "no webview attached to block" };
         }
@@ -55,7 +55,7 @@ export class WebWshClient extends WshClient {
         _rh: RpcResponseHelper,
         _data: CommandWebCaptureData
     ): Promise<CommandWebCaptureRtnData> {
-        const webview = this.model.webviewRef.current as WebviewTag | null;
+        const webview = this.model.webviewRef.current as EmbeddedWebview | null;
         if (!webview) {
             throw new Error("no webview attached to block");
         }
@@ -72,7 +72,7 @@ export class WebWshClient extends WshClient {
     }
 }
 
-function safeUrl(webview: WebviewTag): string {
+function safeUrl(webview: EmbeddedWebview): string {
     try {
         return webview.getURL();
     } catch {
@@ -80,7 +80,7 @@ function safeUrl(webview: WebviewTag): string {
     }
 }
 
-function safeTitle(webview: WebviewTag): string {
+function safeTitle(webview: EmbeddedWebview): string {
     try {
         return webview.getTitle();
     } catch {
