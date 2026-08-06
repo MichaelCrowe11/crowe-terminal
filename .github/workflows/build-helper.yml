@@ -50,7 +50,10 @@ jobs:
               run: |
                   sudo apt-get update
                   sudo apt-get install --no-install-recommends -y libarchive-tools libopenjp2-tools rpm squashfs-tools
-                  sudo snap install snapcraft --classic
+                  # Pinned to 8.x: snapcraft 9 removed the `snap` subcommand in favour of
+                  # `pack`. electron-builder only ships a prebuilt snap template for amd64,
+                  # so arm64 shells out to `snapcraft snap` and fails on 9.x.
+                  sudo snap install snapcraft --classic --channel=8.x
                   sudo snap install lxd
                   sudo lxd init --auto
                   sudo snap refresh
