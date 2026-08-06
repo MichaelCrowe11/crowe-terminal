@@ -17,6 +17,7 @@ jobs:
     build-app:
         outputs:
             version: ${{ steps.set-version.outputs.WAVETERM_VERSION }}
+            productname: ${{ steps.set-version.outputs.PRODUCT_NAME }}
         strategy:
             fail-fast: false
             matrix:
@@ -98,7 +99,9 @@ jobs:
 
             - name: "Set Version"
               id: set-version
-              run: echo "WAVETERM_VERSION=$(task version)" >> "$GITHUB_OUTPUT"
+              run: |
+                  echo "WAVETERM_VERSION=$(task version)" >> "$GITHUB_OUTPUT"
+                  echo "PRODUCT_NAME=$(node -p "require('./package.json').productName")" >> "$GITHUB_OUTPUT"
               shell: bash
 
             # Windows Code Signing Setup
@@ -207,10 +210,11 @@ jobs:
               uses: softprops/action-gh-release@v2
               with:
                   prerelease: ${{ contains(github.ref_name, '-beta') }}
-                  name: Wave Terminal ${{ github.ref_name }} Release
+                  name: ${{ needs.build-app.outputs.productname }} ${{ github.ref_name }} Release
                   generate_release_notes: true
                   draft: true
                   files: |
+                      make/*.yml
                       make/*.zip
                       make/*.dmg
                       make/*.exe
