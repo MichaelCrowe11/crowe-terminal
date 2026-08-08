@@ -135,7 +135,7 @@ func TestCallTargetGlobRestricts(t *testing.T) {
 	// real prompt; for now we just confirm the call completes without a
 	// hard error so legacy flows do not break during rollout.
 	called = false
-	nonMatchingArgs, _ := json.Marshal(map[string]string{"path": "/etc/passwd"})
+	nonMatchingArgs, _ := json.Marshal(map[string]string{"path": "/Users/me/Downloads/report.txt"})
 	res, _ = r.Call(ctx, CallRequest{Name: "test.tool", Arguments: nonMatchingArgs})
 	if res.IsError {
 		t.Fatalf("v1 ask mode should allow-with-log, not error: %v", res)

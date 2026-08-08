@@ -1,20 +1,22 @@
-# Crowe Terminal — Agent User Guide
+# Hypheus Agent User Guide
 
-How to use the AI panel + tool surface that ships with Crowe Terminal.
+How to use the AI panel and operator tool surface that ships with Hypheus.
 
 ---
 
 ## TL;DR
 
 Open the AI panel (right side of the window). Pick a CroweLM model (Auto is
-fine). Chat. The model has 21 native tools to drive your terminal, browser,
-host metrics, and macOS — and can be extended with three opt-in MCP-based
+fine). Chat. The model has native tools to drive your terminal, visible blocks,
+browser, host metrics, and macOS, and can be extended with opt-in MCP-based
 tool families.
 
 ```
 "What's my CPU usage?"            -> ct_system_metrics
 "Open github.com in my browser"   -> ct_browser_in_window_navigate
 "Run git status"                  -> ct_terminal_exec_safe
+"Read the open terminal"          -> ct_terminal_read_scrollback
+"Inspect this block"              -> ct_widget_capture_screenshot
 "Run rm /tmp/x"                   -> typed into the terminal, you press Enter
 "Open Music"                      -> ct_system_tell_app
 ```
@@ -50,7 +52,7 @@ refused.
 
 ---
 
-## The 21 native tools
+## Native operator tools
 
 ### `system.*` — host telemetry + macOS automation
 
@@ -67,6 +69,15 @@ refused.
 | `terminal.exec_safe(command, cwd?, timeout_sec?)` | Run a read-only shell command in a fresh subprocess. Refuses anything mutating. | no |
 | `terminal.propose_command(blockid, command)` | Type a command into the visible terminal block, leaving the cursor on the line. **Does not press Enter.** | yes |
 | `terminal.list_blocks(view?)` | List open blocks (terminal/browser/sysinfo/etc.) so the model can target one. | no |
+| `terminal.read_scrollback(blockid, line_start?, count?, last_command?)` | Read visible terminal output with pagination and last-command status. | no |
+
+### `widget.*` — inspect and control visible blocks
+
+| Tool | What it does | Mutating? |
+|---|---|---|
+| `widget.capture_screenshot(blockid)` | Capture any visible block as a PNG data URL. | no |
+| `widget.focus(blockid)` | Focus a block for subsequent keyboard or operator actions. | yes |
+| `widget.open_in_crowecode(path, language?)` | Open a local file in a Crowe Code block. | yes |
 
 ### `browser.in_window.*` — drive the same-window web block
 
@@ -112,8 +123,8 @@ first launch.
 ## Opt-in: outbound MCP families
 
 These connect external MCP servers as agent tools through the same registry.
-Set the env var, restart Crowe Terminal, and the tools surface alongside the
-21 native ones.
+Set the env var, restart Hypheus, and the tools surface alongside the native
+operator tools.
 
 | Env var | What it adds | Notes |
 |---|---|---|
