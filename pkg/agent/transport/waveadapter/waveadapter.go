@@ -35,8 +35,21 @@ import (
 // not always valid in OpenAI/Anthropic tool name regexes; we substitute
 // underscores so "system.metrics" becomes "system_metrics" but keep the
 // original in the description so the model can reason about families.
+// Registry tools whose results this adapter cannot represent, and which the Wave
+// chat path already covers natively. widget.capture_screenshot returns its PNG as a
+// data URL inside a JSON object for the external agent bridge, and this adapter has
+// no way to hoist that into image content — the model would receive a multi-megabyte
+// base64 string as plain text. aiusechat registers its own capture_screenshot with
+// proper image-capability handling, so the registry variant is redundant here.
+var waveExcludedTools = map[string]bool{
+	"widget.capture_screenshot": true,
+}
+
 func AppendAgentTools(existing []uctypes.ToolDefinition) []uctypes.ToolDefinition {
 	for _, t := range registry.Default().List() {
+		if t != nil && waveExcludedTools[t.Name] {
+			continue
+		}
 		def := wrap(t)
 		if def != nil {
 			existing = append(existing, *def)

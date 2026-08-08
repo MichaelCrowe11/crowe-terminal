@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	"github.com/wavetermdev/waveterm/pkg/waveobj"
 	"github.com/wavetermdev/waveterm/pkg/wshrpc"
 	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
@@ -97,43 +98,48 @@ func resolveBlockControlArgs(ctx context.Context, raw json.RawMessage) (string, 
 		failure := errResult(fmt.Errorf("invalid arguments: %w", err))
 		return "", "", &failure
 	}
-	blockID, err := resolveAnyBlock(ctx, args.BlockID)
+	blockID, tabID, err := resolveBlockInCallerTab(ctx, args.BlockID)
 	if err != nil {
 		failure := errResult(err)
-		return "", "", &failure
-	}
-	tabID, err := wstore.DBFindTabForBlockId(ctx, blockID)
-	if err != nil {
-		failure := errResult(fmt.Errorf("resolve tab for block %s: %w", blockID, err))
 		return "", "", &failure
 	}
 	return blockID, tabID, nil
 }
 
-func resolveAnyBlock(ctx context.Context, idOrPrefix string) (string, error) {
+// Resolution is confined to the calling agent's own tab. A global scan would let an
+// agent embedded in one tab photograph or steal focus from another tab or workspace.
+func resolveBlockInCallerTab(ctx context.Context, idOrPrefix string) (string, string, error) {
 	idOrPrefix = strings.TrimSpace(idOrPrefix)
 	if idOrPrefix == "" {
-		return "", fmt.Errorf("blockid required")
+		return "", "", fmt.Errorf("blockid required")
 	}
-	if block, _ := wstore.DBGet[*waveobj.Block](ctx, idOrPrefix); block != nil {
-		return block.OID, nil
+	callerBlockID, ok := scope.BlockIDFromContext(ctx)
+	if !ok {
+		return "", "", fmt.Errorf("no calling block in context; widget tools require an embedded agent")
 	}
-	blocks, err := wstore.DBGetAllObjsByType[*waveobj.Block](ctx, waveobj.OType_Block)
+	tabID, err := wstore.DBFindTabForBlockId(ctx, callerBlockID)
 	if err != nil {
-		return "", err
+		return "", "", fmt.Errorf("resolve tab for calling block %s: %w", callerBlockID, err)
+	}
+	tab, err := wstore.DBMustGet[*waveobj.Tab](ctx, tabID)
+	if err != nil {
+		return "", "", fmt.Errorf("get tab %s: %w", tabID, err)
 	}
 	var match string
-	for _, block := range blocks {
-		if block == nil || !strings.HasPrefix(block.OID, idOrPrefix) {
+	for _, blockID := range tab.BlockIds {
+		if !strings.HasPrefix(blockID, idOrPrefix) {
 			continue
 		}
-		if match != "" {
-			return "", fmt.Errorf("block prefix %q is ambiguous", idOrPrefix)
+		if blockID == idOrPrefix {
+			return blockID, tabID, nil
 		}
-		match = block.OID
+		if match != "" {
+			return "", "", fmt.Errorf("block prefix %q is ambiguous in this tab", idOrPrefix)
+		}
+		match = blockID
 	}
 	if match == "" {
-		return "", fmt.Errorf("no block found matching %q", idOrPrefix)
+		return "", "", fmt.Errorf("no block matching %q in the calling tab", idOrPrefix)
 	}
-	return match, nil
+	return match, tabID, nil
 }

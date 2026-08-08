@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	"github.com/wavetermdev/waveterm/pkg/waveobj"
 	"github.com/wavetermdev/waveterm/pkg/wshrpc"
 	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
@@ -131,7 +132,14 @@ func handleReadScrollback(ctx context.Context, raw json.RawMessage) (registry.Re
 }
 
 func buildScrollbackResult(blockID string, request wshrpc.CommandTermGetScrollbackLinesData, result *wshrpc.CommandTermGetScrollbackLinesRtnData, now time.Time) readScrollbackResult {
+	// line_start/line_end are physical buffer rows, but result.Lines holds logical
+	// lines: the frontend joins wrapped rows and trims trailing blanks. Advancing the
+	// cursor by len(Lines) would under-advance it, so paginate on the requested row
+	// span instead (matching pkg/aiusechat/tools_term.go).
 	lineEnd := result.LineStart + len(result.Lines)
+	if !request.LastCommand {
+		lineEnd = min(request.LineEnd, result.TotalLines)
+	}
 	hasMore := !request.LastCommand && lineEnd < result.TotalLines
 
 	var nextStart *int
@@ -175,40 +183,61 @@ func buildScrollbackResult(blockID string, request wshrpc.CommandTermGetScrollba
 	}
 }
 
+// Resolution is confined to the calling agent's own tab. A global scan would let an
+// agent embedded in one tab read terminal output from another tab or workspace, which
+// is the user's data from a session it was never invited into.
 func resolveTerminalBlock(ctx context.Context, idOrPrefix string) (string, error) {
-	if block, _ := wstore.DBGet[*waveobj.Block](ctx, idOrPrefix); block != nil {
-		return assertTerminalView(block)
+	idOrPrefix = strings.TrimSpace(idOrPrefix)
+	if idOrPrefix == "" {
+		return "", fmt.Errorf("blockid required")
 	}
-	blocks, err := wstore.DBGetAllObjsByType[*waveobj.Block](ctx, waveobj.OType_Block)
+	blockIDs, err := callerTabBlockIDs(ctx)
 	if err != nil {
 		return "", err
 	}
 	var match string
-	for _, block := range blocks {
-		if block == nil || block.Meta == nil || !strings.HasPrefix(block.OID, idOrPrefix) {
+	for _, blockID := range blockIDs {
+		if !strings.HasPrefix(blockID, idOrPrefix) {
 			continue
 		}
-		view, _ := block.Meta[waveobj.MetaKey_View].(string)
-		if view != "term" {
+		block, _ := wstore.DBGet[*waveobj.Block](ctx, blockID)
+		if block == nil || block.Meta == nil {
 			continue
+		}
+		if view, _ := block.Meta[waveobj.MetaKey_View].(string); view != "term" {
+			if blockID == idOrPrefix {
+				return "", fmt.Errorf("block %s is view=%q, expected 'term'", blockID, view)
+			}
+			continue
+		}
+		if blockID == idOrPrefix {
+			return blockID, nil
 		}
 		if match != "" {
-			return "", fmt.Errorf("terminal block prefix %q is ambiguous", idOrPrefix)
+			return "", fmt.Errorf("terminal block prefix %q is ambiguous in this tab", idOrPrefix)
 		}
-		match = block.OID
+		match = blockID
 	}
 	if match == "" {
-		return "", fmt.Errorf("no terminal block found matching %q", idOrPrefix)
+		return "", fmt.Errorf("no terminal block matching %q in the calling tab", idOrPrefix)
 	}
 	return match, nil
 }
 
-func assertTerminalView(block *waveobj.Block) (string, error) {
-	view, _ := block.Meta[waveobj.MetaKey_View].(string)
-	if view != "term" {
-		return "", fmt.Errorf("block %s is view=%q, expected 'term'", block.OID, view)
+func callerTabBlockIDs(ctx context.Context) ([]string, error) {
+	callerBlockID, ok := scope.BlockIDFromContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("no calling block in context; this tool requires an embedded agent")
 	}
-	return block.OID, nil
+	tabID, err := wstore.DBFindTabForBlockId(ctx, callerBlockID)
+	if err != nil {
+		return nil, fmt.Errorf("resolve tab for calling block %s: %w", callerBlockID, err)
+	}
+	tab, err := wstore.DBMustGet[*waveobj.Tab](ctx, tabID)
+	if err != nil {
+		return nil, fmt.Errorf("get tab %s: %w", tabID, err)
+	}
+	return tab.BlockIds, nil
 }
 
 func terminalErrResult(err error) registry.Result {

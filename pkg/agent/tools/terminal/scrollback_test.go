@@ -53,6 +53,63 @@ func TestBuildScrollbackResultPaginatesNewestFirst(t *testing.T) {
 	}
 }
 
+// The frontend joins wrapped rows and trims trailing blanks, so it routinely returns
+// fewer logical lines than the physical row span requested. Paginating on len(Lines)
+// would report more data on a terminal the agent has already read in full, and on an
+// all-blank buffer would hand back a cursor that never advances.
+func TestBuildScrollbackResultDoesNotPaginateWhenWindowReachedEnd(t *testing.T) {
+	cases := []struct {
+		name       string
+		lines      []string
+		totalLines int
+	}{
+		{name: "trailing blanks trimmed", lines: []string{"a", "b", "c"}, totalLines: 40},
+		{name: "wrapped rows joined", lines: []string{"one-very-long-logical-line"}, totalLines: 200},
+		{name: "blank buffer returns nothing", lines: nil, totalLines: 40},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := buildScrollbackResult(
+				"block-1",
+				wshrpc.CommandTermGetScrollbackLinesData{LineStart: 0, LineEnd: 200},
+				&wshrpc.CommandTermGetScrollbackLinesRtnData{
+					Lines:      tc.lines,
+					LineStart:  0,
+					TotalLines: tc.totalLines,
+				},
+				time.Now(),
+			)
+			if result.HasMore || result.NextStart != nil {
+				t.Fatalf("requested window covered the whole buffer, want has_more=false: %+v", result)
+			}
+			if result.LineEnd != tc.totalLines {
+				t.Fatalf("line_end=%d, want %d (the requested span clamped to the buffer)", result.LineEnd, tc.totalLines)
+			}
+		})
+	}
+}
+
+// A window that stops short of the buffer must still advance by the requested row
+// span, not by the number of logical lines that came back.
+func TestBuildScrollbackResultAdvancesByRequestedSpan(t *testing.T) {
+	result := buildScrollbackResult(
+		"block-1",
+		wshrpc.CommandTermGetScrollbackLinesData{LineStart: 0, LineEnd: 100},
+		&wshrpc.CommandTermGetScrollbackLinesRtnData{
+			Lines:      []string{"wrapped-into-two-logical-lines", "second"},
+			LineStart:  0,
+			TotalLines: 500,
+		},
+		time.Now(),
+	)
+	if !result.HasMore || result.NextStart == nil {
+		t.Fatalf("buffer has more rows, want has_more=true: %+v", result)
+	}
+	if *result.NextStart != 100 {
+		t.Fatalf("next_start=%d, want 100 (requested span, not len(lines)=2)", *result.NextStart)
+	}
+}
+
 func TestBuildScrollbackResultLastCommandDoesNotPaginate(t *testing.T) {
 	result := buildScrollbackResult(
 		"block-1",

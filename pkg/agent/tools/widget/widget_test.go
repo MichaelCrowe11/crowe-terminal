@@ -140,8 +140,17 @@ func TestBlockControlToolsRegistered(t *testing.T) {
 	}
 }
 
-func TestResolveAnyBlockRequiresID(t *testing.T) {
-	if _, err := resolveAnyBlock(context.Background(), "  "); err == nil || !strings.Contains(err.Error(), "blockid required") {
+func TestResolveBlockInCallerTabRequiresID(t *testing.T) {
+	if _, _, err := resolveBlockInCallerTab(context.Background(), "  "); err == nil || !strings.Contains(err.Error(), "blockid required") {
 		t.Fatalf("expected blockid-required error, got %v", err)
+	}
+}
+
+// Without a calling block there is no tab to confine resolution to, so the tool must
+// refuse rather than fall back to searching every block in every workspace.
+func TestResolveBlockInCallerTabRequiresCallingBlock(t *testing.T) {
+	_, _, err := resolveBlockInCallerTab(context.Background(), "abcd1234")
+	if err == nil || !strings.Contains(err.Error(), "no calling block in context") {
+		t.Fatalf("expected calling-block refusal, got %v", err)
 	}
 }
