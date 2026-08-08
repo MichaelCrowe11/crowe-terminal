@@ -79,6 +79,33 @@ refused.
 | `widget.focus(blockid)` | Focus a block for subsequent keyboard or operator actions. | yes |
 | `widget.open_in_crowecode(path, language?)` | Open a local file in a Crowe Code block. | yes |
 
+### `vcs.*` — make the agent's edits reversible
+
+Backed by [Jujutsu](https://github.com/jj-vcs/jj), which snapshots the working
+copy on every command and records each snapshot in an operation log that
+restores atomically. That is what makes an agent edit undoable: `vcs.checkpoint`
+hands back an operation id, and `vcs.undo` puts the whole tree back — including
+files the agent deleted — in one step. Git cannot do this, because it cannot
+recover work that was never staged.
+
+Repositories are created with **no remote**. The store under `.jj` is
+self-contained and nothing is sent anywhere; the agent never adds a remote. An
+existing git repo is colocated, so git history and tooling keep working.
+
+These tools appear only if `jj` is installed (`brew install jj`).
+
+| Tool | What it does | Mutating? |
+|---|---|---|
+| `vcs.init(path)` | Start tracking a directory. No remote, no hosting provider. | yes |
+| `vcs.status(path)` | What changed in the working copy. | no |
+| `vcs.checkpoint(path, label?)` | Record a restore point, return its operation id. | no |
+| `vcs.diff(path, revision?)` | Line-level changes. | no |
+| `vcs.history(path, limit?)` | The restore-point timeline, newest first. | no |
+| `vcs.undo(path, operation?)` | Rewind the tree to a restore point. | yes |
+
+Ask for it in plain language: "checkpoint this before you refactor" or "undo
+what you just did to that folder."
+
 ### `browser.in_window.*` — drive the same-window web block
 
 All take `blockid` (use `terminal.list_blocks(view="web")` to discover).

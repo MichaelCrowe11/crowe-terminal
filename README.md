@@ -86,6 +86,9 @@ CroweLM has a native operator tool surface inside your Hypheus window:
   `list_blocks`, and `read_scrollback`
 - **`widget.*`**: `capture_screenshot`, `focus`, and `open_in_crowecode`
   for direct control of visible blocks
+- **`vcs.*`**: `checkpoint`, `undo`, `init`, `status`, `diff`, and `history` —
+  Jujutsu-backed restore points that make the agent's edits reversible, in a
+  local repository with no remote (requires `jj`)
 - **`browser.in_window.*`**: `navigate`, `read`, `click`, `type`, `screenshot`,
   `eval`, `wait_for`, `scroll`, `hover`, `get_attr`, `select_option`,
   `list_links`, which drive the in-window webview block
