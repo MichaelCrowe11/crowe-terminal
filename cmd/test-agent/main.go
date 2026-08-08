@@ -28,6 +28,7 @@ import (
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/playwright"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/system"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/terminal"
+	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/vcs"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/web"
 	_ "github.com/wavetermdev/waveterm/pkg/agent/tools/widget"
 	"github.com/wavetermdev/waveterm/pkg/authkey"
