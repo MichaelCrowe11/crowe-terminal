@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/wavetermdev/waveterm/pkg/agent/registry"
 )
 
 func mustJSON(t *testing.T, v any) json.RawMessage {
@@ -115,5 +117,31 @@ func TestSchemaIsValidJSON(t *testing.T) {
 	var v any
 	if err := json.Unmarshal([]byte(schemaOpenInCroweCode), &v); err != nil {
 		t.Fatalf("schemaOpenInCroweCode is not valid JSON: %v", err)
+	}
+}
+
+func TestBlockControlToolsRegistered(t *testing.T) {
+	cases := map[string]bool{
+		"widget.capture_screenshot": false,
+		"widget.focus":              true,
+	}
+	for name, mutating := range cases {
+		tool, ok := registry.Default().Get(name)
+		if !ok {
+			t.Fatalf("%s not registered", name)
+		}
+		if tool.Mutating != mutating {
+			t.Fatalf("%s mutating=%t, want %t", name, tool.Mutating, mutating)
+		}
+		var schema map[string]any
+		if err := json.Unmarshal(tool.Schema, &schema); err != nil {
+			t.Fatalf("%s has invalid schema: %v", name, err)
+		}
+	}
+}
+
+func TestResolveAnyBlockRequiresID(t *testing.T) {
+	if _, err := resolveAnyBlock(context.Background(), "  "); err == nil || !strings.Contains(err.Error(), "blockid required") {
+		t.Fatalf("expected blockid-required error, got %v", err)
 	}
 }

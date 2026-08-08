@@ -77,13 +77,15 @@ Restart Hypheus and the operator panel will show CroweLM models.
 
 ## The agent tool surface
 
-CroweLM has 21 native tools that operate inside your Hypheus window:
+CroweLM has a native operator tool surface inside your Hypheus window:
 
 - **`system.*`**: `metrics` (CPU, RAM, processes), `run_applescript`, `tell_app`
   (macOS UI automation)
 - **`terminal.*`**: `exec_safe` (read-only commands), `propose_command`
   (mutating commands typed into a visible terminal block, awaiting Enter),
-  `list_blocks`
+  `list_blocks`, and `read_scrollback`
+- **`widget.*`**: `capture_screenshot`, `focus`, and `open_in_crowecode`
+  for direct control of visible blocks
 - **`browser.in_window.*`**: `navigate`, `read`, `click`, `type`, `screenshot`,
   `eval`, `wait_for`, `scroll`, `hover`, `get_attr`, `select_option`,
   `list_links`, which drive the in-window webview block
