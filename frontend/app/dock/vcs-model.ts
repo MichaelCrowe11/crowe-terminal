@@ -26,7 +26,8 @@ export class VcsModel {
     errorAtom = jotai.atom(null) as jotai.PrimitiveAtom<string>;
     dirtyAtom!: jotai.Atom<boolean>;
 
-    private pollTimer: ReturnType<typeof setInterval> = null;
+    pollTimer: ReturnType<typeof setInterval> = null;
+    refreshSeq = 0;
 
     private constructor() {
         this.dirtyAtom = jotai.atom((get) => {
@@ -62,16 +63,28 @@ export class VcsModel {
         if (VcsModel.fetchDisabled) {
             return;
         }
+        // A restore/init-triggered refresh must win over a slower in-flight poll
+        // response that resolves after it; only the most recent call may write.
+        const seq = ++this.refreshSeq;
         const path = this.targetDir();
         try {
             const status = await RpcApi.VcsStatusCommand(TabRpcClient, { path });
+            if (seq !== this.refreshSeq) {
+                return;
+            }
             globalStore.set(this.statusAtom, status);
             if ((includeHistory ?? this.panelOpen()) && status?.isrepo) {
                 const hist = await RpcApi.VcsHistoryCommand(TabRpcClient, { path, limit: HistoryLimit });
+                if (seq !== this.refreshSeq) {
+                    return;
+                }
                 globalStore.set(this.historyAtom, hist?.operations ?? []);
             }
             globalStore.set(this.errorAtom, null);
         } catch (e) {
+            if (seq !== this.refreshSeq) {
+                return;
+            }
             globalStore.set(this.errorAtom, String(e));
         }
     }
