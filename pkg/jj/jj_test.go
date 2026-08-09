@@ -4,7 +4,11 @@
 package jj
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -45,5 +49,115 @@ func TestClampLimit(t *testing.T) {
 		if got := ClampLimit(in); got != want {
 			t.Fatalf("ClampLimit(%d) = %d, want %d", in, got, want)
 		}
+	}
+}
+
+func withStubRun(t *testing.T, stub func(dir string, args ...string) (string, string, error)) {
+	t.Helper()
+	restoreLook, restoreRun := LookPath, Run
+	LookPath = func() string { return "/stub/jj" }
+	Run = func(_ context.Context, dir string, args ...string) (string, string, error) {
+		return stub(dir, args...)
+	}
+	t.Cleanup(func() { LookPath, Run = restoreLook, restoreRun })
+}
+
+func TestWorkspaceRootNotARepo(t *testing.T) {
+	withStubRun(t, func(_ string, _ ...string) (string, string, error) {
+		return "", `Error: There is no jj repo in "."`, errors.New("exit status 1")
+	})
+	if _, err := WorkspaceRoot(context.Background(), "/tmp"); !errors.Is(err, ErrNotRepo) {
+		t.Fatalf("want ErrNotRepo, got %v", err)
+	}
+}
+
+func TestWorkspaceRootTrimsOutput(t *testing.T) {
+	withStubRun(t, func(_ string, _ ...string) (string, string, error) {
+		return "/Users/me/proj\n", "", nil
+	})
+	root, err := WorkspaceRoot(context.Background(), "/tmp")
+	if err != nil || root != "/Users/me/proj" {
+		t.Fatalf("root = %q, err = %v", root, err)
+	}
+}
+
+func TestParseStatLines(t *testing.T) {
+	out := "a.txt | 2 ++\n" +
+		"dir/b name.txt   | 3 +--\n" +
+		"2 files changed, 3 insertions(+), 2 deletions(-)\n"
+	files := parseStatLines(out)
+	if len(files) != 2 {
+		t.Fatalf("got %d files, want 2: %+v", len(files), files)
+	}
+	if files[0] != (FileChange{Path: "a.txt", Changes: 2, Plus: 2, Minus: 0}) {
+		t.Fatalf("first file parsed wrong: %+v", files[0])
+	}
+	if files[1] != (FileChange{Path: "dir/b name.txt", Changes: 3, Plus: 1, Minus: 2}) {
+		t.Fatalf("second file parsed wrong: %+v", files[1])
+	}
+}
+
+// One op can change several commits; the same path may appear in more than
+// one stat block and must be summed, and op-show header/graph lines must
+// not match.
+func TestParseStatLinesAggregatesOpShowOutput(t *testing.T) {
+	out := "f0302bfacf0f user@host now, lasted 9 milliseconds\n" +
+		"snapshot working copy\n" +
+		"args: jj status\n" +
+		"\n" +
+		"Changed commits:\n" +
+		"○  + qwnuyzlk 911b2a12 (no description set)\n" +
+		"   a.txt | 1 +\n" +
+		"   b.txt | 2 ++\n" +
+		"   2 files changed, 3 insertions(+), 0 deletions(-)\n" +
+		"   a.txt | 1 -\n"
+	files := parseStatLines(out)
+	if len(files) != 2 {
+		t.Fatalf("got %d files, want 2: %+v", len(files), files)
+	}
+	if files[0] != (FileChange{Path: "a.txt", Changes: 2, Plus: 1, Minus: 1}) {
+		t.Fatalf("aggregation wrong: %+v", files[0])
+	}
+}
+
+func TestDiffStatAndOpFilesAgainstRealRepo(t *testing.T) {
+	if !Available() {
+		t.Skip("jj not installed")
+	}
+	ctx := context.Background()
+	dir := t.TempDir()
+	if _, _, err := Run(ctx, dir, "git", "init"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "a.txt"), []byte("one\ntwo\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := Run(ctx, dir, "status"); err != nil {
+		t.Fatal(err)
+	}
+	root, err := WorkspaceRoot(ctx, dir)
+	if err != nil || root == "" {
+		t.Fatalf("root = %q, err = %v", root, err)
+	}
+	files, err := DiffStat(ctx, dir)
+	if err != nil || len(files) == 0 {
+		t.Fatalf("DiffStat files = %+v, err = %v", files, err)
+	}
+	ops, err := History(ctx, dir, 5)
+	if err != nil || len(ops) == 0 {
+		t.Fatalf("History ops = %+v, err = %v", ops, err)
+	}
+	opFiles, err := OpFiles(ctx, dir, ops[0].ID)
+	if err != nil {
+		t.Fatalf("OpFiles err = %v", err)
+	}
+	found := false
+	for _, f := range opFiles {
+		if f.Path == "a.txt" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("newest op should include a.txt: %+v", opFiles)
 	}
 }

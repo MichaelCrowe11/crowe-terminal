@@ -10,10 +10,13 @@ package jj
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -243,4 +246,74 @@ func restoreDetail(stdout string, stderr string) string {
 		detail = strings.TrimSpace(stdout)
 	}
 	return detail
+}
+
+// ErrNotRepo distinguishes "this directory is simply not tracked" — a normal
+// state the dock offers to fix — from real failures.
+var ErrNotRepo = errors.New("not a jj repository")
+
+func WorkspaceRoot(ctx context.Context, dir string) (string, error) {
+	stdout, stderr, err := Run(ctx, dir, "workspace", "root")
+	if err != nil {
+		if strings.Contains(stderr, "no jj repo") {
+			return "", ErrNotRepo
+		}
+		return "", fmt.Errorf("jj workspace root failed: %s", FirstLine(stderr, err))
+	}
+	return strings.TrimSpace(stdout), nil
+}
+
+type FileChange struct {
+	Path    string
+	Changes int
+	Plus    int
+	Minus   int
+}
+
+// statLineRe matches git-style stat lines: "path | 3 ++-". The +/- bar is
+// proportional (scaled down on very large diffs), so Plus/Minus are honest
+// approximations, not guaranteed insert/delete counts.
+var statLineRe = regexp.MustCompile(`^\s*(.+?)\s+\|\s+(\d+)\s*([+-]*)\s*$`)
+
+func parseStatLines(out string) []FileChange {
+	files := []FileChange{}
+	index := map[string]int{}
+	for _, line := range strings.Split(out, "\n") {
+		m := statLineRe.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		n, _ := strconv.Atoi(m[2])
+		plus := strings.Count(m[3], "+")
+		minus := strings.Count(m[3], "-")
+		if i, ok := index[m[1]]; ok {
+			files[i].Changes += n
+			files[i].Plus += plus
+			files[i].Minus += minus
+			continue
+		}
+		index[m[1]] = len(files)
+		files = append(files, FileChange{Path: m[1], Changes: n, Plus: plus, Minus: minus})
+	}
+	return files
+}
+
+func DiffStat(ctx context.Context, dir string) ([]FileChange, error) {
+	stdout, stderr, err := Run(ctx, dir, "diff", "--stat")
+	if err != nil {
+		return nil, fmt.Errorf("jj diff failed: %s", FirstLine(stderr, err))
+	}
+	return parseStatLines(stdout), nil
+}
+
+func OpFiles(ctx context.Context, dir string, opID string) ([]FileChange, error) {
+	op := strings.TrimSpace(opID)
+	if op == "" {
+		return nil, fmt.Errorf("operation id required")
+	}
+	stdout, stderr, err := Run(ctx, dir, "op", "show", op, "--stat")
+	if err != nil {
+		return nil, fmt.Errorf("jj op show failed: %s", FirstLine(stderr, err))
+	}
+	return parseStatLines(stdout), nil
 }
