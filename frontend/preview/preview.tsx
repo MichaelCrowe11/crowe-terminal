@@ -18,12 +18,15 @@ import { installPreviewElectronApi } from "./mock/preview-electron-api";
 import { PreviewContextMenu } from "./preview-contextmenu";
 
 import "overlayscrollbars/overlayscrollbars.css";
-import "../app/app.scss";
-// The real entry point is app.tsx, which the preview never loads, so the glass
-// surfaces it brings in were missing here. Without them every .glass-chrome
-// surface renders transparent and previewed drawers bleed the content behind
-// them, which makes the preview misreport the design as broken.
+// app.tsx is the real entry point and the preview never loads it, so the Crowe
+// primitives and glass optics it pulls in were absent here: every var() they
+// define resolved to nothing, .glass-chrome surfaces computed to a transparent
+// background, and previewed drawers let the content behind them bleed through
+// their own labels. The preview then misreports working design as broken.
+// Order matches app.tsx — tokens define the primitives glass and app.scss consume.
+import "../app/crowe-tokens.css";
 import "../app/crowe-glass.css";
+import "../app/app.scss";
 
 // preview.css should come *after* app.scss (don't remove the newline above otherwise prettier will reorder these imports)
 // preview.css re-exports tailwindsetup.css and adds @source "../app" so Tailwind v4 scans frontend/app/** for class names
