@@ -123,15 +123,22 @@ export class VcsModel {
             return;
         }
         globalStore.set(this.busyAtom, true);
+        let failure: string = null;
         try {
             await RpcApi.VcsRestoreCommand(TabRpcClient, { path: this.targetDir(), operation: opId ?? "" });
             globalStore.set(this.errorAtom, null);
         } catch (e) {
-            globalStore.set(this.errorAtom, String(e));
+            failure = String(e);
         } finally {
             globalStore.set(this.busyAtom, false);
             globalStore.set(this.opFilesAtom, {});
-            this.refresh(true);
+            await this.refresh(true);
+            // refresh()'s success path clears errorAtom; write the action's own
+            // failure after it so jj's message survives instead of being erased
+            // (spec: restore failures surface jj's message verbatim).
+            if (failure != null) {
+                globalStore.set(this.errorAtom, failure);
+            }
         }
     }
 
@@ -140,14 +147,20 @@ export class VcsModel {
             return;
         }
         globalStore.set(this.busyAtom, true);
+        let failure: string = null;
         try {
             await RpcApi.VcsInitCommand(TabRpcClient, { path: this.targetDir() });
             globalStore.set(this.errorAtom, null);
         } catch (e) {
-            globalStore.set(this.errorAtom, String(e));
+            failure = String(e);
         } finally {
             globalStore.set(this.busyAtom, false);
-            this.refresh(true);
+            await this.refresh(true);
+            // refresh()'s success path clears errorAtom; write the action's own
+            // failure after it so jj's message survives instead of being erased.
+            if (failure != null) {
+                globalStore.set(this.errorAtom, failure);
+            }
         }
     }
 }
