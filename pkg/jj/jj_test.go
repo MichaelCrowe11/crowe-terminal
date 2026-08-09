@@ -99,23 +99,40 @@ func TestParseStatLines(t *testing.T) {
 
 // One op can change several commits; the same path may appear in more than
 // one stat block and must be summed, and op-show header/graph lines must
-// not match.
+// not match. Captured verbatim from `jj op show --stat` on jj 0.44.0 (user@
+// host substituted for the machine's real hostname) for an absorb operation
+// that split one file's edits into two ancestor commits: every non-final
+// commit block is prefixed with a "│" (U+2502) graph continuation bar
+// instead of plain spaces, so b.txt appears once bar-prefixed and once
+// space-indented in the final block. Both occurrences must parse to the
+// clean path "b.txt" and aggregate into one entry.
 func TestParseStatLinesAggregatesOpShowOutput(t *testing.T) {
-	out := "f0302bfacf0f user@host now, lasted 9 milliseconds\n" +
-		"snapshot working copy\n" +
-		"args: jj status\n" +
+	out := "7d7bcbad6960 user@host default@ 12 seconds ago, lasted 17 milliseconds\n" +
+		"absorb changes into 2 commits\n" +
+		"args: jj absorb\n" +
 		"\n" +
 		"Changed commits:\n" +
-		"○  + qwnuyzlk 911b2a12 (no description set)\n" +
-		"   a.txt | 1 +\n" +
-		"   b.txt | 2 ++\n" +
-		"   2 files changed, 3 insertions(+), 0 deletions(-)\n" +
-		"   a.txt | 1 -\n"
+		"○  + wmnplqvq 2bd8be1f (empty) (no description set)\n" +
+		"│  0 files changed, 0 insertions(+), 0 deletions(-)\n" +
+		"○  + sxnnyloy f203ee21 commit B\n" +
+		"│  - sxnnyloy/1 180ea5d1 (hidden) commit B\n" +
+		"│  - lwkywlym/0 82d60460 (hidden) (no description set)\n" +
+		"│  b.txt | 2 +-\n" +
+		"│  1 file changed, 1 insertion(+), 1 deletion(-)\n" +
+		"○  + nplulton ed2c9172 commit A\n" +
+		"   - nplulton/1 bddc44f7 (hidden) commit A\n" +
+		"   - lwkywlym/0 82d60460 (hidden) (no description set)\n" +
+		"   b.txt | 2 +-\n" +
+		"   1 file changed, 1 insertion(+), 1 deletion(-)\n" +
+		"\n" +
+		"Changed working copy default@:\n" +
+		"+ wmnplqvq 2bd8be1f (empty) (no description set)\n" +
+		"- lwkywlym/0 82d60460 (hidden) (no description set)\n"
 	files := parseStatLines(out)
-	if len(files) != 2 {
-		t.Fatalf("got %d files, want 2: %+v", len(files), files)
+	if len(files) != 1 {
+		t.Fatalf("got %d files, want 1: %+v", len(files), files)
 	}
-	if files[0] != (FileChange{Path: "a.txt", Changes: 2, Plus: 1, Minus: 1}) {
+	if files[0] != (FileChange{Path: "b.txt", Changes: 4, Plus: 2, Minus: 2}) {
 		t.Fatalf("aggregation wrong: %+v", files[0])
 	}
 }

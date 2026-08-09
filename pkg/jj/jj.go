@@ -272,13 +272,24 @@ type FileChange struct {
 
 // statLineRe matches git-style stat lines: "path | 3 ++-". The +/- bar is
 // proportional (scaled down on very large diffs), so Plus/Minus are honest
-// approximations, not guaranteed insert/delete counts.
-var statLineRe = regexp.MustCompile(`^\s*(.+?)\s+\|\s+(\d+)\s*([+-]*)\s*$`)
+// approximations, not guaranteed insert/delete counts. Leading whitespace is
+// stripped by the caller (see parseStatLines), so the pattern anchors
+// directly on the path.
+var statLineRe = regexp.MustCompile(`^(.+?)\s+\|\s+(\d+)\s*([+-]*)\s*$`)
 
 func parseStatLines(out string) []FileChange {
 	files := []FileChange{}
 	index := map[string]int{}
 	for _, line := range strings.Split(out, "\n") {
+		// `jj op show` on an operation touching multiple commits prefixes
+		// every non-final commit block with a graph continuation bar ("│",
+		// U+2502) instead of plain spaces; only the last block is
+		// space-indented. Trim both so the same path aggregates regardless
+		// of which block it came from. Accepted edge case: a repo-relative
+		// path that genuinely starts with one of these glyphs would be
+		// mis-trimmed, but jj paths are repo-relative and this hasn't been
+		// observed in practice.
+		line = strings.TrimLeft(line, "│├─╮╯╰○◆×~ \t")
 		m := statLineRe.FindStringSubmatch(line)
 		if m == nil {
 			continue
