@@ -4,7 +4,7 @@
 import { globalStore } from "@/app/store/jotaiStore";
 import * as jotai from "jotai";
 
-export type DockToolId = "telemetry" | "model" | "thinking" | "design" | "mycelium";
+export type DockToolId = "telemetry" | "model" | "thinking" | "design" | "mycelium" | "repo";
 
 export const DOCK_DEFAULT_WIDTH = 360;
 export const DOCK_MIN_WIDTH = 280;
