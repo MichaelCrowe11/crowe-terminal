@@ -12,11 +12,12 @@ import (
 	"testing"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/jj"
 )
 
 func callTool(t *testing.T, name string, args map[string]any) map[string]any {
 	t.Helper()
-	if !Available() {
+	if !jj.Available() {
 		t.Skip("jj not installed; tools are deliberately not registered")
 	}
 	tool, ok := registry.Default().Get(name)
@@ -49,7 +50,7 @@ func errorOf(m map[string]any) string {
 }
 
 func TestToolsRegisteredWithExpectedMutability(t *testing.T) {
-	if !Available() {
+	if !jj.Available() {
 		t.Skip("jj not installed; tools are deliberately not registered")
 	}
 	cases := map[string]bool{
@@ -112,12 +113,12 @@ func TestFileTargetIsRejected(t *testing.T) {
 func TestArgumentsAreNotShellInterpreted(t *testing.T) {
 	dir := t.TempDir()
 	var captured []string
-	restore := runJJ
-	runJJ = func(_ context.Context, _ string, args ...string) (string, string, error) {
+	restore := jj.Run
+	jj.Run = func(_ context.Context, _ string, args ...string) (string, string, error) {
 		captured = args
 		return "", "", nil
 	}
-	defer func() { runJJ = restore }()
+	defer func() { jj.Run = restore }()
 
 	callTool(t, "vcs.diff", map[string]any{"path": dir, "revision": "; rm -rf / #"})
 	joined := strings.Join(captured, "\x00")
@@ -131,34 +132,15 @@ func TestArgumentsAreNotShellInterpreted(t *testing.T) {
 	}
 }
 
-func TestParseOperations(t *testing.T) {
-	out := "abc123\tsnapshot working copy\t2026-08-08 15:33:55\n" +
-		"def456\tadd workspace 'default'\t2026-08-08 15:33:54\n" +
-		"000000\t\t1970-01-01 00:00:00\n"
-	ops := parseOperations(out)
-	if len(ops) != 3 {
-		t.Fatalf("got %d operations, want 3", len(ops))
-	}
-	if ops[0].ID != "abc123" || ops[0].Description != "snapshot working copy" {
-		t.Fatalf("first operation parsed wrong: %+v", ops[0])
-	}
-	if ops[2].Description != "" {
-		t.Fatalf("empty description should stay empty: %+v", ops[2])
-	}
-	if len(parseOperations("")) != 0 {
-		t.Fatal("empty output should yield no operations")
-	}
-}
-
 func TestHistoryClampsLimit(t *testing.T) {
 	dir := t.TempDir()
 	var captured []string
-	restore := runJJ
-	runJJ = func(_ context.Context, _ string, args ...string) (string, string, error) {
+	restore := jj.Run
+	jj.Run = func(_ context.Context, _ string, args ...string) (string, string, error) {
 		captured = args
 		return "", "", nil
 	}
-	defer func() { runJJ = restore }()
+	defer func() { jj.Run = restore }()
 
 	callTool(t, "vcs.history", map[string]any{"path": dir, "limit": 99999})
 	for i, a := range captured {
@@ -175,12 +157,12 @@ func TestHistoryClampsLimit(t *testing.T) {
 func TestUndoWithoutOperationUndoesOnlyTheLastOne(t *testing.T) {
 	dir := t.TempDir()
 	var captured []string
-	restore := runJJ
-	runJJ = func(_ context.Context, _ string, args ...string) (string, string, error) {
+	restore := jj.Run
+	jj.Run = func(_ context.Context, _ string, args ...string) (string, string, error) {
 		captured = args
 		return "", "done", nil
 	}
-	defer func() { runJJ = restore }()
+	defer func() { jj.Run = restore }()
 
 	out := callTool(t, "vcs.undo", map[string]any{"path": dir})
 	if strings.Join(captured, " ") != "undo" {
@@ -194,7 +176,7 @@ func TestUndoWithoutOperationUndoesOnlyTheLastOne(t *testing.T) {
 // The whole point of the package: an agent wrecks a tree, and one call puts it
 // back. Exercises the real jj binary end to end.
 func TestCheckpointSurvivesAWreckedTree(t *testing.T) {
-	if !Available() {
+	if !jj.Available() {
 		t.Skip("jj not installed")
 	}
 	dir := t.TempDir()
@@ -237,7 +219,7 @@ func TestCheckpointSurvivesAWreckedTree(t *testing.T) {
 }
 
 func TestInitIsIdempotentAndAddsNoRemote(t *testing.T) {
-	if !Available() {
+	if !jj.Available() {
 		t.Skip("jj not installed")
 	}
 	dir := t.TempDir()
@@ -256,7 +238,7 @@ func TestInitIsIdempotentAndAddsNoRemote(t *testing.T) {
 }
 
 func TestHistoryListsRestorePointsAgainstRealRepo(t *testing.T) {
-	if !Available() {
+	if !jj.Available() {
 		t.Skip("jj not installed")
 	}
 	dir := t.TempDir()
