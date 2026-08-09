@@ -6,13 +6,13 @@
 @source "../node_modules/streamdown/dist/index.js";
 
 @theme {
-    --color-background: rgb(11, 11, 12);
-    --color-foreground: #f7f7f7;
+    --color-background: var(--surface);
+    --color-foreground: var(--text);
     --color-white: #f7f7f7;
-    --color-primary: #f7f7f7;
-    --color-muted-foreground: rgb(195, 200, 194);
-    --color-secondary: rgb(195, 200, 194);
-    --color-muted: rgb(140, 145, 140);
+    --color-primary: var(--text);
+    --color-muted-foreground: var(--text-dim);
+    --color-secondary: var(--text-dim);
+    --color-muted: var(--text-dim);
     /* Hypheus blue accent palette (#2a5090 anchor). */
     --color-accent-50: rgb(233, 239, 247);
     --color-accent-100: rgb(206, 219, 238);
@@ -27,15 +27,15 @@
     --color-error: rgb(229, 77, 46);
     --color-warning: rgb(224, 185, 86);
     --color-success: rgb(78, 154, 6);
-    --color-panel: rgba(20, 22, 28, 0.5);
-    --color-hover: rgba(255, 255, 255, 0.1);
-    --color-border: rgba(191, 166, 105, 0.16);
-    --color-modalbg: #1a1d24;
-    --color-accentbg: rgba(42, 80, 144, 0.5);
-    --color-hoverbg: rgba(255, 255, 255, 0.2);
-    --color-highlightbg: rgba(255, 255, 255, 0.2);
-    --color-accent: rgb(42, 80, 144);
-    --color-accenthover: rgb(61, 107, 176);
+    --color-panel: var(--surface-raised);
+    --color-hover: var(--wash-accent);
+    --color-border: var(--hairline);
+    --color-modalbg: var(--surface-overlay);
+    --color-accentbg: var(--wash-accent-strong);
+    --color-hoverbg: var(--wash-accent-mid);
+    --color-highlightbg: var(--wash-accent-mid);
+    --color-accent: var(--accent);
+    --color-accenthover: var(--accent-bright);
 
     --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
     --font-serif: "Fraunces Variable", "Fraunces", Georgia, "Times New Roman", serif;

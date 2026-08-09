@@ -101,7 +101,7 @@ const WorkspaceElem = memo(() => {
         return () => window.removeEventListener("focus", handleFocus);
     }, []);
 
-    // The AI panel now lives in the right-side utility dock, not the left group,
+    // The AI panel now lives in the left-side utility dock, not the panel group,
     // so the inner (vtab/ai) handle is gone and the outer handle only resizes the
     // vertical tab bar.
     const innerHandleClass = "bg-transparent w-0 pointer-events-none";
@@ -112,6 +112,7 @@ const WorkspaceElem = memo(() => {
             {!(showLeftTabBar && isMacOS()) && <TabBar key={ws.oid} workspace={ws} noTabs={showLeftTabBar} />}
             {showLeftTabBar && isMacOS() && <MacOSTabBarSpacer />}
             <div ref={panelContainerRef} className="flex flex-row flex-grow overflow-hidden">
+                <UtilityDock />
                 <div className="relative flex-grow min-w-0 h-full overflow-hidden">
                 <ErrorBoundary key={tabId}>
                     <PanelGroup
@@ -163,7 +164,6 @@ const WorkspaceElem = memo(() => {
                     <ModalsRenderer />
                 </ErrorBoundary>
                 </div>
-                <UtilityDock />
             </div>
         </div>
     );
