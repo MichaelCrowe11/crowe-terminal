@@ -984,6 +984,36 @@ export class RpcApiType {
         return client.wshRpcCall("updateworkspacetabids", { args: [arg1, arg2] }, opts);
     }
 
+    // command "vcshistory" [call]
+    VcsHistoryCommand(client: WshClient, data: CommandVcsHistoryData, opts?: RpcOpts): Promise<CommandVcsHistoryRtnData> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "vcshistory", data, opts);
+        return client.wshRpcCall("vcshistory", data, opts);
+    }
+
+    // command "vcsinit" [call]
+    VcsInitCommand(client: WshClient, data: CommandVcsInitData, opts?: RpcOpts): Promise<CommandVcsInitRtnData> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "vcsinit", data, opts);
+        return client.wshRpcCall("vcsinit", data, opts);
+    }
+
+    // command "vcsopfiles" [call]
+    VcsOpFilesCommand(client: WshClient, data: CommandVcsOpFilesData, opts?: RpcOpts): Promise<CommandVcsOpFilesRtnData> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "vcsopfiles", data, opts);
+        return client.wshRpcCall("vcsopfiles", data, opts);
+    }
+
+    // command "vcsrestore" [call]
+    VcsRestoreCommand(client: WshClient, data: CommandVcsRestoreData, opts?: RpcOpts): Promise<CommandVcsRestoreRtnData> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "vcsrestore", data, opts);
+        return client.wshRpcCall("vcsrestore", data, opts);
+    }
+
+    // command "vcsstatus" [call]
+    VcsStatusCommand(client: WshClient, data: CommandVcsStatusData, opts?: RpcOpts): Promise<CommandVcsStatusRtnData> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "vcsstatus", data, opts);
+        return client.wshRpcCall("vcsstatus", data, opts);
+    }
+
     // command "vdomasyncinitiation" [call]
     VDomAsyncInitiationCommand(client: WshClient, data: VDomAsyncInitiationRequest, opts?: RpcOpts): Promise<void> {
         if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "vdomasyncinitiation", data, opts);

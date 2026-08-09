@@ -775,6 +775,65 @@ declare global {
         exists: boolean;
     };
 
+    // wshrpc.CommandVcsHistoryData
+    type CommandVcsHistoryData = {
+        path?: string;
+        limit?: number;
+    };
+
+    // wshrpc.CommandVcsHistoryRtnData
+    type CommandVcsHistoryRtnData = {
+        operations?: VcsOperation[];
+    };
+
+    // wshrpc.CommandVcsInitData
+    type CommandVcsInitData = {
+        path?: string;
+    };
+
+    // wshrpc.CommandVcsInitRtnData
+    type CommandVcsInitRtnData = {
+        colocated?: boolean;
+        alreadyinitialized?: boolean;
+    };
+
+    // wshrpc.CommandVcsOpFilesData
+    type CommandVcsOpFilesData = {
+        path?: string;
+        operation: string;
+    };
+
+    // wshrpc.CommandVcsOpFilesRtnData
+    type CommandVcsOpFilesRtnData = {
+        files?: VcsFileChange[];
+    };
+
+    // wshrpc.CommandVcsRestoreData
+    type CommandVcsRestoreData = {
+        path?: string;
+        operation?: string;
+    };
+
+    // wshrpc.CommandVcsRestoreRtnData
+    type CommandVcsRestoreRtnData = {
+        detail?: string;
+    };
+
+    // wshrpc.CommandVcsStatusData
+    type CommandVcsStatusData = {
+        path?: string;
+    };
+
+    // wshrpc.CommandVcsStatusRtnData
+    type CommandVcsStatusRtnData = {
+        installed: boolean;
+        isrepo: boolean;
+        dir?: string;
+        root?: string;
+        clean: boolean;
+        files?: VcsFileChange[];
+    };
+
     // wshrpc.CommandWaitForRouteData
     type CommandWaitForRouteData = {
         routeid: string;
@@ -2072,6 +2131,22 @@ declare global {
         statuscode?: number;
         headers?: {[key: string]: string};
         body?: string;
+    };
+
+    // wshrpc.VcsFileChange
+    type VcsFileChange = {
+        path: string;
+        changes: number;
+        plus: number;
+        minus: number;
+    };
+
+    // wshrpc.VcsOperation
+    type VcsOperation = {
+        opid: string;
+        description: string;
+        time: string;
+        timerel: string;
     };
 
     type WSCommandType = {

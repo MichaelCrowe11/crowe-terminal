@@ -978,6 +978,36 @@ func UpdateWorkspaceTabIdsCommand(w *wshutil.WshRpc, arg1 string, arg2 []string,
 	return err
 }
 
+// command "vcshistory", wshserver.VcsHistoryCommand
+func VcsHistoryCommand(w *wshutil.WshRpc, data wshrpc.CommandVcsHistoryData, opts *wshrpc.RpcOpts) (*wshrpc.CommandVcsHistoryRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandVcsHistoryRtnData](w, "vcshistory", data, opts)
+	return resp, err
+}
+
+// command "vcsinit", wshserver.VcsInitCommand
+func VcsInitCommand(w *wshutil.WshRpc, data wshrpc.CommandVcsInitData, opts *wshrpc.RpcOpts) (*wshrpc.CommandVcsInitRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandVcsInitRtnData](w, "vcsinit", data, opts)
+	return resp, err
+}
+
+// command "vcsopfiles", wshserver.VcsOpFilesCommand
+func VcsOpFilesCommand(w *wshutil.WshRpc, data wshrpc.CommandVcsOpFilesData, opts *wshrpc.RpcOpts) (*wshrpc.CommandVcsOpFilesRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandVcsOpFilesRtnData](w, "vcsopfiles", data, opts)
+	return resp, err
+}
+
+// command "vcsrestore", wshserver.VcsRestoreCommand
+func VcsRestoreCommand(w *wshutil.WshRpc, data wshrpc.CommandVcsRestoreData, opts *wshrpc.RpcOpts) (*wshrpc.CommandVcsRestoreRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandVcsRestoreRtnData](w, "vcsrestore", data, opts)
+	return resp, err
+}
+
+// command "vcsstatus", wshserver.VcsStatusCommand
+func VcsStatusCommand(w *wshutil.WshRpc, data wshrpc.CommandVcsStatusData, opts *wshrpc.RpcOpts) (*wshrpc.CommandVcsStatusRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandVcsStatusRtnData](w, "vcsstatus", data, opts)
+	return resp, err
+}
+
 // command "vdomasyncinitiation", wshserver.VDomAsyncInitiationCommand
 func VDomAsyncInitiationCommand(w *wshutil.WshRpc, data vdom.VDomAsyncInitiationRequest, opts *wshrpc.RpcOpts) error {
 	_, err := sendRpcRequestCallHelper[any](w, "vdomasyncinitiation", data, opts)
