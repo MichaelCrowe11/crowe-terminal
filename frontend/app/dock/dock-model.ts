@@ -6,62 +6,65 @@ import * as jotai from "jotai";
 
 export type DockToolId = "telemetry" | "model" | "thinking" | "design" | "mycelium" | "repo";
 
-export const DOCK_DEFAULT_WIDTH = 360;
+export const DOCK_DEFAULT_WIDTH = 460;
 export const DOCK_MIN_WIDTH = 280;
 export const DOCK_MAX_WIDTH = 760;
 export const DOCK_RAIL_WIDTH = 44;
-
-// The chat drawer is the headline surface, so it gets its own (wider) width
-// track independent of the diagnostic tool drawers.
-export const CHAT_DEFAULT_WIDTH = 460;
-export const CHAT_MIN_WIDTH = 340;
-export const CHAT_MAX_WIDTH = 900;
+export const MIN_PANE_PX = 120;
+export const DEFAULT_CHAT_FRACTION = 0.5;
 
 const StorageKey = "crowe.dock.v1";
 
 type DockPersisted = {
     activeTool: DockToolId | null;
-    width: number;
-    chatWidth: number;
+    columnWidth: number;
+    chatFraction: number;
     collapsed: boolean;
 };
 
-const DefaultPersisted: DockPersisted = {
-    activeTool: null,
-    width: DOCK_DEFAULT_WIDTH,
-    chatWidth: CHAT_DEFAULT_WIDTH,
-    collapsed: true,
-};
-
-function clampWidth(px: number): number {
+export function clampColumnWidth(px: number): number {
     if (!Number.isFinite(px)) {
         return DOCK_DEFAULT_WIDTH;
     }
     return Math.min(DOCK_MAX_WIDTH, Math.max(DOCK_MIN_WIDTH, Math.round(px)));
 }
 
-function clampChatWidth(px: number): number {
-    if (!Number.isFinite(px)) {
-        return CHAT_DEFAULT_WIDTH;
+// With a measured column height the clamp keeps both panes above MIN_PANE_PX;
+// without one it falls back to generic bounds, which is what a cold load has.
+export function clampChatFraction(f: number, columnHeight?: number): number {
+    if (!Number.isFinite(f)) {
+        return DEFAULT_CHAT_FRACTION;
     }
-    return Math.min(CHAT_MAX_WIDTH, Math.max(CHAT_MIN_WIDTH, Math.round(px)));
+    if (columnHeight == null || !Number.isFinite(columnHeight) || columnHeight <= 0) {
+        return Math.min(0.9, Math.max(0.1, f));
+    }
+    const minF = MIN_PANE_PX / columnHeight;
+    const maxF = 1 - minF;
+    if (minF >= maxF) {
+        return DEFAULT_CHAT_FRACTION;
+    }
+    return Math.min(maxF, Math.max(minF, f));
+}
+
+// v1 stored `width` and `chatWidth` as two independent columns. One column
+// inherits the chat width, which was the wider and more deliberately set of
+// the two.
+export function migratePersisted(raw: any): DockPersisted {
+    const width = raw?.columnWidth ?? raw?.chatWidth ?? raw?.width;
+    return {
+        activeTool: raw?.activeTool ?? null,
+        columnWidth: clampColumnWidth(typeof width === "number" ? width : NaN),
+        chatFraction: clampChatFraction(typeof raw?.chatFraction === "number" ? raw.chatFraction : NaN),
+        collapsed: raw?.collapsed ?? true,
+    };
 }
 
 function loadPersisted(): DockPersisted {
     try {
         const raw = localStorage.getItem(StorageKey);
-        if (!raw) {
-            return { ...DefaultPersisted };
-        }
-        const parsed = JSON.parse(raw);
-        return {
-            activeTool: parsed?.activeTool ?? null,
-            width: clampWidth(parsed?.width ?? DOCK_DEFAULT_WIDTH),
-            chatWidth: clampChatWidth(parsed?.chatWidth ?? CHAT_DEFAULT_WIDTH),
-            collapsed: parsed?.collapsed ?? true,
-        };
+        return migratePersisted(raw ? JSON.parse(raw) : null);
     } catch {
-        return { ...DefaultPersisted };
+        return migratePersisted(null);
     }
 }
 
@@ -69,15 +72,15 @@ export class DockModel {
     private static instance: DockModel | null = null;
     activeToolAtom: jotai.PrimitiveAtom<DockToolId | null>;
     collapsedAtom: jotai.PrimitiveAtom<boolean>;
-    widthAtom: jotai.PrimitiveAtom<number>;
-    chatWidthAtom: jotai.PrimitiveAtom<number>;
+    columnWidthAtom: jotai.PrimitiveAtom<number>;
+    chatFractionAtom: jotai.PrimitiveAtom<number>;
 
     private constructor() {
         const p = loadPersisted();
         this.activeToolAtom = jotai.atom(p.activeTool) as jotai.PrimitiveAtom<DockToolId | null>;
         this.collapsedAtom = jotai.atom(p.collapsed);
-        this.widthAtom = jotai.atom(p.width);
-        this.chatWidthAtom = jotai.atom(p.chatWidth);
+        this.columnWidthAtom = jotai.atom(p.columnWidth);
+        this.chatFractionAtom = jotai.atom(p.chatFraction);
     }
 
     static getInstance(): DockModel {
@@ -90,8 +93,8 @@ export class DockModel {
     persistState() {
         const data: DockPersisted = {
             activeTool: globalStore.get(this.activeToolAtom),
-            width: globalStore.get(this.widthAtom),
-            chatWidth: globalStore.get(this.chatWidthAtom),
+            columnWidth: globalStore.get(this.columnWidthAtom),
+            chatFraction: globalStore.get(this.chatFractionAtom),
             collapsed: globalStore.get(this.collapsedAtom),
         };
         try {
@@ -118,14 +121,13 @@ export class DockModel {
         this.persistState();
     }
 
-    setWidth(px: number) {
-        globalStore.set(this.widthAtom, clampWidth(px));
-        globalStore.set(this.collapsedAtom, false);
+    setColumnWidth(px: number) {
+        globalStore.set(this.columnWidthAtom, clampColumnWidth(px));
         this.persistState();
     }
 
-    setChatWidth(px: number) {
-        globalStore.set(this.chatWidthAtom, clampChatWidth(px));
+    setChatFraction(f: number, columnHeight?: number) {
+        globalStore.set(this.chatFractionAtom, clampChatFraction(f, columnHeight));
         this.persistState();
     }
 }
