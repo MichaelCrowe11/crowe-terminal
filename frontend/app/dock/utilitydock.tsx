@@ -172,8 +172,8 @@ const UtilityDockElem = memo(() => {
                     type="button"
                     className={cn("crowe-dock-btn cursor-pointer", chatOpen && "crowe-dock-btn-active")}
                     onClick={toggleChat}
-                    title="Assistant"
-                    aria-label="Assistant"
+                    title={chatOpen ? "Hide assistant" : "Assistant"}
+                    aria-label={chatOpen ? "Hide assistant" : "Assistant"}
                     aria-pressed={chatOpen}
                 >
                     <AssistantIcon className="crowe-dock-glyph" />
