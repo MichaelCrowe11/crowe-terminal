@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/wavetermdev/waveterm/pkg/jj"
+	"github.com/wavetermdev/waveterm/pkg/wavebase"
 	"github.com/wavetermdev/waveterm/pkg/wshrpc"
 )
 
@@ -103,5 +104,20 @@ func TestVcsOpFilesRequiresOperation(t *testing.T) {
 	ws := &WshServer{}
 	if _, err := ws.VcsOpFilesCommand(context.Background(), wshrpc.CommandVcsOpFilesData{Path: t.TempDir()}); err == nil {
 		t.Fatal("expected an error for an empty operation id")
+	}
+}
+
+func TestVcsInitRefusesHomeDir(t *testing.T) {
+	stubJJ(t, func(_ string, _ ...string) (string, string, error) { return "", "", nil })
+	ws := &WshServer{}
+	_, err := ws.VcsInitCommand(context.Background(), wshrpc.CommandVcsInitData{Path: wavebase.GetHomeDir()})
+	if err == nil || !strings.Contains(err.Error(), "home") {
+		t.Fatalf("expected an error mentioning home for an explicit home-dir path, got: %v", err)
+	}
+	// An empty path resolves to the home directory too, so it must hit the
+	// same guard.
+	_, err = ws.VcsInitCommand(context.Background(), wshrpc.CommandVcsInitData{Path: ""})
+	if err == nil || !strings.Contains(err.Error(), "home") {
+		t.Fatalf("expected an error mentioning home for an empty path, got: %v", err)
 	}
 }

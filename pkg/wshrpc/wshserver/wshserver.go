@@ -1829,6 +1829,11 @@ func (ws *WshServer) VcsInitCommand(ctx context.Context, data wshrpc.CommandVcsI
 	if err != nil {
 		return nil, err
 	}
+	// The home fallback is a display convenience; initializing there would
+	// snapshot everything in $HOME, secrets included, on the next status poll.
+	if dir == wavebase.GetHomeDir() {
+		return nil, fmt.Errorf("refusing to initialize version control across the whole home directory; focus a terminal in a project directory first")
+	}
 	colocated, already, err := jj.Init(ctx, dir)
 	if err != nil {
 		return nil, err
