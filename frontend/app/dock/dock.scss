@@ -168,6 +168,11 @@
     }
 }
 
+.crowe-dock-column-closed {
+    border-right: none;
+    overflow: hidden;
+}
+
 .crowe-dock-pane {
     display: flex;
     flex-direction: column;

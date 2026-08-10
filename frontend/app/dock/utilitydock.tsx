@@ -211,79 +211,85 @@ const UtilityDockElem = memo(() => {
                     {theme === "dark" ? <SunIcon className="crowe-dock-glyph" /> : <MoonIcon className="crowe-dock-glyph" />}
                 </button>
             </nav>
-            {columnOpen && (
-                <div
-                    ref={columnRef}
-                    className={cn("crowe-dock-column glass-chrome glass-grain", dragging && "crowe-dock-dragging")}
-                    style={{ width: columnWidth }}
+            <div
+                ref={columnRef}
+                className={cn(
+                    "crowe-dock-column glass-chrome glass-grain",
+                    dragging && "crowe-dock-dragging",
+                    !columnOpen && "crowe-dock-column-closed"
+                )}
+                style={{ width: columnOpen ? columnWidth : 0 }}
+            >
+                {/* The AI panel stays mounted while hidden so a close/reopen does not discard
+                    the conversation, reload it over RPC, or truncate a response mid-stream. */}
+                <section
+                    className="crowe-dock-pane"
+                    style={{ ...chatPaneStyle, display: chatOpen ? "flex" : "none" }}
+                    aria-hidden={!chatOpen}
                 >
-                    {chatOpen && (
-                        <section className="crowe-dock-pane" style={chatPaneStyle}>
-                            <div className="crowe-dock-head crowe-chat-head">
-                                <button
-                                    type="button"
-                                    className="crowe-chat-model cursor-pointer"
-                                    onClick={() => toggleTool("model")}
-                                    title="Switch model"
-                                >
-                                    <span className="crowe-chat-model-dot" />
-                                    <span className="crowe-chat-model-name">{modelLabel}</span>
-                                    <i className="fa fa-angle-down crowe-chat-model-caret" />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="crowe-dock-close cursor-pointer"
-                                    onClick={() => layout.setAIPanelVisible(false)}
-                                    title="Close assistant"
-                                    aria-label="Close assistant"
-                                >
-                                    <CloseIcon />
-                                </button>
-                            </div>
-                            <div className="crowe-chat-body">
-                                <AIPanel roundTopLeft={false} />
-                            </div>
-                        </section>
-                    )}
-                    {chatOpen && toolOpen && (
-                        <div
-                            className="crowe-dock-split"
-                            role="separator"
-                            aria-orientation="horizontal"
-                            title="Drag to resize, double-click to reset"
-                            onMouseDown={onSplitDown}
-                            onDoubleClick={() => model.setChatFraction(DEFAULT_CHAT_FRACTION)}
-                        />
-                    )}
-                    {toolOpen && (
-                        <section className="crowe-dock-pane" style={toolPaneStyle}>
-                            <div className="crowe-dock-head">
-                                <span className="crowe-dock-title">{activeDef.label}</span>
-                                <button
-                                    type="button"
-                                    className="crowe-dock-close cursor-pointer"
-                                    onClick={() => model.collapse()}
-                                    title="Collapse panel"
-                                    aria-label="Collapse panel"
-                                >
-                                    <CloseIcon />
-                                </button>
-                            </div>
-                            <div className="crowe-dock-body">
-                                <ActivePanel />
-                            </div>
-                        </section>
-                    )}
+                    <div className="crowe-dock-head crowe-chat-head">
+                        <button
+                            type="button"
+                            className="crowe-chat-model cursor-pointer"
+                            onClick={() => toggleTool("model")}
+                            title="Switch model"
+                        >
+                            <span className="crowe-chat-model-dot" />
+                            <span className="crowe-chat-model-name">{modelLabel}</span>
+                            <i className="fa fa-angle-down crowe-chat-model-caret" />
+                        </button>
+                        <button
+                            type="button"
+                            className="crowe-dock-close cursor-pointer"
+                            onClick={() => layout.setAIPanelVisible(false)}
+                            title="Close assistant"
+                            aria-label="Close assistant"
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+                    <div className="crowe-chat-body">
+                        <AIPanel roundTopLeft={false} />
+                    </div>
+                </section>
+                {chatOpen && toolOpen && (
                     <div
-                        className="crowe-dock-resize crowe-dock-resize-grip"
+                        className="crowe-dock-split"
                         role="separator"
-                        aria-orientation="vertical"
+                        aria-orientation="horizontal"
                         title="Drag to resize, double-click to reset"
-                        onMouseDown={onColumnResizeDown}
-                        onDoubleClick={() => model.setColumnWidth(DOCK_DEFAULT_WIDTH)}
+                        onMouseDown={onSplitDown}
+                        onDoubleClick={() => model.setChatFraction(DEFAULT_CHAT_FRACTION)}
                     />
-                </div>
-            )}
+                )}
+                {toolOpen && (
+                    <section className="crowe-dock-pane" style={toolPaneStyle}>
+                        <div className="crowe-dock-head">
+                            <span className="crowe-dock-title">{activeDef.label}</span>
+                            <button
+                                type="button"
+                                className="crowe-dock-close cursor-pointer"
+                                onClick={() => model.collapse()}
+                                title="Collapse panel"
+                                aria-label="Collapse panel"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+                        <div className="crowe-dock-body">
+                            <ActivePanel />
+                        </div>
+                    </section>
+                )}
+                <div
+                    className="crowe-dock-resize crowe-dock-resize-grip"
+                    role="separator"
+                    aria-orientation="vertical"
+                    title="Drag to resize, double-click to reset"
+                    onMouseDown={onColumnResizeDown}
+                    onDoubleClick={() => model.setColumnWidth(DOCK_DEFAULT_WIDTH)}
+                />
+            </div>
         </div>
     );
 });
