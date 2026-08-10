@@ -10,6 +10,7 @@ import { applyAppTheme, AppTheme, getAppTheme } from "@/app/theme/app-theme";
 import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { debounce } from "throttle-debounce";
 import {
     AssistantIcon,
     CloseIcon,
@@ -171,10 +172,14 @@ const UtilityDockElem = memo(() => {
 
     // Shrinking the window does not fire mousemove, so an already-wide column
     // needs its own re-clamp on resize to keep blocks above MIN_BLOCK_PX.
+    // resize fires at high frequency during a live drag, and setColumnWidth
+    // synchronously persists to localStorage, so debounce it like the other
+    // hot-path persistence in this codebase (e.g. termwrap's 50ms resize
+    // debounce).
     useEffect(() => {
-        const onResize = () => {
+        const onResize = debounce(100, () => {
             model.setColumnWidth(Math.min(globalStore.get(model.columnWidthAtom), maxColumnWidth()));
-        };
+        });
         window.addEventListener("resize", onResize);
         return () => {
             window.removeEventListener("resize", onResize);

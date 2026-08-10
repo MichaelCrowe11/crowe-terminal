@@ -172,7 +172,12 @@
 }
 
 .crowe-dock-column-closed {
-    border-right: none;
+    // .crowe-dock-column also carries glass-chrome, whose `border` shorthand
+    // sets all four sides. overflow: hidden clips descendants, not the box's
+    // own border, so at zero width a border-right: none alone still leaves a
+    // full-height hairline seam from the left/top/bottom sides. Clear all
+    // four so a collapsed column paints nothing.
+    border: none;
     overflow: hidden;
 }
 
