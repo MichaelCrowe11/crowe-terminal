@@ -34,6 +34,7 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/filebackup"
 	"github.com/wavetermdev/waveterm/pkg/filestore"
 	"github.com/wavetermdev/waveterm/pkg/genconn"
+	"github.com/wavetermdev/waveterm/pkg/jj"
 	"github.com/wavetermdev/waveterm/pkg/jobcontroller"
 	"github.com/wavetermdev/waveterm/pkg/mcpui/uihost"
 	"github.com/wavetermdev/waveterm/pkg/panichandler"
@@ -1702,4 +1703,140 @@ func (ws *WshServer) CroweCodeBootstrapScopeCommand(ctx context.Context, data ws
 		rtn.TargetPatterns = g.TargetPatterns
 	}
 	return rtn, nil
+}
+
+// resolveVcsDir applies the panel's targeting rule server-side: an empty path
+// falls back to the home directory, and validation reuses the same refusal
+// list the agent tools enforce.
+func resolveVcsDir(rawPath string) (string, error) {
+	p := strings.TrimSpace(rawPath)
+	if p == "" {
+		p = wavebase.GetHomeDir()
+	}
+	expanded, err := wavebase.ExpandHomeDir(p)
+	if err != nil {
+		return "", err
+	}
+	return jj.ResolveDir(expanded)
+}
+
+func vcsFileChanges(changes []jj.FileChange) []wshrpc.VcsFileChange {
+	rtn := make([]wshrpc.VcsFileChange, 0, len(changes))
+	for _, c := range changes {
+		rtn = append(rtn, wshrpc.VcsFileChange{Path: c.Path, Changes: c.Changes, Plus: c.Plus, Minus: c.Minus})
+	}
+	return rtn
+}
+
+func (ws *WshServer) VcsStatusCommand(ctx context.Context, data wshrpc.CommandVcsStatusData) (*wshrpc.CommandVcsStatusRtnData, error) {
+	if !jj.Available() {
+		return &wshrpc.CommandVcsStatusRtnData{}, nil
+	}
+	dir, err := resolveVcsDir(data.Path)
+	if err != nil {
+		return nil, err
+	}
+	root, err := jj.WorkspaceRoot(ctx, dir)
+	if errors.Is(err, jj.ErrNotRepo) {
+		return &wshrpc.CommandVcsStatusRtnData{Installed: true, Dir: dir}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	// jj status also snapshots the working copy, so polling this command is
+	// what keeps the agent's edits continuously restorable.
+	_, clean, err := jj.StatusText(ctx, dir)
+	if err != nil {
+		return nil, err
+	}
+	rtn := &wshrpc.CommandVcsStatusRtnData{Installed: true, IsRepo: true, Dir: dir, Root: root, Clean: clean}
+	if clean {
+		return rtn, nil
+	}
+	changes, err := jj.DiffStat(ctx, dir)
+	if err != nil {
+		return nil, err
+	}
+	rtn.Files = vcsFileChanges(changes)
+	return rtn, nil
+}
+
+func (ws *WshServer) VcsHistoryCommand(ctx context.Context, data wshrpc.CommandVcsHistoryData) (*wshrpc.CommandVcsHistoryRtnData, error) {
+	if !jj.Available() {
+		return nil, fmt.Errorf("jj is not installed")
+	}
+	dir, err := resolveVcsDir(data.Path)
+	if err != nil {
+		return nil, err
+	}
+	ops, err := jj.History(ctx, dir, data.Limit)
+	if err != nil {
+		return nil, err
+	}
+	rtn := &wshrpc.CommandVcsHistoryRtnData{Operations: make([]wshrpc.VcsOperation, 0, len(ops))}
+	for _, op := range ops {
+		rtn.Operations = append(rtn.Operations, wshrpc.VcsOperation{
+			OpId: op.ID, Description: op.Description, Time: op.Time, TimeRel: op.TimeRel,
+		})
+	}
+	return rtn, nil
+}
+
+func (ws *WshServer) VcsOpFilesCommand(ctx context.Context, data wshrpc.CommandVcsOpFilesData) (*wshrpc.CommandVcsOpFilesRtnData, error) {
+	if !jj.Available() {
+		return nil, fmt.Errorf("jj is not installed")
+	}
+	if strings.TrimSpace(data.Operation) == "" {
+		return nil, fmt.Errorf("operation is required")
+	}
+	dir, err := resolveVcsDir(data.Path)
+	if err != nil {
+		return nil, err
+	}
+	files, err := jj.OpFiles(ctx, dir, data.Operation)
+	if err != nil {
+		return nil, err
+	}
+	return &wshrpc.CommandVcsOpFilesRtnData{Files: vcsFileChanges(files)}, nil
+}
+
+func (ws *WshServer) VcsRestoreCommand(ctx context.Context, data wshrpc.CommandVcsRestoreData) (*wshrpc.CommandVcsRestoreRtnData, error) {
+	if !jj.Available() {
+		return nil, fmt.Errorf("jj is not installed")
+	}
+	dir, err := resolveVcsDir(data.Path)
+	if err != nil {
+		return nil, err
+	}
+	op := strings.TrimSpace(data.Operation)
+	var detail string
+	if op == "" {
+		detail, err = jj.Undo(ctx, dir)
+	} else {
+		detail, err = jj.Restore(ctx, dir, op)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &wshrpc.CommandVcsRestoreRtnData{Detail: detail}, nil
+}
+
+func (ws *WshServer) VcsInitCommand(ctx context.Context, data wshrpc.CommandVcsInitData) (*wshrpc.CommandVcsInitRtnData, error) {
+	if !jj.Available() {
+		return nil, fmt.Errorf("jj is not installed")
+	}
+	dir, err := resolveVcsDir(data.Path)
+	if err != nil {
+		return nil, err
+	}
+	// The home fallback is a display convenience; initializing there would
+	// snapshot everything in $HOME, secrets included, on the next status poll.
+	if dir == wavebase.GetHomeDir() {
+		return nil, fmt.Errorf("refusing to initialize version control across the whole home directory; focus a terminal in a project directory first")
+	}
+	colocated, already, err := jj.Init(ctx, dir)
+	if err != nil {
+		return nil, err
+	}
+	return &wshrpc.CommandVcsInitRtnData{Colocated: colocated, AlreadyInitialized: already}, nil
 }

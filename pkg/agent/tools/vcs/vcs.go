@@ -20,73 +20,20 @@
 //
 // Registration is gated on the jj binary being present, so on a machine without
 // it the tools are absent rather than advertised and broken.
+//
+// The jj mechanics live in pkg/jj, shared with the repository dock's wshrpc
+// commands.
 package vcs
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
+	"github.com/wavetermdev/waveterm/pkg/jj"
 )
-
-const (
-	DefaultTimeout = 30 * time.Second
-	MaxOutputBytes = 60 * 1024
-	DefaultLogN    = 20
-	MaxLogN        = 200
-)
-
-// Refused outright: a repo here is either a mistake or an attempt to snapshot
-// somewhere the agent has no business writing .jj into.
-var refusedPrefixes = []string{
-	"/System",
-	"/Library",
-	"/private/var/db",
-	"/etc",
-	"/bin",
-	"/sbin",
-	"/usr",
-}
-
-// jjPath is a seam so tests can point at a stub without a real jj install.
-var jjPath = func() string {
-	p, err := exec.LookPath("jj")
-	if err != nil {
-		return ""
-	}
-	return p
-}
-
-// runJJ executes jj as an argv list. Nothing reaches a shell, so a
-// model-supplied revision or message cannot inject an operator.
-var runJJ = func(ctx context.Context, dir string, args ...string) (string, string, error) {
-	bin := jjPath()
-	if bin == "" {
-		return "", "", fmt.Errorf("jj is not installed or not on PATH")
-	}
-	ctx, cancel := context.WithTimeout(ctx, DefaultTimeout)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, bin, args...)
-	cmd.Dir = dir
-	// --no-pager keeps jj from blocking on a pager it thinks is a terminal.
-	cmd.Env = append(os.Environ(), "JJ_CONFIG=", "NO_COLOR=1", "PAGER=cat")
-	var out, errOut strings.Builder
-	cmd.Stdout = &out
-	cmd.Stderr = &errOut
-	err := cmd.Run()
-	if ctx.Err() == context.DeadlineExceeded {
-		return "", "", fmt.Errorf("jj %s timed out after %s", args[0], DefaultTimeout)
-	}
-	return out.String(), errOut.String(), err
-}
-
-func Available() bool { return jjPath() != "" }
 
 func errResult(err error) registry.Result {
 	return registry.Result{IsError: true, ErrorText: err.Error()}
@@ -98,38 +45,6 @@ func okResult(payload map[string]any) (registry.Result, error) {
 		return errResult(err), nil
 	}
 	return registry.Result{Content: body}, nil
-}
-
-func truncate(s string) (string, bool) {
-	if len(s) <= MaxOutputBytes {
-		return s, false
-	}
-	return s[:MaxOutputBytes], true
-}
-
-// resolveDir validates the workspace path before any jj command touches it.
-func resolveDir(raw string) (string, error) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return "", fmt.Errorf("path required")
-	}
-	if !filepath.IsAbs(raw) {
-		return "", fmt.Errorf("path must be absolute: %s", raw)
-	}
-	clean := filepath.Clean(raw)
-	for _, p := range refusedPrefixes {
-		if clean == p || strings.HasPrefix(clean, p+"/") {
-			return "", fmt.Errorf("refusing to operate on a system path: %s", clean)
-		}
-	}
-	info, err := os.Stat(clean)
-	if err != nil {
-		return "", fmt.Errorf("cannot stat %s: %w", clean, err)
-	}
-	if !info.IsDir() {
-		return "", fmt.Errorf("path is not a directory: %s", clean)
-	}
-	return clean, nil
 }
 
 type pathArgs struct {
@@ -148,7 +63,7 @@ const schemaPathOnly = `{
 func init() {
 	// Absent jj, these tools cannot do anything, so they are never offered
 	// rather than advertised and failing on first use.
-	if !Available() {
+	if !jj.Available() {
 		return
 	}
 	registry.Register(&registry.Tool{
@@ -258,26 +173,19 @@ func handleInit(ctx context.Context, raw json.RawMessage) (registry.Result, erro
 	if err := json.Unmarshal(raw, &args); err != nil {
 		return errResult(fmt.Errorf("invalid arguments: %w", err)), nil
 	}
-	dir, err := resolveDir(args.Path)
+	dir, err := jj.ResolveDir(args.Path)
 	if err != nil {
 		return errResult(err), nil
 	}
-	if _, statErr := os.Stat(filepath.Join(dir, ".jj")); statErr == nil {
+	colocated, already, err := jj.Init(ctx, dir)
+	if err != nil {
+		return errResult(err), nil
+	}
+	if already {
 		return okResult(map[string]any{
 			"path": dir, "already_initialized": true,
 			"note": "workspace is already tracked; nothing changed",
 		})
-	}
-	// Colocating keeps git history and any existing tooling working alongside jj.
-	jjArgs := []string{"git", "init"}
-	colocated := false
-	if _, gitErr := os.Stat(filepath.Join(dir, ".git")); gitErr == nil {
-		jjArgs = append(jjArgs, "--colocate")
-		colocated = true
-	}
-	_, stderr, runErr := runJJ(ctx, dir, jjArgs...)
-	if runErr != nil {
-		return errResult(fmt.Errorf("jj git init failed: %s", firstLine(stderr, runErr))), nil
 	}
 	return okResult(map[string]any{
 		"path": dir, "colocated": colocated, "remote": nil,
@@ -290,18 +198,18 @@ func handleStatus(ctx context.Context, raw json.RawMessage) (registry.Result, er
 	if err := json.Unmarshal(raw, &args); err != nil {
 		return errResult(fmt.Errorf("invalid arguments: %w", err)), nil
 	}
-	dir, err := resolveDir(args.Path)
+	dir, err := jj.ResolveDir(args.Path)
 	if err != nil {
 		return errResult(err), nil
 	}
-	stdout, stderr, runErr := runJJ(ctx, dir, "status")
-	if runErr != nil {
-		return errResult(fmt.Errorf("jj status failed: %s", firstLine(stderr, runErr))), nil
+	text, clean, err := jj.StatusText(ctx, dir)
+	if err != nil {
+		return errResult(err), nil
 	}
-	text, clipped := truncate(stdout)
+	out, clipped := jj.Truncate(text)
 	return okResult(map[string]any{
-		"path": dir, "status": text, "truncated": clipped,
-		"clean": strings.Contains(stdout, "The working copy has no changes"),
+		"path": dir, "status": out, "truncated": clipped,
+		"clean": clean,
 	})
 }
 
@@ -313,22 +221,13 @@ func handleCheckpoint(ctx context.Context, raw json.RawMessage) (registry.Result
 	if err := json.Unmarshal(raw, &args); err != nil {
 		return errResult(fmt.Errorf("invalid arguments: %w", err)), nil
 	}
-	dir, err := resolveDir(args.Path)
+	dir, err := jj.ResolveDir(args.Path)
 	if err != nil {
 		return errResult(err), nil
 	}
-	// `jj status` is the cheapest command that forces a working-copy snapshot,
-	// so the id returned below already includes edits made moments ago.
-	if _, stderr, runErr := runJJ(ctx, dir, "status"); runErr != nil {
-		return errResult(fmt.Errorf("jj status failed: %s", firstLine(stderr, runErr))), nil
-	}
-	stdout, stderr, runErr := runJJ(ctx, dir, "op", "log", "--no-graph", "-n", "1", "-T", "id.short()")
-	if runErr != nil {
-		return errResult(fmt.Errorf("jj op log failed: %s", firstLine(stderr, runErr))), nil
-	}
-	opID := strings.TrimSpace(stdout)
-	if opID == "" {
-		return errResult(fmt.Errorf("could not determine operation id")), nil
+	opID, err := jj.CheckpointID(ctx, dir)
+	if err != nil {
+		return errResult(err), nil
 	}
 	return okResult(map[string]any{
 		"path": dir, "operation": opID, "label": args.Label,
@@ -345,29 +244,19 @@ func handleDiff(ctx context.Context, raw json.RawMessage) (registry.Result, erro
 	if err := json.Unmarshal(raw, &args); err != nil {
 		return errResult(fmt.Errorf("invalid arguments: %w", err)), nil
 	}
-	dir, err := resolveDir(args.Path)
+	dir, err := jj.ResolveDir(args.Path)
 	if err != nil {
 		return errResult(err), nil
 	}
-	jjArgs := []string{"diff"}
-	if rev := strings.TrimSpace(args.Revision); rev != "" {
-		jjArgs = append(jjArgs, "-r", rev)
+	diff, err := jj.DiffText(ctx, dir, args.Revision)
+	if err != nil {
+		return errResult(err), nil
 	}
-	stdout, stderr, runErr := runJJ(ctx, dir, jjArgs...)
-	if runErr != nil {
-		return errResult(fmt.Errorf("jj diff failed: %s", firstLine(stderr, runErr))), nil
-	}
-	text, clipped := truncate(stdout)
+	text, clipped := jj.Truncate(diff)
 	return okResult(map[string]any{
 		"path": dir, "revision": args.Revision, "diff": text,
-		"truncated": clipped, "empty": strings.TrimSpace(stdout) == "",
+		"truncated": clipped, "empty": strings.TrimSpace(diff) == "",
 	})
-}
-
-type operation struct {
-	ID          string `json:"id"`
-	Description string `json:"description"`
-	Time        string `json:"time"`
 }
 
 func handleHistory(ctx context.Context, raw json.RawMessage) (registry.Result, error) {
@@ -378,45 +267,18 @@ func handleHistory(ctx context.Context, raw json.RawMessage) (registry.Result, e
 	if err := json.Unmarshal(raw, &args); err != nil {
 		return errResult(fmt.Errorf("invalid arguments: %w", err)), nil
 	}
-	dir, err := resolveDir(args.Path)
+	dir, err := jj.ResolveDir(args.Path)
 	if err != nil {
 		return errResult(err), nil
 	}
-	limit := args.Limit
-	if limit <= 0 {
-		limit = DefaultLogN
-	}
-	if limit > MaxLogN {
-		limit = MaxLogN
-	}
-	stdout, stderr, runErr := runJJ(ctx, dir, "op", "log", "--no-graph",
-		"-n", fmt.Sprint(limit),
-		"-T", `id.short() ++ "\t" ++ description ++ "\t" ++ time.end() ++ "\n"`)
-	if runErr != nil {
-		return errResult(fmt.Errorf("jj op log failed: %s", firstLine(stderr, runErr))), nil
+	limit := jj.ClampLimit(args.Limit)
+	ops, err := jj.History(ctx, dir, limit)
+	if err != nil {
+		return errResult(err), nil
 	}
 	return okResult(map[string]any{
-		"path": dir, "operations": parseOperations(stdout), "limit": limit,
+		"path": dir, "operations": ops, "limit": limit,
 	})
-}
-
-func parseOperations(out string) []operation {
-	ops := []operation{}
-	for _, line := range strings.Split(out, "\n") {
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
-		parts := strings.SplitN(line, "\t", 3)
-		op := operation{ID: strings.TrimSpace(parts[0])}
-		if len(parts) > 1 {
-			op.Description = strings.TrimSpace(parts[1])
-		}
-		if len(parts) > 2 {
-			op.Time = strings.TrimSpace(parts[2])
-		}
-		ops = append(ops, op)
-	}
-	return ops
 }
 
 func handleUndo(ctx context.Context, raw json.RawMessage) (registry.Result, error) {
@@ -427,40 +289,25 @@ func handleUndo(ctx context.Context, raw json.RawMessage) (registry.Result, erro
 	if err := json.Unmarshal(raw, &args); err != nil {
 		return errResult(fmt.Errorf("invalid arguments: %w", err)), nil
 	}
-	dir, err := resolveDir(args.Path)
+	dir, err := jj.ResolveDir(args.Path)
 	if err != nil {
 		return errResult(err), nil
 	}
 	op := strings.TrimSpace(args.Operation)
-	jjArgs := []string{"undo"}
+	var detail string
 	mode := "last-operation"
-	if op != "" {
-		jjArgs = []string{"op", "restore", op}
+	if op == "" {
+		detail, err = jj.Undo(ctx, dir)
+	} else {
 		mode = "restore-to-operation"
+		detail, err = jj.Restore(ctx, dir, op)
 	}
-	stdout, stderr, runErr := runJJ(ctx, dir, jjArgs...)
-	if runErr != nil {
-		return errResult(fmt.Errorf("jj %s failed: %s", mode, firstLine(stderr, runErr))), nil
+	if err != nil {
+		return errResult(err), nil
 	}
-	// jj reports the outcome on stderr, which is the part worth showing back.
-	detail := strings.TrimSpace(stderr)
-	if detail == "" {
-		detail = strings.TrimSpace(stdout)
-	}
-	text, clipped := truncate(detail)
+	text, clipped := jj.Truncate(detail)
 	return okResult(map[string]any{
 		"path": dir, "mode": mode, "operation": op,
 		"result": text, "truncated": clipped,
 	})
-}
-
-func firstLine(stderr string, err error) string {
-	s := strings.TrimSpace(stderr)
-	if s == "" {
-		return err.Error()
-	}
-	if i := strings.Index(s, "\n"); i > 0 {
-		return s[:i]
-	}
-	return s
 }

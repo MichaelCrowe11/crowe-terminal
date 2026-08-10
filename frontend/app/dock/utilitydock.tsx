@@ -2,16 +2,30 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AIPanel } from "@/app/aipanel/aipanel";
+import hypheusMark from "@/app/asset/hypheus-mark.png";
 import { WaveAIModel } from "@/app/aipanel/waveai-model";
 import { WorkspaceLayoutModel } from "@/app/workspace/workspace-layout-model";
+import { applyAppTheme, AppTheme, getAppTheme } from "@/app/theme/app-theme";
 import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
-import { memo, useCallback, useEffect, useRef } from "react";
-import { AssistantIcon, CloseIcon, HyphaeIcon, NetworkIcon, NibIcon, SporeIcon, VitalsIcon } from "./crowe-icons";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import {
+    AssistantIcon,
+    CloseIcon,
+    HyphaeIcon,
+    MoonIcon,
+    NetworkIcon,
+    NibIcon,
+    RingsIcon,
+    SporeIcon,
+    SunIcon,
+    VitalsIcon,
+} from "./crowe-icons";
 import { DesignReviewModel } from "./designreview-model";
 import { CHAT_DEFAULT_WIDTH, DOCK_DEFAULT_WIDTH, DOCK_RAIL_WIDTH, DockModel, DockToolId } from "./dock-model";
 import "./dock.scss";
-import { DesignPanel, ModelPanel, MyceliumPanel, TelemetryPanel, ThinkingPanel } from "./dockpanels";
+import { DesignPanel, ModelPanel, MyceliumPanel, TelemetryPanel, ThinkingPanel, VcsPanel } from "./dockpanels";
+import { VcsModel } from "./vcs-model";
 
 interface DockTool {
     id: DockToolId;
@@ -26,7 +40,10 @@ const DOCK_TOOLS: DockTool[] = [
     { id: "thinking", label: "Cognition", Icon: HyphaeIcon, Panel: ThinkingPanel },
     { id: "design", label: "Design review", Icon: NibIcon, Panel: DesignPanel },
     { id: "mycelium", label: "Mycelium", Icon: NetworkIcon, Panel: MyceliumPanel },
+    { id: "repo", label: "Repository", Icon: RingsIcon, Panel: VcsPanel },
 ];
+
+const DOCK_COMPACT_BREAKPOINT = 900;
 
 const DesignBadge = memo(() => {
     const count = useAtomValue(DesignReviewModel.getInstance().openCountAtom);
@@ -36,6 +53,15 @@ const DesignBadge = memo(() => {
     return <span className="crowe-dock-badge">{count > 99 ? 99 : count}</span>;
 });
 DesignBadge.displayName = "DesignBadge";
+
+const VcsDirtyPip = memo(() => {
+    const dirty = useAtomValue(VcsModel.getInstance().dirtyAtom);
+    if (!dirty) {
+        return null;
+    }
+    return <span className="crowe-dock-pip" />;
+});
+VcsDirtyPip.displayName = "VcsDirtyPip";
 
 const UtilityDockElem = memo(() => {
     const model = DockModel.getInstance();
@@ -50,10 +76,33 @@ const UtilityDockElem = memo(() => {
     const aiConfigs = useAtomValue(waveAI.aiModeConfigs);
     const modelLabel = aiConfigs?.[aiMode]?.["display:name"] ?? "Model";
     const dragMode = useRef<"tool" | "chat" | null>(null);
+    const [theme, setTheme] = useState<AppTheme>(() => getAppTheme());
 
     const toggleChat = useCallback(() => {
-        layout.setAIPanelVisible(!layout.getAIPanelVisible());
-    }, [layout]);
+        const nextOpen = !layout.getAIPanelVisible();
+        if (nextOpen && window.innerWidth < DOCK_COMPACT_BREAKPOINT) {
+            model.collapse();
+        }
+        layout.setAIPanelVisible(nextOpen);
+    }, [layout, model]);
+
+    const toggleTool = useCallback(
+        (id: DockToolId) => {
+            if (window.innerWidth < DOCK_COMPACT_BREAKPOINT && layout.getAIPanelVisible()) {
+                layout.setAIPanelVisible(false);
+            }
+            model.toggle(id);
+        },
+        [layout, model]
+    );
+
+    const toggleTheme = useCallback(() => {
+        setTheme((currentTheme) => {
+            const nextTheme = currentTheme === "dark" ? "light" : "dark";
+            applyAppTheme(nextTheme);
+            return nextTheme;
+        });
+    }, []);
 
     const onToolResizeDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
@@ -71,11 +120,11 @@ const UtilityDockElem = memo(() => {
 
     useEffect(() => {
         const onMove = (e: MouseEvent) => {
-            const px = window.innerWidth - e.clientX - DOCK_RAIL_WIDTH;
             if (dragMode.current === "tool") {
-                model.setWidth(px);
+                const toolOffset = DOCK_RAIL_WIDTH + (chatOpen ? chatWidth : 0);
+                model.setWidth(e.clientX - toolOffset);
             } else if (dragMode.current === "chat") {
-                model.setChatWidth(px);
+                model.setChatWidth(e.clientX - DOCK_RAIL_WIDTH);
             }
         };
         const onUp = () => {
@@ -92,13 +141,17 @@ const UtilityDockElem = memo(() => {
             document.removeEventListener("mousemove", onMove);
             document.removeEventListener("mouseup", onUp);
         };
-    }, [model]);
+    }, [chatOpen, chatWidth, model]);
+
+    useEffect(() => {
+        VcsModel.getInstance().startPolling();
+    }, []);
 
     const activeDef = !collapsed && activeTool ? DOCK_TOOLS.find((t) => t.id === activeTool) : null;
     const ActivePanel = activeDef?.Panel;
-    // Tool drawers slide out to the LEFT of the chat drawer when it's open so the
+    // Tool drawers extend to the right of the chat drawer when it's open so the
     // two floating panels never stack on top of each other.
-    const toolRight = chatOpen ? DOCK_RAIL_WIDTH + chatWidth : DOCK_RAIL_WIDTH;
+    const toolLeft = chatOpen ? DOCK_RAIL_WIDTH + chatWidth : DOCK_RAIL_WIDTH;
 
     return (
         <div className="crowe-dock-root">
@@ -122,7 +175,7 @@ const UtilityDockElem = memo(() => {
                     <button
                         type="button"
                         className="crowe-chat-model cursor-pointer"
-                        onClick={() => model.toggle("model")}
+                        onClick={() => toggleTool("model")}
                         title="Switch model"
                     >
                         <span className="crowe-chat-model-dot" />
@@ -144,7 +197,7 @@ const UtilityDockElem = memo(() => {
                 </div>
             </aside>
             {activeDef && ActivePanel && (
-                <aside className="crowe-dock-drawer glass-chrome glass-grain" style={{ width, right: toolRight }}>
+                <aside className="crowe-dock-drawer glass-chrome glass-grain" style={{ width, left: toolLeft }}>
                     <div
                         className="crowe-dock-resize"
                         role="separator"
@@ -170,7 +223,11 @@ const UtilityDockElem = memo(() => {
                     </div>
                 </aside>
             )}
-            <nav className="crowe-dock-rail glass-chrome" aria-label="Utility tools">
+            <nav className="crowe-dock-rail glass-chrome" aria-label="Hypheus operator tools">
+                <div className="crowe-dock-brand" title="Hypheus operator tools" aria-hidden="true">
+                    <img src={hypheusMark} alt="" />
+                </div>
+                <span className="crowe-dock-sep" />
                 <button
                     type="button"
                     className={cn("crowe-dock-btn cursor-pointer", chatOpen && "crowe-dock-btn-active")}
@@ -190,7 +247,7 @@ const UtilityDockElem = memo(() => {
                             key={tool.id}
                             type="button"
                             className={cn("crowe-dock-btn cursor-pointer", isActive && "crowe-dock-btn-active")}
-                            onClick={() => model.toggle(tool.id)}
+                            onClick={() => toggleTool(tool.id)}
                             title={tool.label}
                             aria-label={tool.label}
                             aria-pressed={isActive}
@@ -198,9 +255,26 @@ const UtilityDockElem = memo(() => {
                             {isActive && <span className="crowe-dock-indicator" />}
                             <tool.Icon className="crowe-dock-glyph" />
                             {tool.id === "design" && <DesignBadge />}
+                            {tool.id === "repo" && <VcsDirtyPip />}
                         </button>
                     );
                 })}
+                <span className="crowe-dock-grow" />
+                <span className="crowe-dock-sep" />
+                <button
+                    type="button"
+                    className="crowe-dock-btn cursor-pointer"
+                    onClick={toggleTheme}
+                    title={theme === "dark" ? "Use light theme" : "Use dark theme"}
+                    aria-label={theme === "dark" ? "Use light theme" : "Use dark theme"}
+                    aria-pressed={theme === "light"}
+                >
+                    {theme === "dark" ? (
+                        <SunIcon className="crowe-dock-glyph" />
+                    ) : (
+                        <MoonIcon className="crowe-dock-glyph" />
+                    )}
+                </button>
             </nav>
         </div>
     );

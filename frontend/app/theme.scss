@@ -7,12 +7,12 @@
      * The Wave chrome vars below bridge onto them via var(); do NOT re-declare the
      * primitives here or the two surfaces will drift. */
 
-    --main-text-color: var(--crowe-parchment);
+    --main-text-color: var(--text);
     --title-font-size: 18px;
     --window-opacity: 1;
-    --secondary-text-color: var(--crowe-parchment-dim);
-    --grey-text-color: var(--crowe-parchment-45);
-    --main-bg-color: var(--crowe-graphite);
+    --secondary-text-color: var(--text-dim);
+    --grey-text-color: var(--text-dim);
+    --main-bg-color: var(--surface);
     --border-color: var(--hairline);
     --base-font: normal 14px / normal var(--font-sans);
     --fixed-font: normal 12px / normal var(--font-mono);
@@ -27,10 +27,10 @@
     --success-color: var(--crowe-gold-dim);
     --hover-bg-color: var(--wash-accent);
     --block-bg-color: var(--glass-tint-raised);
-    --block-bg-solid-color: var(--crowe-graphite-card);
+    --block-bg-solid-color: var(--surface-raised);
     --block-border-radius: var(--radius-sm);
 
-    --keybinding-color: var(--crowe-parchment);
+    --keybinding-color: var(--text);
     --keybinding-bg-color: var(--surface-sunken);
     --keybinding-border-color: var(--hairline);
 
@@ -153,7 +153,7 @@
     --button-grey-bg: var(--wash-accent-faint);
     --button-grey-hover-bg: var(--wash-accent);
     --button-grey-border-color: var(--hairline);
-    --button-grey-outlined-color: var(--crowe-parchment-66);
+    --button-grey-outlined-color: var(--text-dim);
     --button-red-bg: #cc0000;
     --button-red-hover-bg: #f93939;
     --button-red-border-color: #fc3131;

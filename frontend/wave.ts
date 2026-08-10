@@ -4,6 +4,7 @@
 import { App } from "@/app/app";
 import { loadMonaco } from "@/app/monaco/monaco-env";
 import { CroweCodeWorkspaceModel } from "@/app/view/crowecode/crowecode-workspace-model";
+import { initializeAppTheme } from "@/app/theme/app-theme";
 import { loadBadges } from "@/app/store/badge";
 import { GlobalModel } from "@/app/store/global-model";
 import {
@@ -38,6 +39,7 @@ import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 
 const platform = getApi().getPlatform();
+initializeAppTheme();
 document.title = `Hypheus`;
 let savedInitOpts: WaveInitOpts = null;
 

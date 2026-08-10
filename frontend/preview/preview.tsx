@@ -7,6 +7,7 @@ import { getAtoms, initGlobalAtoms } from "@/app/store/global-atoms";
 import { GlobalModel } from "@/app/store/global-model";
 import { globalStore } from "@/app/store/jotaiStore";
 import { getTabModelByTabId, TabModelContext } from "@/app/store/tab-model";
+import { initializeAppTheme } from "@/app/theme/app-theme";
 import { WaveEnvContext } from "@/app/waveenv/waveenv";
 import { loadFonts } from "@/util/fontutil";
 import { Provider } from "jotai";
@@ -17,11 +18,21 @@ import { installPreviewElectronApi } from "./mock/preview-electron-api";
 import { PreviewContextMenu } from "./preview-contextmenu";
 
 import "overlayscrollbars/overlayscrollbars.css";
+// app.tsx is the real entry point and the preview never loads it, so the Crowe
+// primitives and glass optics it pulls in were absent here: every var() they
+// define resolved to nothing, .glass-chrome surfaces computed to a transparent
+// background, and previewed drawers let the content behind them bleed through
+// their own labels. The preview then misreports working design as broken.
+// Order matches app.tsx — tokens define the primitives glass and app.scss consume.
+import "../app/crowe-tokens.css";
+import "../app/crowe-glass.css";
 import "../app/app.scss";
 
 // preview.css should come *after* app.scss (don't remove the newline above otherwise prettier will reorder these imports)
 // preview.css re-exports tailwindsetup.css and adds @source "../app" so Tailwind v4 scans frontend/app/** for class names
 import "./preview.css";
+
+initializeAppTheme();
 
 // Vite glob import — statically analyzed at build time, lazily loaded at runtime.
 // Each *.preview.tsx file is auto-discovered; its filename (minus the suffix) becomes the key.

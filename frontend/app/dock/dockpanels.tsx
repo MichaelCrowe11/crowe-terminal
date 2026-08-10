@@ -9,6 +9,7 @@ import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { DesignAnnotation, DesignReviewModel, DesignSeverity } from "./designreview-model";
 import { TelemetryModel } from "./telemetry-model";
+import { VcsModel } from "./vcs-model";
 
 function fmtMs(ms: number): string {
     if (!ms) {
@@ -376,6 +377,140 @@ export const MyceliumPanel = () => {
             <div className="crowe-graph-count">
                 {blockIds.length} node{blockIds.length === 1 ? "" : "s"}
             </div>
+        </div>
+    );
+};
+
+// --- Repository (jj operation log) -----------------------------------------
+
+const VcsFileRow = ({ file }: { file: VcsFileChange }) => (
+    <div className="crowe-vcs-file">
+        <span className="crowe-vcs-file-path" title={file.path}>
+            {file.path}
+        </span>
+        <span className="crowe-vcs-counts">
+            {file.plus > 0 && <span className="crowe-vcs-plus">+{file.plus}</span>}
+            {file.minus > 0 && <span className="crowe-vcs-minus">-{file.minus}</span>}
+            {file.plus === 0 && file.minus === 0 && <span>{file.changes}</span>}
+        </span>
+    </div>
+);
+
+const VcsOpRow = ({ op }: { op: VcsOperation }) => {
+    const m = VcsModel.getInstance();
+    const expandedOp = useAtomValue(m.expandedOpAtom);
+    const opFiles = useAtomValue(m.opFilesAtom);
+    const busy = useAtomValue(m.busyAtom);
+    const expanded = expandedOp === op.opid;
+    const files = opFiles[op.opid];
+    return (
+        <div className={cn("crowe-vcs-op", expanded && "crowe-vcs-op-expanded")}>
+            <button
+                type="button"
+                className="crowe-vcs-op-head cursor-pointer"
+                onClick={() => m.toggleOp(op.opid)}
+                aria-expanded={expanded}
+            >
+                <span className="crowe-vcs-op-desc" title={op.description}>
+                    {op.description || "(no description)"}
+                </span>
+                <span className="crowe-vcs-op-time">{op.timerel}</span>
+            </button>
+            {expanded && (
+                <div className="crowe-vcs-op-body">
+                    {files == null && <div className="crowe-panel-hint">Reading files</div>}
+                    {files != null && files.length === 0 && (
+                        <div className="crowe-panel-hint">No file changes in this operation.</div>
+                    )}
+                    {files?.map((f) => (
+                        <VcsFileRow key={f.path} file={f} />
+                    ))}
+                    <button
+                        type="button"
+                        className="crowe-btn cursor-pointer"
+                        disabled={busy}
+                        onClick={() => m.restoreTo(op.opid)}
+                    >
+                        Restore to here
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export const VcsPanel = () => {
+    const m = VcsModel.getInstance();
+    const status = useAtomValue(m.statusAtom);
+    const history = useAtomValue(m.historyAtom);
+    const busy = useAtomValue(m.busyAtom);
+    const error = useAtomValue(m.errorAtom);
+
+    useEffect(() => {
+        m.refresh(true);
+    }, []);
+
+    if (status == null) {
+        return <div className="crowe-empty">Reading repository state.</div>;
+    }
+    if (!status.installed) {
+        return (
+            <div className="crowe-panel">
+                <div className="crowe-empty">Jujutsu (jj) is not installed, so there is no operation log to show.</div>
+            </div>
+        );
+    }
+    if (!status.isrepo) {
+        return (
+            <div className="crowe-panel">
+                <div className="crowe-vcs-dir" title={status.dir}>
+                    {status.dir}
+                </div>
+                <div className="crowe-empty">This directory is not tracked yet.</div>
+                <button type="button" className="crowe-btn cursor-pointer" disabled={busy} onClick={() => m.initRepo()}>
+                    Start tracking this directory
+                </button>
+                <div className="crowe-panel-hint">
+                    Creates a self-contained local repository with no remote. Nothing is sent anywhere.
+                </div>
+            </div>
+        );
+    }
+    const fileCount = status.files?.length ?? 0;
+    return (
+        <div className="crowe-panel">
+            <div className="crowe-vcs-dir" title={status.root || status.dir}>
+                {status.root || status.dir}
+            </div>
+            {error && <div className="crowe-vcs-error">{error}</div>}
+            <div className={cn("crowe-vcs-now", !status.clean && "crowe-vcs-now-dirty")}>
+                <div className="crowe-vcs-now-head">
+                    <span className="crowe-vcs-now-label">Now</span>
+                    <span className="crowe-vcs-now-summary">
+                        {status.clean ? "no uncommitted changes" : `${fileCount} file${fileCount === 1 ? "" : "s"} changed`}
+                    </span>
+                    {!status.clean && (
+                        <button
+                            type="button"
+                            className="crowe-link cursor-pointer"
+                            disabled={busy}
+                            onClick={() => m.restoreTo()}
+                            title="Reverses only the most recent operation. Use a row below to restore further back."
+                        >
+                            undo last op
+                        </button>
+                    )}
+                </div>
+                {status.files?.map((f) => (
+                    <VcsFileRow key={f.path} file={f} />
+                ))}
+            </div>
+            {history.length === 0 ? (
+                <div className="crowe-empty">No operations recorded yet.</div>
+            ) : (
+                history.map((op) => <VcsOpRow key={op.opid} op={op} />)
+            )}
+            <div className="crowe-panel-hint">Every restore is itself an operation, so a restore can always be restored.</div>
         </div>
     );
 };

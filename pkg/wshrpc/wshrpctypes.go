@@ -230,6 +230,13 @@ type WshRpcInterface interface {
 	// watch (or stop watching) the file a Crowe Code block has open, so edits
 	// from outside the app republish crowecode:filechange and the block reloads.
 	CroweCodeWatchFileCommand(ctx context.Context, data CommandCroweCodeWatchFileData) error
+
+	// vcs (repository dock)
+	VcsStatusCommand(ctx context.Context, data CommandVcsStatusData) (*CommandVcsStatusRtnData, error)
+	VcsHistoryCommand(ctx context.Context, data CommandVcsHistoryData) (*CommandVcsHistoryRtnData, error)
+	VcsOpFilesCommand(ctx context.Context, data CommandVcsOpFilesData) (*CommandVcsOpFilesRtnData, error)
+	VcsRestoreCommand(ctx context.Context, data CommandVcsRestoreData) (*CommandVcsRestoreRtnData, error)
+	VcsInitCommand(ctx context.Context, data CommandVcsInitData) (*CommandVcsInitRtnData, error)
 }
 
 // for frontend
@@ -337,6 +344,69 @@ type CommandCroweCodeActiveEditorData struct {
 	// Empty means "no editor is focused right now" — agent should treat that
 	// as a missing-context state, not an error.
 	Empty bool `json:"empty,omitempty"`
+}
+
+type CommandVcsStatusData struct {
+	Path string `json:"path,omitempty"`
+}
+
+type VcsFileChange struct {
+	Path    string `json:"path"`
+	Changes int    `json:"changes"`
+	Plus    int    `json:"plus"`
+	Minus   int    `json:"minus"`
+}
+
+type CommandVcsStatusRtnData struct {
+	Installed bool            `json:"installed"`
+	IsRepo    bool            `json:"isrepo"`
+	Dir       string          `json:"dir,omitempty"`
+	Root      string          `json:"root,omitempty"`
+	Clean     bool            `json:"clean"`
+	Files     []VcsFileChange `json:"files,omitempty"`
+}
+
+type CommandVcsHistoryData struct {
+	Path  string `json:"path,omitempty"`
+	Limit int    `json:"limit,omitempty"`
+}
+
+type VcsOperation struct {
+	OpId        string `json:"opid"`
+	Description string `json:"description"`
+	Time        string `json:"time"`
+	TimeRel     string `json:"timerel"`
+}
+
+type CommandVcsHistoryRtnData struct {
+	Operations []VcsOperation `json:"operations,omitempty"`
+}
+
+type CommandVcsOpFilesData struct {
+	Path      string `json:"path,omitempty"`
+	Operation string `json:"operation"`
+}
+
+type CommandVcsOpFilesRtnData struct {
+	Files []VcsFileChange `json:"files,omitempty"`
+}
+
+type CommandVcsRestoreData struct {
+	Path      string `json:"path,omitempty"`
+	Operation string `json:"operation,omitempty"`
+}
+
+type CommandVcsRestoreRtnData struct {
+	Detail string `json:"detail,omitempty"`
+}
+
+type CommandVcsInitData struct {
+	Path string `json:"path,omitempty"`
+}
+
+type CommandVcsInitRtnData struct {
+	Colocated          bool `json:"colocated,omitempty"`
+	AlreadyInitialized bool `json:"alreadyinitialized,omitempty"`
 }
 
 type CommandResolveIdsData struct {
