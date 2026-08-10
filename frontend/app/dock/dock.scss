@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Left utility dock: a 44px icon rail pinned to the workspace's left edge with
-// a resizable drawer that overlays content to its right. Colors/blur come from the
-// shared glass + token layer (crowe-tokens.css / crowe-glass.css).
+// an in-flow, resizable column beside it — blocks shrink to make room rather
+// than being covered. Colors/blur come from the shared glass + token layer
+// (crowe-tokens.css / crowe-glass.css).
 
 .crowe-dock-root {
     position: relative;
@@ -133,18 +134,22 @@
     }
 }
 
-.crowe-dock-drawer {
-    position: absolute;
-    top: 0;
-    left: var(--dock-rail-width, 44px);
-    bottom: 0;
-    max-width: calc(100vw - var(--dock-rail-width, 44px));
+// The dock column takes real space in the workspace row: blocks shrink to make
+// room instead of being covered. Chat sits above the active tool panel.
+.crowe-dock-column {
+    position: relative;
     display: flex;
     flex-direction: column;
-    border-left: 1px solid var(--glass-hairline-chrome);
+    min-width: 0;
+    max-width: 70%;
     border-right: 1px solid var(--glass-hairline-chrome);
-    box-shadow: var(--shadow-card-strong);
     overflow: hidden;
+    transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+
+    // While dragging, the transition would make the column lag the cursor.
+    &.crowe-dock-dragging {
+        transition: none;
+    }
 
     .crowe-dock-resize {
         position: absolute;
@@ -155,11 +160,19 @@
         cursor: col-resize;
         background: transparent;
         transition: background-color 0.15s ease;
+        z-index: 1;
 
         &:hover {
             background: var(--wash-accent-mid);
         }
     }
+}
+
+.crowe-dock-pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 
     .crowe-dock-head {
         display: flex;
@@ -194,20 +207,6 @@
             }
         }
     }
-
-    .crowe-dock-body {
-        flex: 1 1 auto;
-        overflow-y: auto;
-        min-height: 0;
-    }
-}
-
-// The chat drawer reuses the floating-drawer shell with a thin head (active
-// model + collapse); the AI panel below supplies its own identity/input chrome.
-.crowe-chat-drawer {
-    transition:
-        width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.18s ease;
 
     .crowe-chat-head {
         padding: 6px 8px 6px 12px;
@@ -263,23 +262,31 @@
         }
     }
 
+    .crowe-dock-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        min-height: 0;
+    }
+
     .crowe-chat-body {
-        display: flex;
         flex: 1 1 auto;
         min-height: 0;
-        flex-direction: column;
+        overflow: hidden;
     }
 }
 
-.crowe-chat-drawer-closed {
-    border-left: none;
-    border-right: none;
-    box-shadow: none;
-    pointer-events: none;
-    opacity: 0;
+.crowe-dock-split {
+    flex: 0 0 4px;
+    cursor: row-resize;
+    background: var(--glass-hairline-chrome);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background: var(--wash-accent-mid);
+    }
 }
 
-// Visible grip so the chat drawer's resize edge reads as draggable.
+// Visible grip so the column's resize edge reads as draggable.
 .crowe-dock-resize-grip::after {
     content: "";
     position: absolute;
