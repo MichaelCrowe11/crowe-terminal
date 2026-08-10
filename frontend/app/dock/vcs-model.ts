@@ -54,6 +54,12 @@ export class VcsModel {
         return block?.meta?.["cmd:cwd"] ?? "";
     }
 
+    // Mutating actions must hit the repository the panel is showing, not
+    // wherever focus moved since the last poll.
+    displayedDir(): string {
+        return globalStore.get(this.statusAtom)?.dir ?? this.targetDir();
+    }
+
     private panelOpen(): boolean {
         const dock = DockModel.getInstance();
         return globalStore.get(dock.activeToolAtom) === "repo" && !globalStore.get(dock.collapsedAtom);
@@ -68,13 +74,15 @@ export class VcsModel {
         const seq = ++this.refreshSeq;
         const path = this.targetDir();
         try {
-            const status = await RpcApi.VcsStatusCommand(TabRpcClient, { path });
+            // jj snapshots big trees slower than the transport's 5s default
+            // deadline, and a killed restore is worse than a slow one.
+            const status = await RpcApi.VcsStatusCommand(TabRpcClient, { path }, { timeout: 60000 });
             if (seq !== this.refreshSeq) {
                 return;
             }
             globalStore.set(this.statusAtom, status);
             if ((includeHistory ?? this.panelOpen()) && status?.isrepo) {
-                const hist = await RpcApi.VcsHistoryCommand(TabRpcClient, { path, limit: HistoryLimit });
+                const hist = await RpcApi.VcsHistoryCommand(TabRpcClient, { path, limit: HistoryLimit }, { timeout: 60000 });
                 if (seq !== this.refreshSeq) {
                     return;
                 }
@@ -109,7 +117,11 @@ export class VcsModel {
             return;
         }
         try {
-            const rtn = await RpcApi.VcsOpFilesCommand(TabRpcClient, { path: this.targetDir(), operation: opId });
+            const rtn = await RpcApi.VcsOpFilesCommand(
+                TabRpcClient,
+                { path: this.displayedDir(), operation: opId },
+                { timeout: 60000 }
+            );
             globalStore.set(this.opFilesAtom, { ...globalStore.get(this.opFilesAtom), [opId]: rtn?.files ?? [] });
         } catch (e) {
             globalStore.set(this.errorAtom, String(e));
@@ -125,13 +137,18 @@ export class VcsModel {
         globalStore.set(this.busyAtom, true);
         let failure: string = null;
         try {
-            await RpcApi.VcsRestoreCommand(TabRpcClient, { path: this.targetDir(), operation: opId ?? "" });
+            await RpcApi.VcsRestoreCommand(
+                TabRpcClient,
+                { path: this.displayedDir(), operation: opId ?? "" },
+                { timeout: 60000 }
+            );
             globalStore.set(this.errorAtom, null);
         } catch (e) {
             failure = String(e);
         } finally {
             globalStore.set(this.busyAtom, false);
             globalStore.set(this.opFilesAtom, {});
+            globalStore.set(this.expandedOpAtom, null);
             await this.refresh(true);
             // refresh()'s success path clears errorAtom; write the action's own
             // failure after it so jj's message survives instead of being erased
@@ -149,7 +166,7 @@ export class VcsModel {
         globalStore.set(this.busyAtom, true);
         let failure: string = null;
         try {
-            await RpcApi.VcsInitCommand(TabRpcClient, { path: this.targetDir() });
+            await RpcApi.VcsInitCommand(TabRpcClient, { path: this.displayedDir() }, { timeout: 60000 });
             globalStore.set(this.errorAtom, null);
         } catch (e) {
             failure = String(e);

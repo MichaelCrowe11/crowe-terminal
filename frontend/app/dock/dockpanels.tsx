@@ -495,8 +495,9 @@ export const VcsPanel = () => {
                             className="crowe-link cursor-pointer"
                             disabled={busy}
                             onClick={() => m.restoreTo()}
+                            title="Reverses only the most recent operation. Use a row below to restore further back."
                         >
-                            undo last
+                            undo last op
                         </button>
                     )}
                 </div>
