@@ -17,6 +17,7 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/agent/events"
 	"github.com/wavetermdev/waveterm/pkg/agent/tools/terminal"
 	"github.com/wavetermdev/waveterm/pkg/agent/transport/agenthttp"
+	"github.com/wavetermdev/waveterm/pkg/authkey"
 )
 
 const (
@@ -50,6 +51,9 @@ func InitAgent(ctx context.Context) {
 		log.Printf("[agent] failed to start transport: %v\n", err)
 		Server = nil
 		return
+	}
+	if err := authkey.WriteSharedKeyFile(); err != nil {
+		log.Printf("[agent] could not write shared auth key file: %v\n", err)
 	}
 	terminal.SetEventHub(Hub)
 	log.Printf("[agent] ready on http://%s/ (tools=%d)\n", Server.Addr(), toolCount())
