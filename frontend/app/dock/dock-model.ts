@@ -11,6 +11,7 @@ export const DOCK_MIN_WIDTH = 280;
 export const DOCK_MAX_WIDTH = 760;
 export const DOCK_RAIL_WIDTH = 44;
 export const MIN_PANE_PX = 120;
+export const MIN_BLOCK_PX = 240;
 export const DEFAULT_CHAT_FRACTION = 0.5;
 
 const StorageKey = "crowe.dock.v1";

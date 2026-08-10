@@ -4,6 +4,7 @@
 import { AIPanel } from "@/app/aipanel/aipanel";
 import hypheusMark from "@/app/asset/hypheus-mark.png";
 import { WaveAIModel } from "@/app/aipanel/waveai-model";
+import { globalStore } from "@/app/store/jotaiStore";
 import { WorkspaceLayoutModel } from "@/app/workspace/workspace-layout-model";
 import { applyAppTheme, AppTheme, getAppTheme } from "@/app/theme/app-theme";
 import { cn } from "@/util/util";
@@ -22,7 +23,16 @@ import {
     VitalsIcon,
 } from "./crowe-icons";
 import { DesignReviewModel } from "./designreview-model";
-import { DOCK_DEFAULT_WIDTH, DOCK_RAIL_WIDTH, DEFAULT_CHAT_FRACTION, DockModel, DockToolId } from "./dock-model";
+import {
+    DOCK_DEFAULT_WIDTH,
+    DOCK_MAX_WIDTH,
+    DOCK_MIN_WIDTH,
+    DOCK_RAIL_WIDTH,
+    DEFAULT_CHAT_FRACTION,
+    MIN_BLOCK_PX,
+    DockModel,
+    DockToolId,
+} from "./dock-model";
 import "./dock.scss";
 import { DesignPanel, ModelPanel, MyceliumPanel, TelemetryPanel, ThinkingPanel, VcsPanel } from "./dockpanels";
 import { VcsModel } from "./vcs-model";
@@ -69,6 +79,7 @@ const UtilityDockElem = memo(() => {
     const columnWidth = useAtomValue(model.columnWidthAtom);
     const chatFraction = useAtomValue(model.chatFractionAtom);
     const columnRef = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<HTMLDivElement>(null);
     const [dragging, setDragging] = useState(false);
     const chatOpen = useAtomValue(layout.panelVisibleAtom);
     const waveAI = WaveAIModel.getInstance();
@@ -113,10 +124,23 @@ const UtilityDockElem = memo(() => {
         document.body.style.userSelect = "none";
     }, []);
 
+    // The CSS max-width: 70% on .crowe-dock-column resolves against
+    // .crowe-dock-root, which has no definite width of its own, so it cannot
+    // be relied on to keep block area usable. This measures the actual
+    // available space (the workspace row) the same way chatFraction is
+    // clamped against a measured column height.
+    const maxColumnWidth = useCallback(() => {
+        const parentWidth = rootRef.current?.parentElement?.getBoundingClientRect().width;
+        if (parentWidth == null || parentWidth <= 0) {
+            return DOCK_MAX_WIDTH;
+        }
+        return Math.max(DOCK_MIN_WIDTH, parentWidth - DOCK_RAIL_WIDTH - MIN_BLOCK_PX);
+    }, []);
+
     useEffect(() => {
         const onMove = (e: MouseEvent) => {
             if (dragMode.current === "column") {
-                model.setColumnWidth(e.clientX - DOCK_RAIL_WIDTH);
+                model.setColumnWidth(Math.min(e.clientX - DOCK_RAIL_WIDTH, maxColumnWidth()));
                 return;
             }
             if (dragMode.current !== "split") {
@@ -143,7 +167,19 @@ const UtilityDockElem = memo(() => {
             document.removeEventListener("mousemove", onMove);
             document.removeEventListener("mouseup", onUp);
         };
-    }, [model]);
+    }, [model, maxColumnWidth]);
+
+    // Shrinking the window does not fire mousemove, so an already-wide column
+    // needs its own re-clamp on resize to keep blocks above MIN_BLOCK_PX.
+    useEffect(() => {
+        const onResize = () => {
+            model.setColumnWidth(Math.min(globalStore.get(model.columnWidthAtom), maxColumnWidth()));
+        };
+        window.addEventListener("resize", onResize);
+        return () => {
+            window.removeEventListener("resize", onResize);
+        };
+    }, [model, maxColumnWidth]);
 
     useEffect(() => {
         VcsModel.getInstance().startPolling();
@@ -162,7 +198,7 @@ const UtilityDockElem = memo(() => {
         : { flex: "1 1 auto", minHeight: 0 };
 
     return (
-        <div className="crowe-dock-root">
+        <div className="crowe-dock-root" ref={rootRef}>
             <nav className="crowe-dock-rail glass-chrome" aria-label="Hypheus operator tools">
                 <div className="crowe-dock-brand" title="Hypheus operator tools" aria-hidden="true">
                     <img src={hypheusMark} alt="" />
