@@ -16,6 +16,7 @@ import {
     MoonIcon,
     NetworkIcon,
     NibIcon,
+    RingsIcon,
     SporeIcon,
     SunIcon,
     VitalsIcon,
@@ -23,7 +24,8 @@ import {
 import { DesignReviewModel } from "./designreview-model";
 import { CHAT_DEFAULT_WIDTH, DOCK_DEFAULT_WIDTH, DOCK_RAIL_WIDTH, DockModel, DockToolId } from "./dock-model";
 import "./dock.scss";
-import { DesignPanel, ModelPanel, MyceliumPanel, TelemetryPanel, ThinkingPanel } from "./dockpanels";
+import { DesignPanel, ModelPanel, MyceliumPanel, TelemetryPanel, ThinkingPanel, VcsPanel } from "./dockpanels";
+import { VcsModel } from "./vcs-model";
 
 interface DockTool {
     id: DockToolId;
@@ -38,6 +40,7 @@ const DOCK_TOOLS: DockTool[] = [
     { id: "thinking", label: "Cognition", Icon: HyphaeIcon, Panel: ThinkingPanel },
     { id: "design", label: "Design review", Icon: NibIcon, Panel: DesignPanel },
     { id: "mycelium", label: "Mycelium", Icon: NetworkIcon, Panel: MyceliumPanel },
+    { id: "repo", label: "Repository", Icon: RingsIcon, Panel: VcsPanel },
 ];
 
 const DOCK_COMPACT_BREAKPOINT = 900;
@@ -50,6 +53,15 @@ const DesignBadge = memo(() => {
     return <span className="crowe-dock-badge">{count > 99 ? 99 : count}</span>;
 });
 DesignBadge.displayName = "DesignBadge";
+
+const VcsDirtyPip = memo(() => {
+    const dirty = useAtomValue(VcsModel.getInstance().dirtyAtom);
+    if (!dirty) {
+        return null;
+    }
+    return <span className="crowe-dock-pip" />;
+});
+VcsDirtyPip.displayName = "VcsDirtyPip";
 
 const UtilityDockElem = memo(() => {
     const model = DockModel.getInstance();
@@ -130,6 +142,10 @@ const UtilityDockElem = memo(() => {
             document.removeEventListener("mouseup", onUp);
         };
     }, [chatOpen, chatWidth, model]);
+
+    useEffect(() => {
+        VcsModel.getInstance().startPolling();
+    }, []);
 
     const activeDef = !collapsed && activeTool ? DOCK_TOOLS.find((t) => t.id === activeTool) : null;
     const ActivePanel = activeDef?.Panel;
@@ -239,6 +255,7 @@ const UtilityDockElem = memo(() => {
                             {isActive && <span className="crowe-dock-indicator" />}
                             <tool.Icon className="crowe-dock-glyph" />
                             {tool.id === "design" && <DesignBadge />}
+                            {tool.id === "repo" && <VcsDirtyPip />}
                         </button>
                     );
                 })}

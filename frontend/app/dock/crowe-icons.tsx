@@ -108,3 +108,11 @@ export const MoonIcon = ({ className, size = 20 }: IconProps) => (
         <path d="M19.4 15.3A8.2 8.2 0 0 1 8.7 4.6 8.2 8.2 0 1 0 19.4 15.3Z" />
     </svg>
 );
+
+export const RingsIcon = ({ className, size = 22 }: IconProps) => (
+    <svg className={className} {...svgProps(size)} aria-hidden="true">
+        <path d="M12 21a9 9 0 1 1 9-9" />
+        <path d="M12 17.5a5.5 5.5 0 1 1 5.5-5.5" />
+        <circle cx="12" cy="12" r="1.8" />
+    </svg>
+);

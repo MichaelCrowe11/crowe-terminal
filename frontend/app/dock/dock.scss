@@ -755,3 +755,138 @@
         animation: none;
     }
 }
+
+// Repository panel + rail pip. The pip is the whole ticker: gold means the
+// tree has uncommitted changes.
+.crowe-dock-pip {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--crowe-gold);
+    box-shadow: 0 0 6px var(--crowe-gold-25);
+    pointer-events: none;
+}
+
+.crowe-vcs-dir {
+    font-family: var(--fixed-font, monospace);
+    font-size: 11px;
+    color: var(--secondary-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
+    text-align: left;
+}
+
+.crowe-vcs-error {
+    font-size: 11px;
+    color: var(--crowe-error);
+    border-left: 2px solid var(--crowe-error);
+    padding: 4px 8px;
+    word-break: break-word;
+}
+
+.crowe-vcs-now {
+    border: 1px solid var(--glass-hairline-chrome);
+    border-radius: 4px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &.crowe-vcs-now-dirty {
+        border-color: var(--crowe-gold-25);
+    }
+}
+
+.crowe-vcs-now-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .crowe-vcs-now-label {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--crowe-gold);
+    }
+
+    .crowe-vcs-now-summary {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-size: 12px;
+    }
+}
+
+.crowe-vcs-op {
+    border-bottom: 1px solid var(--glass-hairline-chrome);
+
+    .crowe-vcs-op-head {
+        display: flex;
+        width: 100%;
+        align-items: baseline;
+        gap: 8px;
+        padding: 6px 2px;
+        background: none;
+        border: none;
+        color: inherit;
+        text-align: left;
+        font-size: 12px;
+    }
+
+    .crowe-vcs-op-desc {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .crowe-vcs-op-time {
+        flex-shrink: 0;
+        font-size: 11px;
+        color: var(--secondary-text-color);
+    }
+
+    .crowe-vcs-op-body {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 0 2px 8px;
+    }
+}
+
+.crowe-vcs-file {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--fixed-font, monospace);
+    font-size: 11px;
+
+    .crowe-vcs-file-path {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        direction: rtl;
+        text-align: left;
+    }
+
+    .crowe-vcs-counts {
+        flex-shrink: 0;
+        display: flex;
+        gap: 6px;
+    }
+
+    .crowe-vcs-plus {
+        color: var(--crowe-gold);
+    }
+
+    .crowe-vcs-minus {
+        color: var(--crowe-error);
+    }
+}
