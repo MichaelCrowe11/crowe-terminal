@@ -135,16 +135,20 @@
 }
 
 // The dock column takes real space in the workspace row: blocks shrink to make
-// room instead of being covered. Chat sits above the active tool panel.
+// room instead of being covered. The active tool is its own column between the
+// rail and chat, the way VS Code seats a sidebar view next to the editor,
+// rather than stacking under chat and halving both.
 .crowe-dock-column {
     position: relative;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     min-width: 0;
-    // Defensive only: this resolves against .crowe-dock-root, which has no
-    // definite width, so it is not a reliable guard on its own. The real
-    // clamp is JS, in utilitydock.tsx's maxColumnWidth().
-    max-width: 70%;
+    // No max-width here. The column's width is set inline and now has to cover
+    // the tool column plus chat, but a percentage max-width resolves against
+    // .crowe-dock-root, which sizes to its children. The row would reserve the
+    // full inline width while the box painted narrower, leaving dead space
+    // between the dock and the blocks. The real clamp is JS, in
+    // utilitydock.tsx's maxColumnWidth().
     border-right: 1px solid var(--glass-hairline-chrome);
     overflow: hidden;
     transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -181,10 +185,15 @@
     overflow: hidden;
 }
 
+// A pane is a flex item in the row, but lays its own head/body out vertically.
 .crowe-dock-pane {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    // Flex items default to min-width: auto, which lets long unbroken content
+    // (a jj change id, a deep file path) push the pane past its assigned width
+    // and shove chat off the edge.
+    min-width: 0;
     overflow: hidden;
 
     .crowe-dock-head {
@@ -292,7 +301,7 @@
 
 .crowe-dock-split {
     flex: 0 0 4px;
-    cursor: row-resize;
+    cursor: col-resize;
     background: var(--glass-hairline-chrome);
     transition: background-color 0.15s ease;
 

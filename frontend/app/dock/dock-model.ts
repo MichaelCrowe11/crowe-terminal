@@ -3,6 +3,7 @@
 
 import { globalStore } from "@/app/store/jotaiStore";
 import * as jotai from "jotai";
+import { debounce } from "throttle-debounce";
 
 export type DockToolId = "telemetry" | "model" | "thinking" | "design" | "mycelium" | "repo";
 
@@ -10,16 +11,19 @@ export const DOCK_DEFAULT_WIDTH = 460;
 export const DOCK_MIN_WIDTH = 280;
 export const DOCK_MAX_WIDTH = 760;
 export const DOCK_RAIL_WIDTH = 44;
-export const MIN_PANE_PX = 120;
 export const MIN_BLOCK_PX = 240;
-export const DEFAULT_CHAT_FRACTION = 0.5;
+export const DOCK_SPLIT_PX = 4;
+
+export const TOOL_DEFAULT_WIDTH = 280;
+export const TOOL_MIN_WIDTH = 200;
+export const TOOL_MAX_WIDTH = 480;
 
 const StorageKey = "crowe.dock.v1";
 
 type DockPersisted = {
     activeTool: DockToolId | null;
     columnWidth: number;
-    chatFraction: number;
+    toolWidth: number;
     collapsed: boolean;
 };
 
@@ -30,32 +34,23 @@ export function clampColumnWidth(px: number): number {
     return Math.min(DOCK_MAX_WIDTH, Math.max(DOCK_MIN_WIDTH, Math.round(px)));
 }
 
-// With a measured column height the clamp keeps both panes above MIN_PANE_PX;
-// without one it falls back to generic bounds, which is what a cold load has.
-export function clampChatFraction(f: number, columnHeight?: number): number {
-    if (!Number.isFinite(f)) {
-        return DEFAULT_CHAT_FRACTION;
+export function clampToolWidth(px: number): number {
+    if (!Number.isFinite(px)) {
+        return TOOL_DEFAULT_WIDTH;
     }
-    if (columnHeight == null || !Number.isFinite(columnHeight) || columnHeight <= 0) {
-        return Math.min(0.9, Math.max(0.1, f));
-    }
-    const minF = MIN_PANE_PX / columnHeight;
-    const maxF = 1 - minF;
-    if (minF >= maxF) {
-        return DEFAULT_CHAT_FRACTION;
-    }
-    return Math.min(maxF, Math.max(minF, f));
+    return Math.min(TOOL_MAX_WIDTH, Math.max(TOOL_MIN_WIDTH, Math.round(px)));
 }
 
-// v1 stored `width` and `chatWidth` as two independent columns. One column
-// inherits the chat width, which was the wider and more deliberately set of
-// the two.
+// Two earlier shapes exist: v0 stored `width` + `chatWidth` as independent
+// columns, and the stacked layout stored a vertical `chatFraction`. A fraction
+// carries no usable width for a side-by-side tool column, so it is dropped and
+// the tool starts at its default rather than at some sliver of the old height.
 export function migratePersisted(raw: any): DockPersisted {
     const width = raw?.columnWidth ?? raw?.chatWidth ?? raw?.width;
     return {
         activeTool: raw?.activeTool ?? null,
         columnWidth: clampColumnWidth(typeof width === "number" ? width : NaN),
-        chatFraction: clampChatFraction(typeof raw?.chatFraction === "number" ? raw.chatFraction : NaN),
+        toolWidth: clampToolWidth(typeof raw?.toolWidth === "number" ? raw.toolWidth : NaN),
         collapsed: raw?.collapsed ?? true,
     };
 }
@@ -74,14 +69,14 @@ export class DockModel {
     activeToolAtom: jotai.PrimitiveAtom<DockToolId | null>;
     collapsedAtom: jotai.PrimitiveAtom<boolean>;
     columnWidthAtom: jotai.PrimitiveAtom<number>;
-    chatFractionAtom: jotai.PrimitiveAtom<number>;
+    toolWidthAtom: jotai.PrimitiveAtom<number>;
 
     private constructor() {
         const p = loadPersisted();
         this.activeToolAtom = jotai.atom(p.activeTool) as jotai.PrimitiveAtom<DockToolId | null>;
         this.collapsedAtom = jotai.atom(p.collapsed);
         this.columnWidthAtom = jotai.atom(p.columnWidth);
-        this.chatFractionAtom = jotai.atom(p.chatFraction);
+        this.toolWidthAtom = jotai.atom(p.toolWidth);
     }
 
     static getInstance(): DockModel {
@@ -95,7 +90,7 @@ export class DockModel {
         const data: DockPersisted = {
             activeTool: globalStore.get(this.activeToolAtom),
             columnWidth: globalStore.get(this.columnWidthAtom),
-            chatFraction: globalStore.get(this.chatFractionAtom),
+            toolWidth: globalStore.get(this.toolWidthAtom),
             collapsed: globalStore.get(this.collapsedAtom),
         };
         try {
@@ -104,6 +99,12 @@ export class DockModel {
             // dock UI state is non-critical; ignore quota/serialization failures
         }
     }
+
+    // A drag fires mousemove at pointer rate, and localStorage.setItem is
+    // synchronous and hits the main thread. Width changes therefore persist on
+    // a trailing debounce while the atom updates immediately, so the drag stays
+    // smooth and the last position is still what gets stored.
+    persistStateDebounced = debounce(150, () => this.persistState());
 
     toggle(id: DockToolId) {
         const active = globalStore.get(this.activeToolAtom);
@@ -124,11 +125,11 @@ export class DockModel {
 
     setColumnWidth(px: number) {
         globalStore.set(this.columnWidthAtom, clampColumnWidth(px));
-        this.persistState();
+        this.persistStateDebounced();
     }
 
-    setChatFraction(f: number, columnHeight?: number) {
-        globalStore.set(this.chatFractionAtom, clampChatFraction(f, columnHeight));
-        this.persistState();
+    setToolWidth(px: number) {
+        globalStore.set(this.toolWidthAtom, clampToolWidth(px));
+        this.persistStateDebounced();
     }
 }

@@ -4,14 +4,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
-    clampChatFraction,
     clampColumnWidth,
-    DEFAULT_CHAT_FRACTION,
+    clampToolWidth,
     DOCK_DEFAULT_WIDTH,
     DOCK_MAX_WIDTH,
     DOCK_MIN_WIDTH,
     migratePersisted,
-    MIN_PANE_PX,
+    TOOL_DEFAULT_WIDTH,
+    TOOL_MAX_WIDTH,
+    TOOL_MIN_WIDTH,
 } from "./dock-model";
 
 describe("clampColumnWidth", () => {
@@ -27,25 +28,16 @@ describe("clampColumnWidth", () => {
     });
 });
 
-describe("clampChatFraction", () => {
-    it("keeps both panes above the minimum on a tall column", () => {
-        const height = 1000;
-        const minF = MIN_PANE_PX / height;
-        expect(clampChatFraction(0.01, height)).toBeCloseTo(minF, 5);
-        expect(clampChatFraction(0.99, height)).toBeCloseTo(1 - minF, 5);
-        expect(clampChatFraction(0.5, height)).toBe(0.5);
+describe("clampToolWidth", () => {
+    it("holds the configured bounds", () => {
+        expect(clampToolWidth(10)).toBe(TOOL_MIN_WIDTH);
+        expect(clampToolWidth(5000)).toBe(TOOL_MAX_WIDTH);
+        expect(clampToolWidth(300)).toBe(300);
     });
 
-    // A column shorter than two minimum panes cannot honor both, so it splits
-    // evenly rather than pinning one pane to a broken bound.
-    it("splits evenly when the column is too short for two minimum panes", () => {
-        expect(clampChatFraction(0.9, MIN_PANE_PX)).toBe(DEFAULT_CHAT_FRACTION);
-    });
-
-    it("uses generic bounds when no height is known", () => {
-        expect(clampChatFraction(0)).toBe(0.1);
-        expect(clampChatFraction(1)).toBe(0.9);
-        expect(clampChatFraction(NaN)).toBe(DEFAULT_CHAT_FRACTION);
+    it("falls back to the default for junk", () => {
+        expect(clampToolWidth(NaN)).toBe(TOOL_DEFAULT_WIDTH);
+        expect(clampToolWidth(Infinity)).toBe(TOOL_DEFAULT_WIDTH);
     });
 });
 
@@ -55,7 +47,7 @@ describe("migratePersisted", () => {
     it("migrates the old two-width shape, preferring the chat width", () => {
         const out = migratePersisted({ activeTool: "repo", width: 360, chatWidth: 520, collapsed: false });
         expect(out.columnWidth).toBe(520);
-        expect(out.chatFraction).toBe(DEFAULT_CHAT_FRACTION);
+        expect(out.toolWidth).toBe(TOOL_DEFAULT_WIDTH);
         expect(out.activeTool).toBe("repo");
         expect(out.collapsed).toBe(false);
     });
@@ -64,16 +56,22 @@ describe("migratePersisted", () => {
         expect(migratePersisted({ width: 400 }).columnWidth).toBe(400);
     });
 
+    // A stacked-layout fraction describes a height split and cannot be
+    // reinterpreted as a column width, so the tool starts at its default.
+    it("drops the stacked chatFraction rather than reusing it as a width", () => {
+        expect(migratePersisted({ columnWidth: 600, chatFraction: 0.3 }).toolWidth).toBe(TOOL_DEFAULT_WIDTH);
+    });
+
     it("reads the new shape unchanged", () => {
-        const out = migratePersisted({ columnWidth: 600, chatFraction: 0.3, activeTool: null, collapsed: true });
+        const out = migratePersisted({ columnWidth: 600, toolWidth: 320, activeTool: null, collapsed: true });
         expect(out.columnWidth).toBe(600);
-        expect(out.chatFraction).toBe(0.3);
+        expect(out.toolWidth).toBe(320);
         expect(out.collapsed).toBe(true);
     });
 
     it("survives null, junk, and missing fields", () => {
         expect(migratePersisted(null).columnWidth).toBe(DOCK_DEFAULT_WIDTH);
-        expect(migratePersisted({}).chatFraction).toBe(DEFAULT_CHAT_FRACTION);
+        expect(migratePersisted({}).toolWidth).toBe(TOOL_DEFAULT_WIDTH);
         expect(migratePersisted({ columnWidth: "wide" }).columnWidth).toBe(DOCK_DEFAULT_WIDTH);
         expect(migratePersisted(undefined).collapsed).toBe(true);
     });
