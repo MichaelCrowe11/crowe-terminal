@@ -9,6 +9,8 @@ import { AuthKey } from "./authkey";
 
 const BRIDGE_PORT = 8011;
 const BRIDGE_HOST = "127.0.0.1";
+const MinPythonMajor = 3;
+const MinPythonMinor = 10;
 
 let bridgeProc: child_process.ChildProcess | null = null;
 let bridgeReady = false;
@@ -30,12 +32,49 @@ function findFoundryRoot(): string | null {
     return null;
 }
 
-function findPython(foundryRoot: string): string {
-    const venvPython = path.join(foundryRoot, ".venv", "bin", "python");
-    if (fs.existsSync(venvPython)) {
-        return venvPython;
+function pythonMinorVersion(bin: string): [number, number] | null {
+    try {
+        const res = child_process.spawnSync(bin, ["-c", "import sys; print('%d %d' % sys.version_info[:2])"], {
+            encoding: "utf8",
+            timeout: 5000,
+        });
+        if (res.status !== 0 || !res.stdout) {
+            return null;
+        }
+        const [major, minor] = res.stdout.trim().split(/\s+/).map(Number);
+        if (!Number.isFinite(major) || !Number.isFinite(minor)) {
+            return null;
+        }
+        return [major, minor];
+    } catch {
+        return null;
     }
-    return "python3";
+}
+
+function findPython(foundryRoot: string): string | null {
+    // The Foundry uses PEP 604 unions, so anything below 3.10 imports far
+    // enough to answer /healthz and then fails on every completion. Bare
+    // "python3" is listed last on purpose: a GUI-launched app inherits a
+    // minimal PATH where it resolves to Apple's 3.9, not the user's.
+    const candidates = [
+        process.env.CROWE_FOUNDRY_PYTHON,
+        path.join(foundryRoot, ".venv", "bin", "python"),
+        "/opt/homebrew/bin/python3",
+        "/usr/local/bin/python3",
+        "python3",
+    ].filter((c) => c != null && c !== "");
+
+    for (const candidate of candidates) {
+        const version = pythonMinorVersion(candidate);
+        if (version == null) {
+            continue;
+        }
+        const [major, minor] = version;
+        if (major > MinPythonMajor || (major === MinPythonMajor && minor >= MinPythonMinor)) {
+            return candidate;
+        }
+    }
+    return null;
 }
 
 async function probeBridge(timeoutMs = 8000): Promise<boolean> {
@@ -72,6 +111,12 @@ export async function startFoundryBridge(): Promise<boolean> {
     }
 
     const python = findPython(foundryRoot);
+    if (!python) {
+        console.warn(
+            `[foundry-bridge] no Python ${MinPythonMajor}.${MinPythonMinor}+ interpreter found; set CROWE_FOUNDRY_PYTHON. Skipping auto-spawn`
+        );
+        return false;
+    }
     console.log(`[foundry-bridge] spawning ${python} -m cli.openai_bridge in ${foundryRoot}`);
 
     bridgeProc = child_process.spawn(python, ["-m", "cli.openai_bridge"], {
