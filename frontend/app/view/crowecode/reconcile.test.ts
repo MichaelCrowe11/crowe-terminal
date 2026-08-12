@@ -25,7 +25,8 @@ describe("changedLineRange", () => {
         expect(changedLineRange("a\nb\nc", "a\nB\nc")).toEqual([2]);
     });
     it("captures appended lines", () => {
-        expect(changedLineRange("a\nb\n", "a\nb\nc\nd\n")).toEqual([3]);
+        // "c" and "d" land on lines 3 and 4; the trailing "" is common suffix.
+        expect(changedLineRange("a\nb\n", "a\nb\nc\nd\n")).toEqual([3, 4]);
     });
     it("captures an inserted block in the middle", () => {
         // common prefix "a"; common suffix "d"; new middle = lines 2..3

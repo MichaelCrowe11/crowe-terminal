@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -27,6 +28,15 @@ const (
 	DefaultLogN    = 20
 	MaxLogN        = 200
 )
+
+var jjBinaryName = jjBinary()
+
+func jjBinary() string {
+	if runtime.GOOS == "windows" {
+		return "jj.exe"
+	}
+	return "jj"
+}
 
 // Refused outright: a repo here is either a mistake or an attempt to snapshot
 // somewhere the agent has no business writing .jj into.
@@ -40,13 +50,46 @@ var refusedPrefixes = []string{
 	"/usr",
 }
 
+// fallbackBinDirs are searched when PATH does not resolve jj. A GUI-launched
+// app inherits a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin), so a packaged
+// build reports "jj is not installed" on machines that plainly have it. These
+// cover the ways jj is actually distributed: homebrew (both prefixes), cargo,
+// nix, and a plain ~/.local/bin drop. Same class of bug the foundry bridge
+// already works around for python3.
+var fallbackBinDirs = []string{
+	"/opt/homebrew/bin",
+	"/usr/local/bin",
+	"/home/linuxbrew/.linuxbrew/bin",
+	"/nix/var/nix/profiles/default/bin",
+	"$HOME/.cargo/bin",
+	"$HOME/.local/bin",
+	"$HOME/.nix-profile/bin",
+}
+
+func isExecutableFile(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir() && info.Mode().Perm()&0o111 != 0
+}
+
 // LookPath is a seam so tests can point at a stub without a real jj install.
 var LookPath = func() string {
-	p, err := exec.LookPath("jj")
-	if err != nil {
-		return ""
+	if p, err := exec.LookPath("jj"); err == nil {
+		return p
 	}
-	return p
+	home, _ := os.UserHomeDir()
+	for _, dir := range fallbackBinDirs {
+		if strings.HasPrefix(dir, "$HOME") {
+			if home == "" {
+				continue
+			}
+			dir = filepath.Join(home, strings.TrimPrefix(dir, "$HOME"))
+		}
+		candidate := filepath.Join(dir, jjBinaryName)
+		if isExecutableFile(candidate) {
+			return candidate
+		}
+	}
+	return ""
 }
 
 // Run executes jj as an argv list. Nothing reaches a shell, so a
