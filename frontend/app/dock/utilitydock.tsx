@@ -169,6 +169,7 @@ const UtilityDockElem = memo(() => {
             setDragging(false);
             document.body.style.cursor = "";
             document.body.style.userSelect = "";
+            model.commitPersist();
         };
         document.addEventListener("mousemove", onMove);
         document.addEventListener("mouseup", onUp);

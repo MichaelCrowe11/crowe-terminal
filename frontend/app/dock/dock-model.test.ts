@@ -1,7 +1,7 @@
 // Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
     clampColumnWidth,
@@ -9,6 +9,8 @@ import {
     DOCK_DEFAULT_WIDTH,
     DOCK_MAX_WIDTH,
     DOCK_MIN_WIDTH,
+    DOCK_PERSIST_DEBOUNCE_MS,
+    DockModel,
     migratePersisted,
     TOOL_DEFAULT_WIDTH,
     TOOL_MAX_WIDTH,
@@ -74,5 +76,69 @@ describe("migratePersisted", () => {
         expect(migratePersisted({}).toolWidth).toBe(TOOL_DEFAULT_WIDTH);
         expect(migratePersisted({ columnWidth: "wide" }).columnWidth).toBe(DOCK_DEFAULT_WIDTH);
         expect(migratePersisted(undefined).collapsed).toBe(true);
+    });
+});
+
+describe("DockModel persistence", () => {
+    let writes: string[];
+
+    beforeEach(() => {
+        writes = [];
+        vi.stubGlobal("localStorage", {
+            getItem: () => null,
+            setItem: (_key: string, value: string) => {
+                writes.push(value);
+            },
+        });
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.unstubAllGlobals();
+    });
+
+    // The release has to flush the pending timer, or a reload inside the
+    // debounce window drops the size the user just chose. commitPersist cancels
+    // with upcomingOnly for a reason: a bare cancel() latches
+    // throttle-debounce's `cancelled` flag and no later write would ever land,
+    // which is what the trailing assertions here guard.
+    it("coalesces drag writes and commits the final value on release", () => {
+        const model = DockModel.getInstance();
+        model.setColumnWidth(400);
+        model.setColumnWidth(420);
+        model.setColumnWidth(440);
+        expect(writes).toHaveLength(0);
+
+        model.commitPersist();
+        expect(writes).toHaveLength(1);
+        expect(JSON.parse(writes[0]).columnWidth).toBe(440);
+
+        vi.advanceTimersByTime(DOCK_PERSIST_DEBOUNCE_MS * 4);
+        expect(writes).toHaveLength(1);
+
+        model.setToolWidth(320);
+        vi.advanceTimersByTime(DOCK_PERSIST_DEBOUNCE_MS);
+        expect(writes).toHaveLength(2);
+        expect(JSON.parse(writes[1]).toolWidth).toBe(320);
+    });
+
+    it("still lands the write when no commit follows", () => {
+        const model = DockModel.getInstance();
+        model.setColumnWidth(500);
+        expect(writes).toHaveLength(0);
+
+        vi.advanceTimersByTime(DOCK_PERSIST_DEBOUNCE_MS);
+        expect(writes).toHaveLength(1);
+        expect(JSON.parse(writes[0]).columnWidth).toBe(500);
+    });
+
+    // Only the drag setters are hot. A toggle is a discrete click and must
+    // survive an immediate reload.
+    it("persists a tool toggle without waiting", () => {
+        const model = DockModel.getInstance();
+        model.toggle("repo");
+        expect(writes).toHaveLength(1);
+        expect(JSON.parse(writes[0]).activeTool).toBe("repo");
     });
 });

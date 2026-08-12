@@ -14,6 +14,8 @@ export const DOCK_RAIL_WIDTH = 44;
 export const MIN_BLOCK_PX = 240;
 export const DOCK_SPLIT_PX = 4;
 
+export const DOCK_PERSIST_DEBOUNCE_MS = 150;
+
 export const TOOL_DEFAULT_WIDTH = 280;
 export const TOOL_MIN_WIDTH = 200;
 export const TOOL_MAX_WIDTH = 480;
@@ -27,6 +29,11 @@ type DockPersisted = {
     collapsed: boolean;
 };
 
+// DOCK_MIN_WIDTH wins over MIN_BLOCK_PX when the two cannot both be satisfied:
+// a chat column under 280px is unusable, so squeezing it further to protect the
+// block area trades one broken pane for two. That conflict needs a workspace row
+// under DOCK_RAIL_WIDTH + DOCK_MIN_WIDTH + MIN_BLOCK_PX (564px), which the
+// 800px MinWindowWidth in emain/emain-window.ts already keeps out of reach.
 export function clampColumnWidth(px: number): number {
     if (!Number.isFinite(px)) {
         return DOCK_DEFAULT_WIDTH;
@@ -104,7 +111,7 @@ export class DockModel {
     // synchronous and hits the main thread. Width changes therefore persist on
     // a trailing debounce while the atom updates immediately, so the drag stays
     // smooth and the last position is still what gets stored.
-    persistStateDebounced = debounce(150, () => this.persistState());
+    persistStateDebounced = debounce(DOCK_PERSIST_DEBOUNCE_MS, () => this.persistState());
 
     toggle(id: DockToolId) {
         const active = globalStore.get(this.activeToolAtom);
@@ -131,5 +138,14 @@ export class DockModel {
     setToolWidth(px: number) {
         globalStore.set(this.toolWidthAtom, clampToolWidth(px));
         this.persistStateDebounced();
+    }
+
+    // A drag that ends must not leave its last size sitting in a pending timer,
+    // where a reload inside the debounce window would lose it. upcomingOnly is
+    // required: a bare cancel() sets throttle-debounce's `cancelled` flag, which
+    // is permanent, so the first drag release would kill every later write.
+    commitPersist() {
+        this.persistStateDebounced.cancel({ upcomingOnly: true });
+        this.persistState();
     }
 }
