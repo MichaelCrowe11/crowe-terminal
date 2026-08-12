@@ -20,6 +20,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/wavetermdev/waveterm/pkg/util/pathutil"
 )
 
 const (
@@ -50,46 +52,11 @@ var refusedPrefixes = []string{
 	"/usr",
 }
 
-// fallbackBinDirs are searched when PATH does not resolve jj. A GUI-launched
-// app inherits a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin), so a packaged
-// build reports "jj is not installed" on machines that plainly have it. These
-// cover the ways jj is actually distributed: homebrew (both prefixes), cargo,
-// nix, and a plain ~/.local/bin drop. Same class of bug the foundry bridge
-// already works around for python3.
-var fallbackBinDirs = []string{
-	"/opt/homebrew/bin",
-	"/usr/local/bin",
-	"/home/linuxbrew/.linuxbrew/bin",
-	"/nix/var/nix/profiles/default/bin",
-	"$HOME/.cargo/bin",
-	"$HOME/.local/bin",
-	"$HOME/.nix-profile/bin",
-}
-
-func isExecutableFile(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && !info.IsDir() && info.Mode().Perm()&0o111 != 0
-}
-
 // LookPath is a seam so tests can point at a stub without a real jj install.
+// It goes through pathutil rather than exec.LookPath because a packaged app
+// inherits a minimal PATH that contains no package manager's bin directory.
 var LookPath = func() string {
-	if p, err := exec.LookPath("jj"); err == nil {
-		return p
-	}
-	home, _ := os.UserHomeDir()
-	for _, dir := range fallbackBinDirs {
-		if strings.HasPrefix(dir, "$HOME") {
-			if home == "" {
-				continue
-			}
-			dir = filepath.Join(home, strings.TrimPrefix(dir, "$HOME"))
-		}
-		candidate := filepath.Join(dir, jjBinaryName)
-		if isExecutableFile(candidate) {
-			return candidate
-		}
-	}
-	return ""
+	return pathutil.LookPath(jjBinaryName)
 }
 
 // Run executes jj as an argv list. Nothing reaches a shell, so a

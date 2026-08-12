@@ -181,8 +181,8 @@ func TestDiffStatAndOpFilesAgainstRealRepo(t *testing.T) {
 }
 
 // TestLookPathSurvivesMinimalPATH is the regression guard for the packaged
-// app. Every other test in this file stubs LookPath, so a resolution that
-// only worked under a developer shell shipped twice without being noticed.
+// app. Every other test in this file stubs LookPath, so a resolution that only
+// worked under a developer shell shipped twice without being noticed.
 func TestLookPathSurvivesMinimalPATH(t *testing.T) {
 	if _, err := exec.LookPath("jj"); err != nil {
 		t.Skip("jj not on the developer PATH either; nothing to compare against")
@@ -191,21 +191,10 @@ func TestLookPathSurvivesMinimalPATH(t *testing.T) {
 	if _, err := exec.LookPath("jj"); err == nil {
 		t.Skip("jj lives on the minimal PATH here, so this machine cannot reproduce the bug")
 	}
-	got := LookPath()
-	if got == "" {
+	if got := LookPath(); got == "" {
 		t.Fatal("LookPath returned empty under a GUI-style minimal PATH; the packaged app will report jj missing")
 	}
-	if !isExecutableFile(got) {
-		t.Fatalf("LookPath returned %q, which is not an executable file", got)
-	}
-}
-
-func TestLookPathReportsMissingWhenAbsent(t *testing.T) {
-	t.Setenv("PATH", t.TempDir())
-	restore := fallbackBinDirs
-	fallbackBinDirs = []string{t.TempDir()}
-	t.Cleanup(func() { fallbackBinDirs = restore })
-	if got := LookPath(); got != "" {
-		t.Fatalf("LookPath = %q, want empty when jj is genuinely absent", got)
+	if !Available() {
+		t.Fatal("Available() is false under a minimal PATH, so agent edits would record no restore point")
 	}
 }
