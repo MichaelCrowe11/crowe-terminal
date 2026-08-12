@@ -5,20 +5,20 @@ import { docOgRenderer } from "./src/renderer/image-renderers";
 const baseUrl = process.env.EMBEDDED ? "/docsite/" : "/";
 
 const config: Config = {
-    title: "Wave Terminal Documentation",
-    tagline: "Level Up Your Terminal With Graphical Widgets",
-    favicon: "img/logo/wave-logo_appicon.svg",
+    title: "Hypheus Documentation",
+    tagline: "A terminal with graphical blocks, remote connections, and durable sessions",
+    favicon: "img/logo/hypheus-mark.svg",
 
     // Set the production url of your site here
-    url: "https://docs.waveterm.dev/",
+    url: "https://docs.hypheus.com/",
     // Set the /<baseUrl>/ pathname under which your site is served
     // For GitHub pages deployment, it is often '/<projectName>/'
     baseUrl,
 
     // GitHub pages deployment config.
     // If you aren't using GitHub pages, you don't need these.
-    organizationName: "wavetermdev", // Usually your GitHub org/user name.
-    projectName: "waveterm-docs", // Usually your repo name.
+    organizationName: "MichaelCrowe11", // Usually your GitHub org/user name.
+    projectName: "crowe-terminal", // Usually your repo name.
     deploymentBranch: "main",
 
     onBrokenAnchors: "ignore",
@@ -40,7 +40,9 @@ const config: Config = {
                 path: "docs",
                 routeBasePath: "/",
                 exclude: ["features/**"],
-                editUrl: !process.env.EMBEDDED ? "https://github.com/wavetermdev/waveterm/edit/main/docs/" : undefined,
+                editUrl: !process.env.EMBEDDED
+                    ? "https://github.com/MichaelCrowe11/crowe-terminal/edit/main/docs/"
+                    : undefined,
                 rehypePlugins: [rehypeHighlight],
             } as import("@docusaurus/plugin-content-docs").Options,
         ],
@@ -82,9 +84,10 @@ const config: Config = {
         },
         navbar: {
             logo: {
-                src: "img/logo/wave-light.png",
-                srcDark: "img/logo/wave-dark.png",
-                href: "https://www.waveterm.dev/",
+                alt: "Hypheus",
+                src: "img/logo/hypheus-light.png",
+                srcDark: "img/logo/hypheus-dark.png",
+                href: "https://hypheus.com/",
             },
             hideOnScroll: true,
             items: [
@@ -97,18 +100,7 @@ const config: Config = {
                 !process.env.EMBEDDED
                     ? [
                           {
-                              position: "left",
-                              href: "https://docs.waveterm.dev/storybook",
-                              label: "Storybook",
-                          },
-                          {
-                              href: "https://discord.gg/zUeP2aAjaP",
-                              position: "right",
-                              className: "header-link-custom custom-icon-discord",
-                              "aria-label": "Discord invite",
-                          },
-                          {
-                              href: "https://github.com/wavetermdev/waveterm",
+                              href: "https://github.com/MichaelCrowe11/crowe-terminal",
                               position: "right",
                               className: "header-link-custom custom-icon-github",
                               "aria-label": "GitHub repository",
@@ -121,7 +113,7 @@ const config: Config = {
             {
                 name: "keywords",
                 content:
-                    "terminal, developer, development, command, line, wave, linux, macos, windows, connection, ssh, cli, waveterm, documentation, docs, ai, graphical, widgets, remote, open, source, open-source, go, golang, react, typescript, javascript",
+                    "terminal, developer, development, command, line, hypheus, linux, macos, windows, connection, ssh, cli, documentation, docs, graphical, widgets, blocks, remote, go, golang, react, typescript, javascript",
             },
             {
                 name: "og:type",
@@ -129,19 +121,19 @@ const config: Config = {
             },
             {
                 name: "og:site_name",
-                content: "Wave Terminal Documentation",
+                content: "Hypheus Documentation",
             },
             {
                 name: "application-name",
-                content: "Wave Terminal Documentation",
+                content: "Hypheus Documentation",
             },
             {
                 name: "apple-mobile-web-app-title",
-                content: "Wave Terminal Documentation",
+                content: "Hypheus Documentation",
             },
         ],
         footer: {
-            copyright: `Copyright © ${new Date().getFullYear()} Command Line Inc. Built with Docusaurus.`,
+            copyright: `Copyright © 2026 Crowe Logic, Inc. Portions derived from Wave Terminal, © Command Line Inc., Apache-2.0. Built with Docusaurus.`,
         },
         algolia: {
             appId: "B6A8512SN4",
@@ -177,14 +169,6 @@ const config: Config = {
                 type: "application/xml",
                 title: "Sitemap",
                 href: `${baseUrl}sitemap.xml`,
-            },
-        },
-        !process.env.EMBEDDED && {
-            tagName: "script",
-            attributes: {
-                defer: "true",
-                "data-domain": "docs.waveterm.dev",
-                src: "https://plausible.io/js/script.file-downloads.outbound-links.tagged-events.js",
             },
         },
     ].filter((v) => v),

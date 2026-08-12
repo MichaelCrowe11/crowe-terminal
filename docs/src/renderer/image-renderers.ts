@@ -3,8 +3,8 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import React, { ReactNode } from "react";
 
-const waveLogo = join(__dirname, "../../static/img/logo/wave-dark.png");
-const waveLogoBase64 = `data:image/png;base64,${readFileSync(waveLogo).toString("base64")}`;
+const brandLogo = join(__dirname, "../../static/img/logo/hypheus-dark.png");
+const brandLogoBase64 = `data:image/png;base64,${readFileSync(brandLogo).toString("base64")}`;
 
 const titleElement = ({ children }) =>
     React.createElement(
@@ -15,15 +15,15 @@ const titleElement = ({ children }) =>
                 fontWeight: 800,
                 letterSpacing: 1,
                 margin: "25px 225px 10px 0px",
-                color: "#e3e3e3",
+                color: "#ece6d6",
                 wordBreak: "break-word",
             },
         },
         children
     );
 
-const waveLogoElement = React.createElement("img", {
-    src: waveLogoBase64,
+const brandLogoElement = React.createElement("img", {
+    src: brandLogoBase64,
     style: {
         width: 300,
     },
@@ -47,7 +47,7 @@ const headerElement = (header: string, svg: ReactNode) =>
                     fontSize: 30,
                     fontWeight: 600,
                     letterSpacing: 1,
-                    color: "#58c142",
+                    color: "#e7c984",
                 },
             },
             header
@@ -64,9 +64,9 @@ const rootDivStyle: React.CSSProperties = {
     fontFamily: "Roboto",
     fontSize: 32,
     fontWeight: 400,
-    backgroundColor: "#1b1b1d",
-    color: "#e3e3e3",
-    borderBottom: "2rem solid #58c142",
+    backgroundColor: "#211d15",
+    color: "#ece6d6",
+    borderBottom: "2rem solid #e7c984",
     zIndex: "2 !important",
 };
 
@@ -74,7 +74,7 @@ export const docOgRenderer: ImageRenderer<DocsPageData> = async (data, context) 
     const element = React.createElement(
         "div",
         { style: rootDivStyle },
-        waveLogoElement,
+        brandLogoElement,
         headerElement("Documentation", null),
         React.createElement(titleElement, null, data.metadata.title),
         React.createElement("div", null, data.metadata.description.replace("&mdash;", "-"))
