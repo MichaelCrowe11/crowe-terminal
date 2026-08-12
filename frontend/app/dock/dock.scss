@@ -143,6 +143,7 @@
     display: flex;
     flex-direction: row;
     min-width: 0;
+
     // No max-width here. The column's width is set inline and now has to cover
     // the tool column plus chat, but a percentage max-width resolves against
     // .crowe-dock-root, which sizes to its children. The row would reserve the
@@ -190,6 +191,7 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+
     // Flex items default to min-width: auto, which lets long unbroken content
     // (a jj change id, a deep file path) push the pane past its assigned width
     // and shove chat off the edge.

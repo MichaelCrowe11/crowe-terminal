@@ -27,8 +27,8 @@ const vcsModel = VcsModel.getInstance();
 globalStore.set(vcsModel.statusAtom, {
     installed: true,
     isrepo: true,
-    dir: "/Users/mike/Projects/hypheus",
-    root: "/Users/mike/Projects/hypheus",
+    dir: "/workspace/hypheus",
+    root: "/workspace/hypheus",
     clean: false,
     files: [
         { path: "frontend/app/dock/utilitydock.tsx", changes: 12, plus: 9, minus: 3 },
