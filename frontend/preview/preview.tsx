@@ -12,6 +12,8 @@ import { WaveEnvContext } from "@/app/waveenv/waveenv";
 import { loadFonts } from "@/util/fontutil";
 import { Provider } from "jotai";
 import React, { lazy, Suspense, useRef } from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { createRoot } from "react-dom/client";
 import { makeMockWaveEnv, PreviewClientId, PreviewTabId, PreviewWindowId } from "./mock/mockwaveenv";
 import { installPreviewElectronApi } from "./mock/preview-electron-api";
@@ -107,13 +109,21 @@ function PreviewHeader({ previewName }: { previewName: string }) {
 function PreviewRoot() {
     const waveEnvRef = useRef(makeMockWaveEnv());
     return (
+        // app.tsx wraps the real tree in DndProvider, so any previewed component
+        // calling useDrag/useDrop threw "Expected drag drop context" and rendered
+        // the error boundary instead of itself. AIPanel does, which meant the dock
+        // preview's chat pane showed a stack trace in two of its four cases: the
+        // same failure mode as the missing stylesheets below, where the harness
+        // reports working design as broken.
         <Provider store={globalStore}>
-            <WaveEnvContext.Provider value={waveEnvRef.current}>
-                <TabModelContext.Provider value={getTabModelByTabId(PreviewTabId, waveEnvRef.current)}>
-                    <PreviewApp />
-                    <PreviewContextMenu />
-                </TabModelContext.Provider>
-            </WaveEnvContext.Provider>
+            <DndProvider backend={HTML5Backend}>
+                <WaveEnvContext.Provider value={waveEnvRef.current}>
+                    <TabModelContext.Provider value={getTabModelByTabId(PreviewTabId, waveEnvRef.current)}>
+                        <PreviewApp />
+                        <PreviewContextMenu />
+                    </TabModelContext.Provider>
+                </WaveEnvContext.Provider>
+            </DndProvider>
         </Provider>
     );
 }
