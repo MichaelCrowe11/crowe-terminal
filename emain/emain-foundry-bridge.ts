@@ -32,26 +32,49 @@ function findFoundryRoot(): string | null {
     return null;
 }
 
-function pythonMinorVersion(bin: string): [number, number] | null {
-    try {
-        const res = child_process.spawnSync(bin, ["-c", "import sys; print('%d %d' % sys.version_info[:2])"], {
-            encoding: "utf8",
-            timeout: 5000,
+// Version probes run asynchronously with a hard kill. This runs on the
+// Electron main process during startup, and a synchronous spawn with a
+// timeout only sends SIGTERM: a candidate that ignores it (or Apple's CLT
+// stub waiting on its install dialog) would hold the whole app hostage.
+const ProbeTimeoutMs = 5000;
+
+function pythonMinorVersion(bin: string): Promise<[number, number] | null> {
+    return new Promise((resolve) => {
+        let settled = false;
+        const finish = (v: [number, number] | null) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            resolve(v);
+        };
+        let proc: child_process.ChildProcess;
+        try {
+            proc = child_process.spawn(bin, ["-c", "import sys; print('%d %d' % sys.version_info[:2])"], {
+                stdio: ["ignore", "pipe", "ignore"],
+            });
+        } catch {
+            resolve(null);
+            return;
+        }
+        const timer = setTimeout(() => {
+            proc.kill("SIGKILL");
+            finish(null);
+        }, ProbeTimeoutMs);
+        let out = "";
+        proc.stdout?.on("data", (chunk) => (out += chunk));
+        proc.on("error", () => finish(null));
+        proc.on("close", (code) => {
+            if (code !== 0 || !out) {
+                finish(null);
+                return;
+            }
+            const [major, minor] = out.trim().split(/\s+/).map(Number);
+            finish(Number.isFinite(major) && Number.isFinite(minor) ? [major, minor] : null);
         });
-        if (res.status !== 0 || !res.stdout) {
-            return null;
-        }
-        const [major, minor] = res.stdout.trim().split(/\s+/).map(Number);
-        if (!Number.isFinite(major) || !Number.isFinite(minor)) {
-            return null;
-        }
-        return [major, minor];
-    } catch {
-        return null;
-    }
+    });
 }
 
-function findPython(foundryRoot: string): string | null {
+async function findPython(foundryRoot: string): Promise<string | null> {
     // The Foundry uses PEP 604 unions, so anything below 3.10 imports far
     // enough to answer /healthz and then fails on every completion. Bare
     // "python3" is listed last on purpose: a GUI-launched app inherits a
@@ -65,7 +88,7 @@ function findPython(foundryRoot: string): string | null {
     ].filter((c) => c != null && c !== "");
 
     for (const candidate of candidates) {
-        const version = pythonMinorVersion(candidate);
+        const version = await pythonMinorVersion(candidate);
         if (version == null) {
             continue;
         }
@@ -110,7 +133,7 @@ export async function startFoundryBridge(): Promise<boolean> {
         return false;
     }
 
-    const python = findPython(foundryRoot);
+    const python = await findPython(foundryRoot);
     if (!python) {
         console.warn(
             `[foundry-bridge] no Python ${MinPythonMajor}.${MinPythonMinor}+ interpreter found; set CROWE_FOUNDRY_PYTHON. Skipping auto-spawn`
