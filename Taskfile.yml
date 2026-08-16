@@ -180,13 +180,17 @@ tasks:
 
     package:
         desc: Package the application for the current platform.
+        # clean must finish before the builds start. As deps these ran
+        # concurrently, and build:server/build:wsh could pass their up-to-date
+        # check (sources unchanged, dist/bin still present) an instant before
+        # clean removed dist/, so the app packaged with no wavesrv or wsh at all
+        # and failed to launch (spawn wavesrv.arm64 ENOENT). cmds run in order.
         cmds:
+            - task: clean
+            - task: npm:install
+            - task: build:backend
+            - task: build:tsunamiscaffold
             - npm run build:prod && npm exec electron-builder -- -c electron-builder.config.cjs -p never {{.CLI_ARGS}}
-        deps:
-            - clean
-            - npm:install
-            - build:backend
-            - build:tsunamiscaffold
 
     build:frontend:dev:
         desc: Build the frontend in development mode.
