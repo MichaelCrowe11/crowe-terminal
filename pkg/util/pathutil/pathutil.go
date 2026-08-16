@@ -14,6 +14,7 @@ package pathutil
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -112,6 +113,17 @@ func EnvWithPATH(env []string) []string {
 func LookPath(name string) string {
 	if name == "" {
 		return ""
+	}
+	// Windows has no user bin fallback here and no execute bit at all: Go maps
+	// every regular file to 0666, so the permission test below can never pass,
+	// and "git" only resolves to git.exe through PATHEXT. exec.LookPath already
+	// knows both rules, so on Windows it stays the whole answer.
+	if runtime.GOOS == "windows" {
+		p, err := exec.LookPath(name)
+		if err != nil {
+			return ""
+		}
+		return p
 	}
 	// An explicit path is the caller's decision; do not second-guess it.
 	if strings.ContainsRune(name, os.PathSeparator) {

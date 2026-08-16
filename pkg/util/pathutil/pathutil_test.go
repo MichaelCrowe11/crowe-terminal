@@ -6,9 +6,19 @@ package pathutil
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
+
+// The fallback directories and the execute-bit test are Unix behaviour; on
+// Windows LookPath is exec.LookPath and ExtraDirs is empty by design.
+func skipOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("user bin fallback is not used on Windows")
+	}
+}
 
 func writeExecutable(t *testing.T, dir string, name string) string {
 	t.Helper()
@@ -23,6 +33,7 @@ func writeExecutable(t *testing.T, dir string, name string) string {
 // manager must still resolve when PATH is the four directories a GUI launch
 // hands us.
 func TestLookPathFindsBinaryOutsidePATH(t *testing.T) {
+	skipOnWindows(t)
 	toolDir := t.TempDir()
 	want := writeExecutable(t, toolDir, "somecli")
 	t.Setenv("PATH", "/usr/bin:/bin")
@@ -36,6 +47,7 @@ func TestLookPathFindsBinaryOutsidePATH(t *testing.T) {
 }
 
 func TestLookPathPrefersPATHOverFallback(t *testing.T) {
+	skipOnWindows(t)
 	pathDir, fallbackDir := t.TempDir(), t.TempDir()
 	want := writeExecutable(t, pathDir, "dup")
 	writeExecutable(t, fallbackDir, "dup")
@@ -61,6 +73,7 @@ func TestLookPathReturnsEmptyWhenAbsent(t *testing.T) {
 }
 
 func TestLookPathIgnoresNonExecutableAndDirectories(t *testing.T) {
+	skipOnWindows(t)
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "notexec"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
@@ -82,6 +95,7 @@ func TestLookPathIgnoresNonExecutableAndDirectories(t *testing.T) {
 }
 
 func TestAugmentedPATHAppendsAndDoesNotDuplicate(t *testing.T) {
+	skipOnWindows(t)
 	onPath, extraDir := t.TempDir(), t.TempDir()
 	t.Setenv("PATH", onPath)
 	restore := UserBinDirs
@@ -96,6 +110,7 @@ func TestAugmentedPATHAppendsAndDoesNotDuplicate(t *testing.T) {
 }
 
 func TestEnvWithPATHReplacesExactlyOnePATH(t *testing.T) {
+	skipOnWindows(t)
 	extraDir := t.TempDir()
 	t.Setenv("PATH", "/usr/bin")
 	restore := UserBinDirs
@@ -134,6 +149,7 @@ func TestEnvWithPATHReplacesExactlyOnePATH(t *testing.T) {
 }
 
 func TestLookPathHonoursExplicitPath(t *testing.T) {
+	skipOnWindows(t)
 	dir := t.TempDir()
 	exe := writeExecutable(t, dir, "direct")
 	if got := LookPath(exe); got != exe {
