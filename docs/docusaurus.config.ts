@@ -116,11 +116,11 @@ const config: Config = {
                     "terminal, developer, development, command, line, hypheus, linux, macos, windows, connection, ssh, cli, documentation, docs, graphical, widgets, blocks, remote, go, golang, react, typescript, javascript",
             },
             {
-                name: "og:type",
+                property: "og:type",
                 content: "website",
             },
             {
-                name: "og:site_name",
+                property: "og:site_name",
                 content: "Hypheus Documentation",
             },
             {

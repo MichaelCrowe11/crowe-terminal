@@ -44,13 +44,13 @@ and notarized by Apple, so the disk image opens without a Gatekeeper bypass.
 
 Current release, macOS Apple Silicon:
 
-```
+```text
 https://releases.hypheus.com/hypheus/Hypheus-darwin-arm64-0.15.3.dmg
 ```
 
 Current release, macOS Intel:
 
-```
+```text
 https://releases.hypheus.com/hypheus/Hypheus-darwin-x64-0.15.3.dmg
 ```
 

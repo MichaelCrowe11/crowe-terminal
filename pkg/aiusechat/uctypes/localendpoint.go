@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 )
 
 // FoundryBridgePort is the port the Crowe Logic Foundry bridge listens on. Every
@@ -24,7 +25,8 @@ func IsLocalEndpoint(endpoint string) bool {
 		return false
 	}
 	host := u.Hostname()
-	if host == "localhost" {
+	// Hostnames are case-insensitive and url.Parse preserves what it was given.
+	if strings.EqualFold(host, "localhost") {
 		return true
 	}
 	ip := net.ParseIP(host)

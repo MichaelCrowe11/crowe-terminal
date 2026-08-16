@@ -81,12 +81,15 @@ describe("migratePersisted", () => {
 
 describe("DockModel persistence", () => {
     let writes: string[];
+    let keys: string[];
 
     beforeEach(() => {
         writes = [];
+        keys = [];
         vi.stubGlobal("localStorage", {
             getItem: () => null,
-            setItem: (_key: string, value: string) => {
+            setItem: (key: string, value: string) => {
+                keys.push(key);
                 writes.push(value);
             },
         });
@@ -94,8 +97,18 @@ describe("DockModel persistence", () => {
     });
 
     afterEach(() => {
+        // Nothing may carry over into the next test's fake clock.
+        vi.clearAllTimers();
         vi.useRealTimers();
         vi.unstubAllGlobals();
+    });
+
+    // The key is the persisted-state contract: migratePersisted reads back
+    // whatever this wrote, so a renamed key silently resets every user's dock.
+    it("writes under the versioned storage key", () => {
+        const model = DockModel.getInstance();
+        model.toggle("repo");
+        expect(keys).toEqual(["crowe.dock.v1"]);
     });
 
     // The release has to flush the pending timer, or a reload inside the
