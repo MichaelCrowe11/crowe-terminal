@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -176,5 +177,24 @@ func TestDiffStatAndOpFilesAgainstRealRepo(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("newest op should include a.txt: %+v", opFiles)
+	}
+}
+
+// TestLookPathSurvivesMinimalPATH is the regression guard for the packaged
+// app. Every other test in this file stubs LookPath, so a resolution that only
+// worked under a developer shell shipped twice without being noticed.
+func TestLookPathSurvivesMinimalPATH(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj not on the developer PATH either; nothing to compare against")
+	}
+	t.Setenv("PATH", "/usr/bin:/bin:/usr/sbin:/sbin")
+	if _, err := exec.LookPath("jj"); err == nil {
+		t.Skip("jj lives on the minimal PATH here, so this machine cannot reproduce the bug")
+	}
+	if got := LookPath(); got == "" {
+		t.Fatal("LookPath returned empty under a GUI-style minimal PATH; the packaged app will report jj missing")
+	}
+	if !Available() {
+		t.Fatal("Available() is false under a minimal PATH, so agent edits would record no restore point")
 	}
 }

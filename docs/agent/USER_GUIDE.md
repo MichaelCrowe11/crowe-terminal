@@ -103,8 +103,17 @@ These tools appear only if `jj` is installed (`brew install jj`).
 | `vcs.history(path, limit?)` | The restore-point timeline, newest first. | no |
 | `vcs.undo(path, operation?)` | Rewind the tree to a restore point. | yes |
 
-Ask for it in plain language: "checkpoint this before you refactor" or "undo
-what you just did to that folder."
+You do not have to ask for the restore point. In a tracked workspace,
+`editor.write_file` and `editor.apply_edit` record one immediately before they
+touch the file and return it as `restore_point`, so every agent edit is
+reversible whether or not anyone thought about it beforehand. The point is
+taken per write, so reverting a bad third edit keeps the two good ones. Outside
+a tracked workspace, or with `jj` absent, the edit still goes through and no
+restore point is claimed.
+
+`vcs.checkpoint` remains useful for marking a spot by hand before a batch of
+work, and plain language still works for the rest: "undo what you just did to
+that folder."
 
 ### `browser.in_window.*` — drive the same-window web block
 

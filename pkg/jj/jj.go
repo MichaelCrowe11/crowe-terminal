@@ -16,9 +16,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/wavetermdev/waveterm/pkg/util/pathutil"
 )
 
 const (
@@ -27,6 +30,15 @@ const (
 	DefaultLogN    = 20
 	MaxLogN        = 200
 )
+
+var jjBinaryName = jjBinary()
+
+func jjBinary() string {
+	if runtime.GOOS == "windows" {
+		return "jj.exe"
+	}
+	return "jj"
+}
 
 // Refused outright: a repo here is either a mistake or an attempt to snapshot
 // somewhere the agent has no business writing .jj into.
@@ -41,12 +53,10 @@ var refusedPrefixes = []string{
 }
 
 // LookPath is a seam so tests can point at a stub without a real jj install.
+// It goes through pathutil rather than exec.LookPath because a packaged app
+// inherits a minimal PATH that contains no package manager's bin directory.
 var LookPath = func() string {
-	p, err := exec.LookPath("jj")
-	if err != nil {
-		return ""
-	}
-	return p
+	return pathutil.LookPath(jjBinaryName)
 }
 
 // Run executes jj as an argv list. Nothing reaches a shell, so a

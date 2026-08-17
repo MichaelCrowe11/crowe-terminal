@@ -4,11 +4,13 @@
 import { AIPanel } from "@/app/aipanel/aipanel";
 import hypheusMark from "@/app/asset/hypheus-mark.png";
 import { WaveAIModel } from "@/app/aipanel/waveai-model";
+import { globalStore } from "@/app/store/jotaiStore";
 import { WorkspaceLayoutModel } from "@/app/workspace/workspace-layout-model";
 import { applyAppTheme, AppTheme, getAppTheme } from "@/app/theme/app-theme";
 import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { debounce } from "throttle-debounce";
 import {
     AssistantIcon,
     CloseIcon,
@@ -22,7 +24,17 @@ import {
     VitalsIcon,
 } from "./crowe-icons";
 import { DesignReviewModel } from "./designreview-model";
-import { CHAT_DEFAULT_WIDTH, DOCK_DEFAULT_WIDTH, DOCK_RAIL_WIDTH, DockModel, DockToolId } from "./dock-model";
+import {
+    DOCK_DEFAULT_WIDTH,
+    DOCK_MAX_WIDTH,
+    DOCK_MIN_WIDTH,
+    DOCK_RAIL_WIDTH,
+    DOCK_SPLIT_PX,
+    MIN_BLOCK_PX,
+    TOOL_DEFAULT_WIDTH,
+    DockModel,
+    DockToolId,
+} from "./dock-model";
 import "./dock.scss";
 import { DesignPanel, ModelPanel, MyceliumPanel, TelemetryPanel, ThinkingPanel, VcsPanel } from "./dockpanels";
 import { VcsModel } from "./vcs-model";
@@ -42,8 +54,6 @@ const DOCK_TOOLS: DockTool[] = [
     { id: "mycelium", label: "Mycelium", Icon: NetworkIcon, Panel: MyceliumPanel },
     { id: "repo", label: "Repository", Icon: RingsIcon, Panel: VcsPanel },
 ];
-
-const DOCK_COMPACT_BREAKPOINT = 900;
 
 const DesignBadge = memo(() => {
     const count = useAtomValue(DesignReviewModel.getInstance().openCountAtom);
@@ -68,32 +78,36 @@ const UtilityDockElem = memo(() => {
     const layout = WorkspaceLayoutModel.getInstance();
     const activeTool = useAtomValue(model.activeToolAtom);
     const collapsed = useAtomValue(model.collapsedAtom);
-    const width = useAtomValue(model.widthAtom);
-    const chatWidth = useAtomValue(model.chatWidthAtom);
+    const columnWidth = useAtomValue(model.columnWidthAtom);
+    const toolWidth = useAtomValue(model.toolWidthAtom);
+    const columnRef = useRef<HTMLDivElement>(null);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [dragging, setDragging] = useState(false);
     const chatOpen = useAtomValue(layout.panelVisibleAtom);
     const waveAI = WaveAIModel.getInstance();
     const aiMode = useAtomValue(waveAI.currentAIMode);
     const aiConfigs = useAtomValue(waveAI.aiModeConfigs);
     const modelLabel = aiConfigs?.[aiMode]?.["display:name"] ?? "Model";
-    const dragMode = useRef<"tool" | "chat" | null>(null);
+    const dragMode = useRef<"column" | "split" | null>(null);
     const [theme, setTheme] = useState<AppTheme>(() => getAppTheme());
 
+    const activeDef = !collapsed && activeTool ? DOCK_TOOLS.find((t) => t.id === activeTool) : null;
+    const ActivePanel = activeDef?.Panel;
+    const toolOpen = activeDef != null && ActivePanel != null;
+    const columnOpen = chatOpen || toolOpen;
+    // The tool column only occupies space when both panes are showing; on its
+    // own it is the whole column and flexes instead of holding a fixed width.
+    const toolAllowance = chatOpen && toolOpen ? toolWidth + DOCK_SPLIT_PX : 0;
+
     const toggleChat = useCallback(() => {
-        const nextOpen = !layout.getAIPanelVisible();
-        if (nextOpen && window.innerWidth < DOCK_COMPACT_BREAKPOINT) {
-            model.collapse();
-        }
-        layout.setAIPanelVisible(nextOpen);
-    }, [layout, model]);
+        layout.setAIPanelVisible(!layout.getAIPanelVisible());
+    }, [layout]);
 
     const toggleTool = useCallback(
         (id: DockToolId) => {
-            if (window.innerWidth < DOCK_COMPACT_BREAKPOINT && layout.getAIPanelVisible()) {
-                layout.setAIPanelVisible(false);
-            }
             model.toggle(id);
         },
-        [layout, model]
+        [model]
     );
 
     const toggleTheme = useCallback(() => {
@@ -104,36 +118,58 @@ const UtilityDockElem = memo(() => {
         });
     }, []);
 
-    const onToolResizeDown = useCallback((e: React.MouseEvent) => {
+    const onColumnResizeDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
-        dragMode.current = "tool";
+        dragMode.current = "column";
+        setDragging(true);
         document.body.style.cursor = "col-resize";
         document.body.style.userSelect = "none";
     }, []);
 
-    const onChatResizeDown = useCallback((e: React.MouseEvent) => {
+    const onSplitDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
-        dragMode.current = "chat";
+        dragMode.current = "split";
+        setDragging(true);
         document.body.style.cursor = "col-resize";
         document.body.style.userSelect = "none";
     }, []);
+
+    // The CSS max-width: 70% on .crowe-dock-column resolves against
+    // .crowe-dock-root, which has no definite width of its own, so it cannot
+    // be relied on to keep block area usable. This measures the actual
+    // available space (the workspace row), and subtracts whatever the tool
+    // column is holding so the clamp bounds the chat pane rather than the pair.
+    const maxColumnWidth = useCallback(() => {
+        const parentWidth = rootRef.current?.parentElement?.getBoundingClientRect().width;
+        if (parentWidth == null || parentWidth <= 0) {
+            return DOCK_MAX_WIDTH;
+        }
+        return Math.max(DOCK_MIN_WIDTH, parentWidth - DOCK_RAIL_WIDTH - MIN_BLOCK_PX - toolAllowance);
+    }, [toolAllowance]);
 
     useEffect(() => {
         const onMove = (e: MouseEvent) => {
-            if (dragMode.current === "tool") {
-                const toolOffset = DOCK_RAIL_WIDTH + (chatOpen ? chatWidth : 0);
-                model.setWidth(e.clientX - toolOffset);
-            } else if (dragMode.current === "chat") {
-                model.setChatWidth(e.clientX - DOCK_RAIL_WIDTH);
+            if (dragMode.current === "column") {
+                // The grip sits on the outer edge, so the pointer measures the
+                // whole dock; the tool column's share is not the chat's to take.
+                const chatPx = e.clientX - DOCK_RAIL_WIDTH - toolAllowance;
+                model.setColumnWidth(Math.min(chatPx, maxColumnWidth()));
+                return;
             }
+            if (dragMode.current !== "split") {
+                return;
+            }
+            model.setToolWidth(e.clientX - DOCK_RAIL_WIDTH);
         };
         const onUp = () => {
             if (dragMode.current == null) {
                 return;
             }
             dragMode.current = null;
+            setDragging(false);
             document.body.style.cursor = "";
             document.body.style.userSelect = "";
+            model.commitPersist();
         };
         document.addEventListener("mousemove", onMove);
         document.addEventListener("mouseup", onUp);
@@ -141,88 +177,44 @@ const UtilityDockElem = memo(() => {
             document.removeEventListener("mousemove", onMove);
             document.removeEventListener("mouseup", onUp);
         };
-    }, [chatOpen, chatWidth, model]);
+    }, [model, maxColumnWidth, toolAllowance]);
+
+    // Shrinking the window does not fire mousemove, so an already-wide column
+    // needs its own re-clamp on resize to keep blocks above MIN_BLOCK_PX.
+    useEffect(() => {
+        const onResize = debounce(100, () => {
+            model.setColumnWidth(Math.min(globalStore.get(model.columnWidthAtom), maxColumnWidth()));
+        });
+        window.addEventListener("resize", onResize);
+        return () => {
+            window.removeEventListener("resize", onResize);
+            // Without this a trailing call can land after unmount and write a
+            // width measured against a layout that no longer exists.
+            onResize.cancel();
+        };
+    }, [model, maxColumnWidth]);
+
+    // Opening a tool widens the dock by a whole column, which can push blocks
+    // under MIN_BLOCK_PX without any window resize to trigger the other clamp.
+    useEffect(() => {
+        if (!toolOpen) {
+            return;
+        }
+        model.setColumnWidth(Math.min(globalStore.get(model.columnWidthAtom), maxColumnWidth()));
+    }, [model, toolOpen, maxColumnWidth]);
 
     useEffect(() => {
         VcsModel.getInstance().startPolling();
     }, []);
 
-    const activeDef = !collapsed && activeTool ? DOCK_TOOLS.find((t) => t.id === activeTool) : null;
-    const ActivePanel = activeDef?.Panel;
-    // Tool drawers extend to the right of the chat drawer when it's open so the
-    // two floating panels never stack on top of each other.
-    const toolLeft = chatOpen ? DOCK_RAIL_WIDTH + chatWidth : DOCK_RAIL_WIDTH;
+    const toolPaneStyle = chatOpen
+        ? { flex: `0 0 ${toolWidth}px`, minWidth: 0 }
+        : { flex: "1 1 auto", minWidth: 0 };
+    const chatPaneStyle = { flex: "1 1 auto", minWidth: 0 };
+    const dockWidth = (chatOpen ? columnWidth : 0) + (toolOpen ? toolWidth : 0) + (chatOpen && toolOpen ? DOCK_SPLIT_PX : 0);
 
     return (
-        <div className="crowe-dock-root">
-            <aside
-                className={cn(
-                    "crowe-dock-drawer crowe-chat-drawer glass-chrome glass-grain",
-                    !chatOpen && "crowe-chat-drawer-closed"
-                )}
-                style={{ width: chatOpen ? chatWidth : 0 }}
-                aria-hidden={!chatOpen}
-            >
-                <div
-                    className="crowe-dock-resize crowe-dock-resize-grip"
-                    role="separator"
-                    aria-orientation="vertical"
-                    title="Drag to resize, double-click to reset"
-                    onMouseDown={onChatResizeDown}
-                    onDoubleClick={() => model.setChatWidth(CHAT_DEFAULT_WIDTH)}
-                />
-                <div className="crowe-dock-head crowe-chat-head">
-                    <button
-                        type="button"
-                        className="crowe-chat-model cursor-pointer"
-                        onClick={() => toggleTool("model")}
-                        title="Switch model"
-                    >
-                        <span className="crowe-chat-model-dot" />
-                        <span className="crowe-chat-model-name">{modelLabel}</span>
-                        <i className="fa fa-angle-down crowe-chat-model-caret" />
-                    </button>
-                    <button
-                        type="button"
-                        className="crowe-dock-close cursor-pointer"
-                        onClick={() => layout.setAIPanelVisible(false)}
-                        title="Close assistant"
-                        aria-label="Close assistant"
-                    >
-                        <CloseIcon />
-                    </button>
-                </div>
-                <div className="crowe-chat-body">
-                    <AIPanel roundTopLeft={false} />
-                </div>
-            </aside>
-            {activeDef && ActivePanel && (
-                <aside className="crowe-dock-drawer glass-chrome glass-grain" style={{ width, left: toolLeft }}>
-                    <div
-                        className="crowe-dock-resize"
-                        role="separator"
-                        aria-orientation="vertical"
-                        title="Drag to resize, double-click to reset"
-                        onMouseDown={onToolResizeDown}
-                        onDoubleClick={() => model.setWidth(DOCK_DEFAULT_WIDTH)}
-                    />
-                    <div className="crowe-dock-head">
-                        <span className="crowe-dock-title">{activeDef.label}</span>
-                        <button
-                            type="button"
-                            className="crowe-dock-close cursor-pointer"
-                            onClick={() => model.collapse()}
-                            title="Collapse panel"
-                            aria-label="Collapse panel"
-                        >
-                            <CloseIcon />
-                        </button>
-                    </div>
-                    <div className="crowe-dock-body">
-                        <ActivePanel />
-                    </div>
-                </aside>
-            )}
+        <div className="crowe-dock-root" ref={rootRef}>
             <nav className="crowe-dock-rail glass-chrome" aria-label="Hypheus operator tools">
                 <div className="crowe-dock-brand" title="Hypheus operator tools" aria-hidden="true">
                     <img src={hypheusMark} alt="" />
@@ -232,16 +224,15 @@ const UtilityDockElem = memo(() => {
                     type="button"
                     className={cn("crowe-dock-btn cursor-pointer", chatOpen && "crowe-dock-btn-active")}
                     onClick={toggleChat}
-                    title={chatOpen ? "Close assistant" : "Open assistant"}
-                    aria-label="Toggle assistant"
+                    title={chatOpen ? "Hide assistant" : "Assistant"}
+                    aria-label={chatOpen ? "Hide assistant" : "Assistant"}
                     aria-pressed={chatOpen}
                 >
-                    {chatOpen && <span className="crowe-dock-indicator" />}
                     <AssistantIcon className="crowe-dock-glyph" />
+                    {chatOpen && <span className="crowe-dock-indicator" />}
                 </button>
-                <span className="crowe-dock-sep" />
                 {DOCK_TOOLS.map((tool) => {
-                    const isActive = activeTool === tool.id && !collapsed;
+                    const isActive = !collapsed && activeTool === tool.id;
                     return (
                         <button
                             key={tool.id}
@@ -252,8 +243,8 @@ const UtilityDockElem = memo(() => {
                             aria-label={tool.label}
                             aria-pressed={isActive}
                         >
-                            {isActive && <span className="crowe-dock-indicator" />}
                             <tool.Icon className="crowe-dock-glyph" />
+                            {isActive && <span className="crowe-dock-indicator" />}
                             {tool.id === "design" && <DesignBadge />}
                             {tool.id === "repo" && <VcsDirtyPip />}
                         </button>
@@ -269,13 +260,88 @@ const UtilityDockElem = memo(() => {
                     aria-label={theme === "dark" ? "Use light theme" : "Use dark theme"}
                     aria-pressed={theme === "light"}
                 >
-                    {theme === "dark" ? (
-                        <SunIcon className="crowe-dock-glyph" />
-                    ) : (
-                        <MoonIcon className="crowe-dock-glyph" />
-                    )}
+                    {theme === "dark" ? <SunIcon className="crowe-dock-glyph" /> : <MoonIcon className="crowe-dock-glyph" />}
                 </button>
             </nav>
+            <div
+                ref={columnRef}
+                className={cn(
+                    "crowe-dock-column glass-chrome glass-grain",
+                    dragging && "crowe-dock-dragging",
+                    !columnOpen && "crowe-dock-column-closed"
+                )}
+                style={{ width: dockWidth }}
+            >
+                {toolOpen && (
+                    <section className="crowe-dock-pane crowe-dock-pane-tool" style={toolPaneStyle}>
+                        <div className="crowe-dock-head">
+                            <span className="crowe-dock-title">{activeDef.label}</span>
+                            <button
+                                type="button"
+                                className="crowe-dock-close cursor-pointer"
+                                onClick={() => model.collapse()}
+                                title="Collapse panel"
+                                aria-label="Collapse panel"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+                        <div className="crowe-dock-body">
+                            <ActivePanel />
+                        </div>
+                    </section>
+                )}
+                {chatOpen && toolOpen && (
+                    <div
+                        className="crowe-dock-split"
+                        role="separator"
+                        aria-orientation="vertical"
+                        title="Drag to resize, double-click to reset"
+                        onMouseDown={onSplitDown}
+                        onDoubleClick={() => model.setToolWidth(TOOL_DEFAULT_WIDTH)}
+                    />
+                )}
+                {/* The AI panel stays mounted while hidden so a close/reopen does not discard
+                    the conversation, reload it over RPC, or truncate a response mid-stream. */}
+                <section
+                    className="crowe-dock-pane"
+                    style={{ ...chatPaneStyle, display: chatOpen ? "flex" : "none" }}
+                    aria-hidden={!chatOpen}
+                >
+                    <div className="crowe-dock-head crowe-chat-head">
+                        <button
+                            type="button"
+                            className="crowe-chat-model cursor-pointer"
+                            onClick={() => toggleTool("model")}
+                            title="Switch model"
+                        >
+                            <span className="crowe-chat-model-dot" />
+                            <span className="crowe-chat-model-name">{modelLabel}</span>
+                            <i className="fa fa-angle-down crowe-chat-model-caret" />
+                        </button>
+                        <button
+                            type="button"
+                            className="crowe-dock-close cursor-pointer"
+                            onClick={() => layout.setAIPanelVisible(false)}
+                            title="Close assistant"
+                            aria-label="Close assistant"
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+                    <div className="crowe-chat-body">
+                        <AIPanel roundTopLeft={false} />
+                    </div>
+                </section>
+                <div
+                    className="crowe-dock-resize crowe-dock-resize-grip"
+                    role="separator"
+                    aria-orientation="vertical"
+                    title="Drag to resize, double-click to reset"
+                    onMouseDown={onColumnResizeDown}
+                    onDoubleClick={() => model.setColumnWidth(DOCK_DEFAULT_WIDTH)}
+                />
+            </div>
         </div>
     );
 });

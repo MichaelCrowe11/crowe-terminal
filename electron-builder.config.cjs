@@ -86,7 +86,9 @@ const config = {
         },
     },
     linux: {
-        artifactName: "${name}-${platform}-${arch}-${version}.${ext}",
+        // "linux" is hardcoded because ${platform} resolves to the *host* platform, which stamps
+        // "darwin" into the filename when cross-building the Linux target from macOS.
+        artifactName: "${name}-linux-${arch}-${version}.${ext}",
         category: "TerminalEmulator",
         executableName: pkg.name,
         target: ["zip", "deb", "rpm", "snap", "AppImage", "pacman"],

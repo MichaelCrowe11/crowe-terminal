@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Left utility dock: a 44px icon rail pinned to the workspace's left edge with
-// a resizable drawer that overlays content to its right. Colors/blur come from the
-// shared glass + token layer (crowe-tokens.css / crowe-glass.css).
+// an in-flow, resizable column beside it — blocks shrink to make room rather
+// than being covered. Colors/blur come from the shared glass + token layer
+// (crowe-tokens.css / crowe-glass.css).
 
 .crowe-dock-root {
     position: relative;
@@ -133,18 +134,30 @@
     }
 }
 
-.crowe-dock-drawer {
-    position: absolute;
-    top: 0;
-    left: var(--dock-rail-width, 44px);
-    bottom: 0;
-    max-width: calc(100vw - var(--dock-rail-width, 44px));
+// The dock column takes real space in the workspace row: blocks shrink to make
+// room instead of being covered. The active tool is its own column between the
+// rail and chat, the way VS Code seats a sidebar view next to the editor,
+// rather than stacking under chat and halving both.
+.crowe-dock-column {
+    position: relative;
     display: flex;
-    flex-direction: column;
-    border-left: 1px solid var(--glass-hairline-chrome);
+    flex-direction: row;
+    min-width: 0;
+
+    // No max-width here. The column's width is set inline and now has to cover
+    // the tool column plus chat, but a percentage max-width resolves against
+    // .crowe-dock-root, which sizes to its children. The row would reserve the
+    // full inline width while the box painted narrower, leaving dead space
+    // between the dock and the blocks. The real clamp is JS, in
+    // utilitydock.tsx's maxColumnWidth().
     border-right: 1px solid var(--glass-hairline-chrome);
-    box-shadow: var(--shadow-card-strong);
     overflow: hidden;
+    transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+
+    // While dragging, the transition would make the column lag the cursor.
+    &.crowe-dock-dragging {
+        transition: none;
+    }
 
     .crowe-dock-resize {
         position: absolute;
@@ -155,11 +168,35 @@
         cursor: col-resize;
         background: transparent;
         transition: background-color 0.15s ease;
+        z-index: 1;
 
         &:hover {
             background: var(--wash-accent-mid);
         }
     }
+}
+
+.crowe-dock-column-closed {
+    // .crowe-dock-column also carries glass-chrome, whose `border` shorthand
+    // sets all four sides. overflow: hidden clips descendants, not the box's
+    // own border, so at zero width a border-right: none alone still leaves a
+    // full-height hairline seam from the left/top/bottom sides. Clear all
+    // four so a collapsed column paints nothing.
+    border: none;
+    overflow: hidden;
+}
+
+// A pane is a flex item in the row, but lays its own head/body out vertically.
+.crowe-dock-pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    // Flex items default to min-width: auto, which lets long unbroken content
+    // (a jj change id, a deep file path) push the pane past its assigned width
+    // and shove chat off the edge.
+    min-width: 0;
+    overflow: hidden;
 
     .crowe-dock-head {
         display: flex;
@@ -194,20 +231,6 @@
             }
         }
     }
-
-    .crowe-dock-body {
-        flex: 1 1 auto;
-        overflow-y: auto;
-        min-height: 0;
-    }
-}
-
-// The chat drawer reuses the floating-drawer shell with a thin head (active
-// model + collapse); the AI panel below supplies its own identity/input chrome.
-.crowe-chat-drawer {
-    transition:
-        width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.18s ease;
 
     .crowe-chat-head {
         padding: 6px 8px 6px 12px;
@@ -263,23 +286,33 @@
         }
     }
 
+    .crowe-dock-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        min-height: 0;
+    }
+
     .crowe-chat-body {
         display: flex;
+        flex-direction: column;
         flex: 1 1 auto;
         min-height: 0;
-        flex-direction: column;
+        overflow: hidden;
     }
 }
 
-.crowe-chat-drawer-closed {
-    border-left: none;
-    border-right: none;
-    box-shadow: none;
-    pointer-events: none;
-    opacity: 0;
+.crowe-dock-split {
+    flex: 0 0 4px;
+    cursor: col-resize;
+    background: var(--glass-hairline-chrome);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background: var(--wash-accent-mid);
+    }
 }
 
-// Visible grip so the chat drawer's resize edge reads as draggable.
+// Visible grip so the column's resize edge reads as draggable.
 .crowe-dock-resize-grip::after {
     content: "";
     position: absolute;

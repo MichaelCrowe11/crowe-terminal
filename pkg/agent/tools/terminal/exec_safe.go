@@ -23,6 +23,7 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/agent/denylist"
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
 	"github.com/wavetermdev/waveterm/pkg/agent/tools/allowlist"
+	"github.com/wavetermdev/waveterm/pkg/util/pathutil"
 )
 
 const (
@@ -109,8 +110,8 @@ func handleExecSafe(ctx context.Context, raw json.RawMessage) (registry.Result, 
 		// agent can offer to remember the pattern.
 	}
 
-	exe, lookErr := exec.LookPath(parts[0])
-	if lookErr != nil {
+	exe := pathutil.LookPath(parts[0])
+	if exe == "" {
 		return registry.Result{IsError: true, ErrorText: "command not found: " + parts[0]}, nil
 	}
 
@@ -119,7 +120,9 @@ func handleExecSafe(ctx context.Context, raw json.RawMessage) (registry.Result, 
 
 	c := exec.CommandContext(runCtx, exe, parts[1:]...)
 	c.Dir = cwd
-	c.Env = append(os.Environ(), "CROWE_AGENT_EXEC=1")
+	// The child needs the augmented PATH too: resolving `git` is pointless if
+	// git then cannot find the helpers it shells out to.
+	c.Env = pathutil.EnvWithPATH(append(os.Environ(), "CROWE_AGENT_EXEC=1"))
 
 	start := time.Now()
 	stdout, stderr, exitCode, runErr := runCapture(c)

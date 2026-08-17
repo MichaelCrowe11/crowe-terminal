@@ -9,6 +9,8 @@ import { AuthKey } from "./authkey";
 
 const BRIDGE_PORT = 8011;
 const BRIDGE_HOST = "127.0.0.1";
+const MinPythonMajor = 3;
+const MinPythonMinor = 10;
 
 let bridgeProc: child_process.ChildProcess | null = null;
 let bridgeReady = false;
@@ -30,12 +32,72 @@ function findFoundryRoot(): string | null {
     return null;
 }
 
-function findPython(foundryRoot: string): string {
-    const venvPython = path.join(foundryRoot, ".venv", "bin", "python");
-    if (fs.existsSync(venvPython)) {
-        return venvPython;
+// Version probes run asynchronously with a hard kill. This runs on the
+// Electron main process during startup, and a synchronous spawn with a
+// timeout only sends SIGTERM: a candidate that ignores it (or Apple's CLT
+// stub waiting on its install dialog) would hold the whole app hostage.
+const ProbeTimeoutMs = 5000;
+
+function pythonMinorVersion(bin: string): Promise<[number, number] | null> {
+    return new Promise((resolve) => {
+        let settled = false;
+        const finish = (v: [number, number] | null) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            resolve(v);
+        };
+        let proc: child_process.ChildProcess;
+        try {
+            proc = child_process.spawn(bin, ["-c", "import sys; print('%d %d' % sys.version_info[:2])"], {
+                stdio: ["ignore", "pipe", "ignore"],
+            });
+        } catch {
+            resolve(null);
+            return;
+        }
+        const timer = setTimeout(() => {
+            proc.kill("SIGKILL");
+            finish(null);
+        }, ProbeTimeoutMs);
+        let out = "";
+        proc.stdout?.on("data", (chunk) => (out += chunk));
+        proc.on("error", () => finish(null));
+        proc.on("close", (code) => {
+            if (code !== 0 || !out) {
+                finish(null);
+                return;
+            }
+            const [major, minor] = out.trim().split(/\s+/).map(Number);
+            finish(Number.isFinite(major) && Number.isFinite(minor) ? [major, minor] : null);
+        });
+    });
+}
+
+async function findPython(foundryRoot: string): Promise<string | null> {
+    // The Foundry uses PEP 604 unions, so anything below 3.10 imports far
+    // enough to answer /healthz and then fails on every completion. Bare
+    // "python3" is listed last on purpose: a GUI-launched app inherits a
+    // minimal PATH where it resolves to Apple's 3.9, not the user's.
+    const candidates = [
+        process.env.CROWE_FOUNDRY_PYTHON,
+        path.join(foundryRoot, ".venv", "bin", "python"),
+        "/opt/homebrew/bin/python3",
+        "/usr/local/bin/python3",
+        "python3",
+    ].filter((c) => c != null && c !== "");
+
+    for (const candidate of candidates) {
+        const version = await pythonMinorVersion(candidate);
+        if (version == null) {
+            continue;
+        }
+        const [major, minor] = version;
+        if (major > MinPythonMajor || (major === MinPythonMajor && minor >= MinPythonMinor)) {
+            return candidate;
+        }
     }
-    return "python3";
+    return null;
 }
 
 async function probeBridge(timeoutMs = 8000): Promise<boolean> {
@@ -71,7 +133,13 @@ export async function startFoundryBridge(): Promise<boolean> {
         return false;
     }
 
-    const python = findPython(foundryRoot);
+    const python = await findPython(foundryRoot);
+    if (!python) {
+        console.warn(
+            `[foundry-bridge] no Python ${MinPythonMajor}.${MinPythonMinor}+ interpreter found; set CROWE_FOUNDRY_PYTHON. Skipping auto-spawn`
+        );
+        return false;
+    }
     console.log(`[foundry-bridge] spawning ${python} -m cli.openai_bridge in ${foundryRoot}`);
 
     bridgeProc = child_process.spawn(python, ["-m", "cli.openai_bridge"], {

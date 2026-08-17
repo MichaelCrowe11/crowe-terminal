@@ -44,8 +44,14 @@ and notarized by Apple, so the disk image opens without a Gatekeeper bypass.
 
 Current release, macOS Apple Silicon:
 
+```text
+https://releases.hypheus.com/hypheus/Hypheus-darwin-arm64-0.15.3.dmg
 ```
-https://releases.hypheus.com/hypheus/Hypheus-darwin-arm64-0.2.0.dmg
+
+Current release, macOS Intel:
+
+```text
+https://releases.hypheus.com/hypheus/Hypheus-darwin-x64-0.15.3.dmg
 ```
 
 Open the disk image, drag **Hypheus** to **Applications**, and launch it.
@@ -64,7 +70,8 @@ on your machine. On launch it:
 3. Spawns `python -m cli.openai_bridge` with the foundry's venv if found
 4. Skips silently if no foundry is present, leaving manual model config working
 
-Set up the Foundry locally:
+Set up the Foundry locally. The Foundry repository is private, so the clone below
+only works once your GitHub account has been granted access:
 
 ```bash
 git clone https://github.com/MichaelCrowe11/crowe-logic-foundry ~/Projects/crowe-logic-foundry

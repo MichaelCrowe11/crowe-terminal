@@ -67,6 +67,9 @@ func RunChatStep(
 	}
 	resp, err := client.Do(req)
 	if err != nil {
+		if localErr := uctypes.LocalEndpointDialError(chatOpts.Config.Endpoint, err); localErr != nil {
+			return nil, nil, nil, localErr
+		}
 		return nil, nil, nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()

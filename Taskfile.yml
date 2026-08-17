@@ -180,13 +180,17 @@ tasks:
 
     package:
         desc: Package the application for the current platform.
+        # clean must finish before the builds start. As deps these ran
+        # concurrently, and build:server/build:wsh could pass their up-to-date
+        # check (sources unchanged, dist/bin still present) an instant before
+        # clean removed dist/, so the app packaged with no wavesrv or wsh at all
+        # and failed to launch (spawn wavesrv.arm64 ENOENT). cmds run in order.
         cmds:
+            - task: clean
+            - task: npm:install
+            - task: build:backend
+            - task: build:tsunamiscaffold
             - npm run build:prod && npm exec electron-builder -- -c electron-builder.config.cjs -p never {{.CLI_ARGS}}
-        deps:
-            - clean
-            - npm:install
-            - build:backend
-            - build:tsunamiscaffold
 
     build:frontend:dev:
         desc: Build the frontend in development mode.
@@ -319,6 +323,31 @@ tasks:
                       sh: echo {{if eq "arm" ARCH}}arm64{{else}}{{ARCH}}{{end}}
                   GO_ENV_VARS:
                       sh: echo "{{if eq "amd64" ARCH}}CC=\"zig cc -target x86_64-linux-gnu.2.28\"{{else}}CC=\"zig cc -target aarch64-linux-gnu.2.28\"{{end}}"
+
+    build:server:linux:cross:
+        desc: Cross-compile the wavesrv component for Linux from macOS, using zig as the C cross-compiler for CGO. Pass LINUX_ARCH=arm64 for aarch64; defaults to amd64. This overwrites dist/bin/wavesrv.x64 with a Linux binary, so re-run build:server:macos before packaging for macOS again.
+        platforms: [darwin]
+        vars:
+            LINUX_ARCH: '{{.LINUX_ARCH | default "amd64"}}'
+        deps:
+            - go:mod:tidy
+            - generate
+        cmds:
+            - task: build:server:internal
+              vars:
+                  ARCHS: "{{.LINUX_ARCH}}"
+                  GO_ENV_VARS: 'GOOS=linux CC="zig cc -target {{if eq .LINUX_ARCH "amd64"}}x86_64{{else}}aarch64{{end}}-linux-gnu.2.28"'
+
+    package:linux:
+        desc: Package the Linux AppImage from macOS. Cross-compiles wavesrv with zig, then runs electron-builder for the Linux x64 AppImage only. Does not clean make/, so existing artifacts for other platforms survive.
+        cmds:
+            - task: build:server:linux:cross
+            - npm run build:prod
+            - npm exec electron-builder -- -c electron-builder.config.cjs --linux AppImage --x64 -p never {{.CLI_ARGS}}
+        deps:
+            - npm:install
+            - build:wsh
+            - build:tsunamiscaffold
 
     build:server:internal:
         requires:

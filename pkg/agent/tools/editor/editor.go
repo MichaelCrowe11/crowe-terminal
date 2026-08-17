@@ -75,7 +75,9 @@ func init() {
 		Description: "Overwrite a file (or create one) with the given UTF-8 contents. " +
 			"Creates parent directories. Use for new files; for existing files prefer " +
 			"editor.apply_edit so you cannot silently lose unrelated changes. Capped " +
-			"at 4 MB.",
+			"at 4 MB. In a Jujutsu workspace a restore point is recorded automatically " +
+			"and returned as restore_point; pass it to vcs.undo as `operation` to revert " +
+			"exactly this write.",
 		Schema:          json.RawMessage(schemaWriteFile),
 		Mutating:        true,
 		Handler:         handleWriteFile,
@@ -86,7 +88,9 @@ func init() {
 		Description: "Replace exactly one occurrence of old_text with new_text inside a " +
 			"file. Fails if old_text is not present, or appears more than once. " +
 			"Safer than write_file because it requires the file to be in a known " +
-			"state. Use this for surgical changes inside existing files.",
+			"state. Use this for surgical changes inside existing files. In a Jujutsu " +
+			"workspace a restore point is recorded automatically and returned as " +
+			"restore_point; pass it to vcs.undo as `operation` to revert exactly this edit.",
 		Schema:          json.RawMessage(schemaApplyEdit),
 		Mutating:        true,
 		Handler:         handleApplyEdit,
@@ -219,17 +223,22 @@ func handleWriteFile(ctx context.Context, raw json.RawMessage) (registry.Result,
 	if info, err := os.Stat(abs); err == nil {
 		prevSize = info.Size()
 	}
+	restorePoint := autoRestorePoint(ctx, abs)
 	if err := os.WriteFile(abs, []byte(args.Contents), 0o644); err != nil {
 		return errResult(err), nil
 	}
 	noteRecent(abs, "write")
 	publishFileChange(abs, "write")
-	body, _ := json.Marshal(map[string]any{
+	payload := map[string]any{
 		"path":          abs,
 		"bytes_written": len(args.Contents),
 		"prev_size":     prevSize,
 		"created":       prevSize < 0,
-	})
+	}
+	if restorePoint != "" {
+		payload["restore_point"] = restorePoint
+	}
+	body, _ := json.Marshal(payload)
 	return registry.Result{Content: body}, nil
 }
 
@@ -282,19 +291,24 @@ func handleApplyEdit(ctx context.Context, raw json.RawMessage) (registry.Result,
 	if int64(len(updated)) > MaxWriteBytes {
 		return errResult(fmt.Errorf("result too large after edit: %d bytes (cap %d)", len(updated), MaxWriteBytes)), nil
 	}
+	restorePoint := autoRestorePoint(ctx, abs)
 	if err := os.WriteFile(abs, []byte(updated), info.Mode().Perm()); err != nil {
 		return errResult(err), nil
 	}
 	noteRecent(abs, "edit")
 	publishFileChange(abs, "edit")
-	body, _ := json.Marshal(map[string]any{
+	payload := map[string]any{
 		"path":         abs,
 		"changed":      true,
 		"prev_size":    info.Size(),
 		"new_size":     len(updated),
 		"old_text_len": len(args.OldText),
 		"new_text_len": len(args.NewText),
-	})
+	}
+	if restorePoint != "" {
+		payload["restore_point"] = restorePoint
+	}
+	body, _ := json.Marshal(payload)
 	return registry.Result{Content: body}, nil
 }
 
