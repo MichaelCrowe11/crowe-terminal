@@ -3,28 +3,44 @@
         "display:name": "CroweLM Deep Work",
         "display:order": -3,
         "display:icon": "crowe-mark",
-        "display:description": "Long-context research, source analysis, and hard reasoning.\nManaged by Crowe Logic.",
+        "display:description": "Long-context research, source analysis, and hard reasoning.\nCrowe Logic's largest model, 1M context.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
-        "ai:model": "crowelm-supreme",
+        "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
+        "ai:model": "crowelm-titan",
         "ai:capabilities": [
-            "tools",
-            "images"
+            "tools"
         ],
         "ai:switchcompat": [
             "openai"
         ],
-        "ai:apitoken": "local-bridge-no-auth"
+        "ai:apitokensecretname": "CROWE_MODELS_KEY"
     },
     "waveai@crowelm-apex": {
         "display:name": "CroweLM Code",
         "display:order": -2,
         "display:icon": "bolt",
-        "display:description": "Implementation, refactors, tests, reviews, and terminal-side decisions.",
+        "display:description": "Implementation, refactors, tests, reviews, and terminal-side decisions.\nCode-tuned model with tools.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
+        "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
+        "ai:model": "crowelm-coder",
+        "ai:capabilities": [
+            "tools"
+        ],
+        "ai:switchcompat": [
+            "openai"
+        ],
+        "ai:apitokensecretname": "CROWE_MODELS_KEY"
+    },
+    "waveai@crowelm-auto": {
+        "display:name": "CroweLM Workspace",
+        "display:order": -1,
+        "display:icon": "lightbulb",
+        "display:description": "Default channel. Crowe Logic's flagship general model with tools, 262k context.",
+        "ai:provider": "openai",
+        "ai:apitype": "openai-chat",
+        "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
         "ai:model": "crowelm-apex",
         "ai:capabilities": [
             "tools"
@@ -32,51 +48,53 @@
         "ai:switchcompat": [
             "openai"
         ],
-        "ai:apitoken": "local-bridge-no-auth"
-    },
-    "waveai@crowelm-auto": {
-        "display:name": "CroweLM Workspace",
-        "display:order": -1,
-        "display:icon": "lightbulb",
-        "display:description": "Default signed-in channel. Crowe Logic routes the right model per turn.",
-        "ai:provider": "openai",
-        "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
-        "ai:model": "crowelm-auto",
-        "ai:capabilities": [
-            "tools"
-        ],
-        "ai:switchcompat": [
-            "openai"
-        ],
-        "ai:apitoken": "local-bridge-no-auth"
+        "ai:apitokensecretname": "CROWE_MODELS_KEY"
     },
     "waveai@crowelm-grower": {
         "display:name": "CroweLM Grow Ops",
         "display:order": 0,
         "display:icon": "leaf",
-        "display:description": "Cultivation operations, SOPs, contamination triage, and yield decisions.",
+        "display:description": "Cultivation operations, SOPs, contamination triage, and yield decisions.\nFast model with tools for on-the-floor questions.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
-        "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
-        "ai:model": "crowelm-grower",
+        "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
+        "ai:model": "crowelm-quasar-fast",
         "ai:capabilities": [
             "tools"
         ],
         "ai:switchcompat": [
             "openai"
         ],
-        "ai:apitoken": "local-bridge-no-auth"
+        "ai:apitokensecretname": "CROWE_MODELS_KEY",
+        "ai:systemprompt": "You are CroweLM Grow Ops, Crowe Logic's cultivation operations assistant for commercial mushroom growers. Give practical, step-by-step guidance on substrate prep, sterilization and pasteurization, inoculation, incubation, fruiting-room conditions (temperature, humidity, CO2, air exchange, light), contamination triage, and yield decisions. Prefer concrete numbers and ranges, name the failure mode you suspect and how to confirm it, and flag anything that risks a crop or worker safety. When the user's setup is unknown, ask for species, substrate, stage, and room conditions before prescribing changes."
     },
     "waveai@crowelm-kernel": {
         "display:name": "CroweLM Cultivation Research",
         "display:order": 1,
-        "display:icon": "atom",
-        "display:description": "Mycology research, Lions Mane SOPs, and grow-room analysis.",
+        "display:icon": "flask",
+        "display:description": "Mycology research, strain and substrate design, and grow-room analysis.",
+        "ai:provider": "openai",
+        "ai:apitype": "openai-chat",
+        "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
+        "ai:model": "crowelm-titan",
+        "ai:capabilities": [
+            "tools"
+        ],
+        "ai:switchcompat": [
+            "openai"
+        ],
+        "ai:apitokensecretname": "CROWE_MODELS_KEY",
+        "ai:systemprompt": "You are CroweLM Cultivation Research, Crowe Logic's mycology research assistant. Reason carefully about fungal biology, strain selection, substrate formulation, SOP design, grow-room analysis, and experiment design. Distinguish established practice from hypothesis, cite the mechanism behind a recommendation, propose measurable trials with controls, and state uncertainty plainly. Keep answers structured and precise; avoid filler."
+    },
+    "waveai@crowelm-local": {
+        "display:name": "CroweLM Local",
+        "display:order": 1.5,
+        "display:icon": "server",
+        "display:description": "Routes through a Crowe Logic Foundry bridge on this machine (127.0.0.1:8011).\nFor developers with the foundry checkout; the cloud modes need nothing local.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "http://127.0.0.1:8011/v1/chat/completions",
-        "ai:model": "crowelm-kernel",
+        "ai:model": "crowelm-auto",
         "ai:capabilities": [
             "tools"
         ],

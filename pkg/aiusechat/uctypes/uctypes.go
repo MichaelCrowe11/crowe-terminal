@@ -272,6 +272,7 @@ type AIOptsType struct {
 	AIMode        string   `json:"aimode,omitempty"`
 	Capabilities  []string `json:"capabilities,omitempty"`
 	WaveAIPremium bool     `json:"waveaipremium,omitempty"`
+	SystemPrompt  string   `json:"systemprompt,omitempty"` // mode-level instructions appended to the built-in system prompt
 }
 
 func (opts AIOptsType) IsWaveProxy() bool {

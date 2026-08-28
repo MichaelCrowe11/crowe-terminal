@@ -46,7 +46,7 @@ const BuilderAIModeConfigs: Record<string, AIModeConfigType> = {
         "display:name": "Builder Default",
         "display:order": -2,
         "display:icon": "crowe-mark",
-        "display:description": "Fast, capable code generation\n(CroweLM Auto via local Foundry agent)",
+        "display:description": "Fast, capable code generation\n(CroweLM Workspace on Crowe Logic cloud models)",
         "ai:provider": "openai",
         "ai:switchcompat": ["openai"],
     },
@@ -54,7 +54,7 @@ const BuilderAIModeConfigs: Record<string, AIModeConfigType> = {
         "display:name": "Builder Deep",
         "display:order": -1,
         "display:icon": "lightbulb",
-        "display:description": "Maximum reasoning for hard builds\n(CroweLM Deep Work through managed workspace)",
+        "display:description": "Maximum reasoning for hard builds\n(CroweLM Deep Work on Crowe Logic cloud models)",
         "ai:provider": "openai",
         "ai:switchcompat": ["openai"],
     },
@@ -139,16 +139,16 @@ export class WaveAIModel {
         });
 
         this.defaultModeAtom = jotai.atom((get) => {
-            // Hypheus: local Foundry agent is always available, so
-            // we don't gate on telemetry like upstream Wave (which needed
-            // telemetry consent for wavecloud). Builder modes ship their
-            // own waveaibuilder@default which routes through Foundry too.
+            // Hypheus: the CroweLM modes ship with their own endpoint and
+            // key (models.crowelogic.com), so we don't gate on telemetry like
+            // upstream Wave (which needed telemetry consent for wavecloud).
+            // Builder modes ship their own waveaibuilder@default.
             if (this.inBuilder) {
                 return "waveaibuilder@default";
             }
             const aiModeConfigs = get(this.aiModeConfigs);
             // Hypheus fallback: regardless of "premium" status, land
-            // on the local Foundry-routed CroweLM Auto mode. Upstream Wave's
+            // on the cloud-routed CroweLM Workspace mode. Upstream Wave's
             // waveai@balanced / waveai@quick names referenced wavecloud
             // configs that never shipped in this fork — would resolve to
             // "unknown mode" and 400 the chat call.

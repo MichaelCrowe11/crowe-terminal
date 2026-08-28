@@ -29,6 +29,7 @@ declare global {
         "ai:azureapiversion"?: string;
         "ai:apitoken"?: string;
         "ai:apitokensecretname"?: string;
+        "ai:systemprompt"?: string;
         "ai:azureresourcename"?: string;
         "ai:azuredeployment"?: string;
         "ai:capabilities"?: string[];

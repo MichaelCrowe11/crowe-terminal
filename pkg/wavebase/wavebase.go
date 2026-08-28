@@ -25,7 +25,16 @@ import (
 var WaveVersion = "0.0.0"
 var BuildTime = "0"
 
+// CroweModelsKey is what the shipped CroweLM modes present to
+// models.crowelogic.com. The release build sets it with -ldflags (see the
+// wavesrv build in Taskfile.yml) so it never lives in source; dev builds
+// export HYPHEUS_MODELS_KEY instead.
+var CroweModelsKey = ""
+
 const (
+	CroweModelsSecretName = "CROWE_MODELS_KEY"
+	CroweModelsKeyEnvVar  = "HYPHEUS_MODELS_KEY"
+
 	WaveConfigHomeEnvVar           = "WAVETERM_CONFIG_HOME"
 	WaveDataHomeEnvVar             = "WAVETERM_DATA_HOME"
 	WaveAppPathVarName             = "WAVETERM_APP_PATH"
@@ -493,4 +502,17 @@ func GetRemoteJobLogDir() string {
 	homeDir := GetHomeDir()
 	jobDir := filepath.Join(homeDir, ".waveterm", "jobs")
 	return jobDir
+}
+
+// CroweModelsKeyFor returns the built-in key only for the CroweLM secret name
+// and only when the user has not supplied one; any other secret name returns
+// "" so the caller keeps its normal missing-secret error.
+func CroweModelsKeyFor(secretName string) string {
+	if secretName != CroweModelsSecretName {
+		return ""
+	}
+	if v := strings.TrimSpace(os.Getenv(CroweModelsKeyEnvVar)); v != "" {
+		return v
+	}
+	return strings.TrimSpace(CroweModelsKey)
 }

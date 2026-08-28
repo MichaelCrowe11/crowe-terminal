@@ -93,10 +93,15 @@ func getWaveAISettings(premium bool, builderMode bool, rtInfo waveobj.ObjRTInfo,
 			return nil, fmt.Errorf("failed to retrieve secret %s: %w", config.APITokenSecretName, err)
 		}
 		secret = strings.TrimSpace(secret)
-		if !exists || secret == "" {
+		if exists && secret != "" {
+			apiToken = secret
+		} else if builtin := wavebase.CroweModelsKeyFor(config.APITokenSecretName); builtin != "" {
+			apiToken = builtin
+		} else if config.APITokenSecretName == wavebase.CroweModelsSecretName {
+			return nil, fmt.Errorf("this build has no Crowe Logic model key. Add a %s secret in Settings > AI, or get a key at https://api.crowelogic.com/", config.APITokenSecretName)
+		} else {
 			return nil, fmt.Errorf("secret %s not found or empty", config.APITokenSecretName)
 		}
-		apiToken = secret
 	}
 
 	var baseUrl string
@@ -126,6 +131,7 @@ func getWaveAISettings(premium bool, builderMode bool, rtInfo waveobj.ObjRTInfo,
 		ProxyURL:      config.ProxyURL,
 		Capabilities:  config.Capabilities,
 		WaveAIPremium: config.WaveAIPremium,
+		SystemPrompt:  config.SystemPrompt,
 	}
 	if apiToken != "" {
 		opts.APIToken = apiToken
@@ -693,6 +699,11 @@ func WaveAIPostMessageHandler(w http.ResponseWriter, r *http.Request) {
 		BuilderAppId:         req.BuilderAppId,
 	}
 	chatOpts.SystemPrompt = getSystemPrompt(chatOpts.Config.APIType, chatOpts.Config.Model, chatOpts.BuilderId != "", chatOpts.Config.HasCapability(uctypes.AICapabilityTools), chatOpts.WidgetAccess)
+	if modePrompt := strings.TrimSpace(chatOpts.Config.SystemPrompt); modePrompt != "" {
+		// A mode can carry its own instructions (the CroweLM domain modes do);
+		// they refine the built-in prompt rather than replace it.
+		chatOpts.SystemPrompt = append(chatOpts.SystemPrompt, modePrompt)
+	}
 
 	if req.TabId != "" {
 		chatOpts.TabStateGenerator = func() (string, []uctypes.ToolDefinition, string, error) {

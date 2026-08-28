@@ -29,11 +29,12 @@ agent, which runs on your machine.
 
 Out of the box you get:
 
-- **Five CroweLM models** in the operator panel: Auto (router), Supreme (flagship
-  reasoning), Apex (peak performance), Titan (long-context), Oracle (deep foresight)
-- **Local agent bridge**, so the Foundry agent runs locally behind an
-  OpenAI-compatible API at `127.0.0.1:8011`. Your code stays on your machine;
-  only model calls leave it
+- **Five CroweLM modes** in the operator panel, served from Crowe Logic's model
+  edge at `models.crowelogic.com`: Workspace (default), Code, Deep Work, Grow Ops,
+  and Cultivation Research. No local model server, no Python, no setup
+- **Local Foundry mode** for developers: if a Crowe Logic Foundry checkout is on
+  the machine, Hypheus starts its bridge at `127.0.0.1:8011` and the
+  "CroweLM Local" mode routes through it
 - **The block foundation**: split panes, browser block, SSH sessions, themes,
   dynamic layout
 
@@ -62,13 +63,14 @@ carry higher version numbers than the current Hypheus builds; ignore them.
 
 ## How the agent works
 
-Hypheus expects to find the [Foundry repo](https://github.com/MichaelCrowe11/crowe-logic-foundry)
-on your machine. On launch it:
+The CroweLM modes work as installed. Optionally, for the "CroweLM Local" mode,
+Hypheus looks for the [Foundry repo](https://github.com/MichaelCrowe11/crowe-logic-foundry)
+on launch:
 
 1. Probes `127.0.0.1:8011` and reuses the bridge if one is already running
 2. Otherwise looks for the foundry at `$CROWE_FOUNDRY_PATH` or `~/Projects/crowe-logic-foundry`
 3. Spawns `python -m cli.openai_bridge` with the foundry's venv if found
-4. Skips silently if no foundry is present, leaving manual model config working
+4. Skips silently if no foundry is present; the cloud modes are unaffected
 
 Set up the Foundry locally. The Foundry repository is private, so the clone below
 only works once your GitHub account has been granted access:

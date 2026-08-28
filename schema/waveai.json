@@ -72,6 +72,10 @@
         "ai:apitokensecretname": {
           "type": "string"
         },
+        "ai:systemprompt": {
+          "type": "string",
+          "description": "Extra system instructions appended to the built-in prompt for this mode"
+        },
         "ai:azureresourcename": {
           "type": "string"
         },
