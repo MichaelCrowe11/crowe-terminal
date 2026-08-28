@@ -7,7 +7,7 @@
     "productName": "Hypheus",
     "description": "Hypheus: a multi-pane terminal where your shell, browser, files, and a CroweLM operator panel branch from one root. A surface of the Crowe Logic platform.",
     "license": "Apache-2.0",
-    "version": "0.15.5",
+    "version": "0.15.6",
     "homepage": "https://crowelogic.com",
     "build": {
         "appId": "io.crowelogic.hypheus"
