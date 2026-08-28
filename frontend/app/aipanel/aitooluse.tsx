@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BlockModel } from "@/app/block/block-model";
-import { Modal } from "@/app/modals/modal";
 import { recordTEvent } from "@/app/store/global";
 import { cn, fireAndForget } from "@/util/util";
 import { useAtomValue } from "jotai";
@@ -13,6 +12,103 @@ import { WaveAIModel } from "./waveai-model";
 
 // matches pkg/filebackup/filebackup.go
 const BackupRetentionDays = 5;
+
+// Human labels for the tools a card can show. Keys are the tool id with "." and
+// "-" folded to "_", so the agent-side "terminal.exec_safe" and the wire-side
+// "terminal_exec_safe" resolve to the same line.
+const ToolLabels: Record<string, string> = {
+    terminal_exec_safe: "Ran a shell command",
+    terminal_propose_command: "Proposed a command",
+    terminal_list_blocks: "Listed the open blocks",
+    terminal_read_scrollback: "Read terminal output",
+    term_get_scrollback: "Read terminal output",
+    term_command_output: "Read command output",
+    read_dir: "Listed a directory",
+    read_file: "Read a file",
+    read_text_file: "Read a file",
+    write_text_file: "Wrote a file",
+    edit_text_file: "Edited a file",
+    delete_text_file: "Deleted a file",
+    capture_screenshot: "Captured a screenshot",
+    widget_capture_screenshot: "Captured a screenshot",
+    widget_focus: "Focused a block",
+    widget_open_in_crowecode: "Opened in CroweCode",
+    web_navigate: "Opened a page",
+    web_search: "Searched the web",
+    browser_navigate: "Opened a page",
+    browser_in_window_navigate: "Opened a page",
+    browser_in_window_read: "Read the page",
+    browser_in_window_click: "Clicked in the page",
+    browser_in_window_type: "Typed into the page",
+    browser_in_window_screenshot: "Captured the page",
+    system_metrics: "Read system metrics",
+    system_run_applescript: "Ran AppleScript",
+    system_tell_app: "Sent a command to an app",
+    editor_read_file: "Read a file in the editor",
+    editor_write_file: "Wrote a file in the editor",
+    editor_apply_edit: "Applied an edit",
+    vcs_status: "Checked repository status",
+    vcs_diff: "Read the diff",
+    vcs_checkpoint: "Saved a checkpoint",
+    vcs_undo: "Reverted a checkpoint",
+};
+
+const ToolFamilies: Record<string, string> = {
+    farm: "Farm",
+    vcs: "Repository",
+    editor: "Editor",
+    browser: "Browser",
+    builder: "Builder",
+    allowlist: "Allowlist",
+    system: "System",
+    widget: "Block",
+};
+
+export function describeTool(toolName: string): string {
+    const key = toolName.toLowerCase().replace(/[.-]/g, "_");
+    const known = ToolLabels[key];
+    if (known) {
+        return known;
+    }
+    const words = key.split("_").filter(Boolean);
+    if (words.length === 0) {
+        return toolName;
+    }
+    const family = ToolFamilies[words[0]];
+    const rest = (family ? words.slice(1) : words).join(" ");
+    const phrase = rest.charAt(0).toUpperCase() + rest.slice(1);
+    return family && phrase ? `${family}: ${phrase}` : phrase || toolName;
+}
+
+// The backend describes a call as "running <tool id>" while it is in flight;
+// that repeats the label, so the card drops it.
+function isRedundantDesc(desc: string | string[], toolName: string): boolean {
+    const text = Array.isArray(desc) ? desc.join("\n") : desc;
+    const fold = (s: string) => s.toLowerCase().replace(/[._\-\s]/g, "");
+    return fold(text) === fold("running " + toolName);
+}
+
+interface StatusDotProps {
+    status: string;
+    className?: string;
+}
+
+const StatusDot = memo(({ status, className }: StatusDotProps) => {
+    const tone =
+        status === "completed"
+            ? "bg-[var(--text-dim)]"
+            : status === "error"
+              ? "bg-[var(--crowe-error)]"
+              : "border border-[var(--text-dim)] bg-transparent motion-safe:animate-pulse";
+    return (
+        <span
+            aria-hidden="true"
+            className={cn("inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full", tone, className)}
+        />
+    );
+});
+
+StatusDot.displayName = "StatusDot";
 
 interface ToolDescLineProps {
     text: string;
@@ -92,16 +188,16 @@ const AIToolApprovalButtons = memo(({ count, onApprove, onDeny }: AIToolApproval
     const denyText = count > 1 ? "Deny All" : "Deny";
 
     return (
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex items-center gap-2 border-t border-[var(--hairline-faint)] pt-2">
             <button
                 onClick={onApprove}
-                className="rounded-[var(--radius-sm)] border border-[var(--crowe-gold-45)] bg-[var(--wash-accent)] px-3 py-1 text-sm text-[var(--accent)] transition-colors hover:bg-[var(--wash-accent-mid)] cursor-pointer"
+                className="rounded-[var(--radius-sm)] bg-[var(--accent)] px-3 py-1 text-[13px] font-medium text-[var(--accent-ink)] transition-colors hover:bg-[var(--accent-bright)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] cursor-pointer"
             >
                 {approveText}
             </button>
             <button
                 onClick={onDeny}
-                className="rounded-[var(--radius-sm)] border border-[var(--hairline)] px-3 py-1 text-sm text-[var(--text-dim)] transition-colors hover:border-[var(--hairline-strong)] hover:text-[var(--text)] cursor-pointer"
+                className="rounded-[var(--radius-sm)] border border-[var(--hairline)] px-3 py-1 text-[13px] text-[var(--text-dim)] transition-colors hover:border-[var(--hairline-strong)] hover:text-[var(--text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] cursor-pointer"
             >
                 {denyText}
             </button>
@@ -117,21 +213,16 @@ interface AIToolUseBatchItemProps {
 }
 
 const AIToolUseBatchItem = memo(({ part, effectiveApproval }: AIToolUseBatchItemProps) => {
-    const statusIcon = part.data.status === "completed" ? "✓" : part.data.status === "error" ? "✗" : "•";
-    const statusColor =
-        part.data.status === "completed"
-            ? "text-success"
-            : part.data.status === "error"
-              ? "text-error"
-              : "text-[var(--text-dim)]";
     const effectiveErrorMessage = part.data.errormessage || (effectiveApproval === "timeout" ? "Not approved" : null);
 
     return (
-        <div className="text-sm pl-2 flex items-start gap-1.5">
-            <span className={cn("font-bold flex-shrink-0", statusColor)}>{statusIcon}</span>
-            <div className="flex-1">
-                <span className="text-[var(--text-dim)]">{part.data.tooldesc}</span>
-                {effectiveErrorMessage && <div className="text-error mt-0.5">{effectiveErrorMessage}</div>}
+        <div className="flex items-start gap-2 text-[13px]">
+            <StatusDot status={part.data.status} className="mt-[6px]" />
+            <div className="min-w-0 flex-1">
+                <span className="text-[var(--text)]">{part.data.tooldesc}</span>
+                {effectiveErrorMessage && (
+                    <div className="mt-0.5 text-[12px] text-[var(--text-dim)]">{effectiveErrorMessage}</div>
+                )}
             </div>
         </div>
     );
@@ -166,10 +257,12 @@ const AIToolUseBatch = memo(({ parts, isStreaming }: AIToolUseBatchProps) => {
     };
 
     return (
-        <div className="flex items-start gap-2 p-2 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] [box-shadow:inset_0_1px_0_var(--hair-top)]">
-            <div className="flex-1">
-                <div className="font-semibold">Reading Files</div>
-                <div className="mt-1 space-y-0.5">
+        <div className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-2 [box-shadow:inset_0_1px_0_var(--hair-top)]">
+            <div className="min-w-0 flex-1">
+                <div className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-dim)]">
+                    Reading files
+                </div>
+                <div className="mt-1.5 space-y-1">
                     {parts.map((part, idx) => (
                         <AIToolUseBatchItem key={idx} part={part} effectiveApproval={effectiveApproval} />
                     ))}
@@ -198,9 +291,8 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
     const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const highlightedBlockIdRef = useRef<string | null>(null);
 
-    const statusIcon = toolData.status === "completed" ? "✓" : toolData.status === "error" ? "✗" : "•";
-    const statusColor =
-        toolData.status === "completed" ? "text-success" : toolData.status === "error" ? "text-error" : "text-[var(--text-dim)]";
+    const toolLabel = describeTool(toolData.toolname);
+    const showDesc = toolData.tooldesc && !isRedundantDesc(toolData.tooldesc, toolData.toolname);
 
     const baseApproval = userApprovalOverride || toolData.approval;
     const effectiveApproval = getEffectiveApprovalStatus(baseApproval, isStreaming);
@@ -267,14 +359,20 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
 
     return (
         <div
-            className={cn("flex flex-col gap-1 p-2 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] [box-shadow:inset_0_1px_0_var(--hair-top)]", statusColor)}
+            className="flex flex-col gap-1 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-2 [box-shadow:inset_0_1px_0_var(--hair-top)]"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
             <div className="flex items-center gap-2">
-                <span className="font-bold">{statusIcon}</span>
-                <div className="font-semibold">{toolData.toolname}</div>
+                <StatusDot status={toolData.status} />
+                <div className="min-w-0 truncate text-[13px] font-medium text-[var(--text)]">{toolLabel}</div>
                 <div className="flex-1" />
+                <span
+                    className="hidden max-w-[45%] truncate font-mono text-[10px] text-[var(--text-dim)] @[260px]:inline"
+                    title={toolData.toolname}
+                >
+                    {toolData.toolname}
+                </span>
                 {isFileWriteTool &&
                     toolData.inputfilename &&
                     toolData.writebackupfilename &&
@@ -303,12 +401,14 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
                     </button>
                 )}
             </div>
-            {toolData.tooldesc && <ToolDesc text={toolData.tooldesc} className="text-sm text-[var(--text-dim)] pl-6" />}
+            {showDesc && <ToolDesc text={toolData.tooldesc} className="pl-[14px] text-[13px] text-[var(--text-dim)]" />}
             {(toolData.errormessage || effectiveApproval === "timeout") && (
-                <div className="text-sm text-error pl-6">{toolData.errormessage || "Not approved"}</div>
+                <div className="pl-[14px] text-[12px] text-[var(--text-dim)]">
+                    {toolData.errormessage || "Not approved"}
+                </div>
             )}
             {effectiveApproval === "needs-approval" && (
-                <div className="pl-6">
+                <div className="pl-[14px]">
                     <AIToolApprovalButtons count={1} onApprove={handleApprove} onDeny={handleDeny} />
                 </div>
             )}

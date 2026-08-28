@@ -58,9 +58,9 @@ func getSystemPrompt(apiType string, model string, isBuilder bool, hasToolsCapab
 	modelLower := strings.ToLower(model)
 	needsStrictToolAddOn, _ := regexp.MatchString(`(?i)\b(mistral|o?llama|qwen|mixtral|yi|phi|deepseek)\b`, modelLower)
 	if needsStrictToolAddOn && !useNoToolsPrompt {
-		return []string{basePrompt, SystemPromptText_StrictToolAddOn}
+		return []string{basePrompt, SystemPromptText_StrictToolAddOn, SystemPromptText_HouseVoice}
 	}
-	return []string{basePrompt}
+	return []string{basePrompt, SystemPromptText_HouseVoice}
 }
 
 func isLocalEndpoint(endpoint string) bool {

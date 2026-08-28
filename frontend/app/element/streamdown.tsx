@@ -233,61 +233,82 @@ export const WaveStreamdown = ({
                 />
             ),
             p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
-                <p {...props} className="text-secondary text-[15px] leading-relaxed" />
+                <p {...props} className="text-[14px] leading-[1.6] text-[var(--text)]" />
             ),
             h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-                <h1 {...props} className="text-2xl font-bold text-primary mt-6 mb-3" />
+                <h1
+                    {...props}
+                    className="mt-5 mb-2 font-serif text-[17px] font-medium leading-[1.2] tracking-[-0.01em] text-[var(--text)]"
+                />
             ),
             h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-                <h2 {...props} className="text-xl font-bold text-primary mt-5 mb-2" />
+                <h2
+                    {...props}
+                    className="mt-4 mb-1.5 font-serif text-[15.5px] font-medium leading-[1.25] tracking-[-0.01em] text-[var(--text)]"
+                />
             ),
             h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-                <h3 {...props} className="text-lg font-bold text-primary mt-4 mb-2" />
+                <h3
+                    {...props}
+                    className="mt-3 mb-1 font-serif text-[14px] font-medium leading-[1.3] text-[var(--text)]"
+                />
             ),
             h4: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-                <h4 {...props} className="text-base font-semibold text-primary mt-3 mb-1" />
+                <h4
+                    {...props}
+                    className="mt-3 mb-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-dim)]"
+                />
             ),
             h5: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-                <h5 {...props} className="text-sm font-semibold text-primary mt-2 mb-1" />
+                <h5
+                    {...props}
+                    className="mt-2 mb-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-dim)]"
+                />
             ),
             h6: (props: React.HTMLAttributes<HTMLHeadingElement>) => (
-                <h6 {...props} className="text-sm text-primary mt-2 mb-1" />
+                <h6
+                    {...props}
+                    className="mt-2 mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-dim)]"
+                />
             ),
             table: (props: React.HTMLAttributes<HTMLTableElement>) => (
-                <table {...props} className="w-full border-collapse my-4" />
+                <table {...props} className="my-3 w-full border-collapse text-[13px]" />
             ),
             thead: (props: React.HTMLAttributes<HTMLTableSectionElement>) => (
-                <thead {...props} className="border-b border-border" />
+                <thead {...props} className="border-b border-[var(--hairline-strong)]" />
             ),
             tbody: (props: React.HTMLAttributes<HTMLTableSectionElement>) => <tbody {...props} />,
             tr: (props: React.HTMLAttributes<HTMLTableRowElement>) => (
-                <tr {...props} className="border-b border-border/50 last:border-0" />
+                <tr {...props} className="border-b border-[var(--hairline-faint)] last:border-0" />
             ),
             th: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                <th {...props} className="text-left font-semibold px-2 py-1.5 text-sm text-primary" />
+                <th
+                    {...props}
+                    className="px-2 py-1.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-dim)]"
+                />
             ),
             td: (props: React.HTMLAttributes<HTMLTableCellElement>) => (
-                <td {...props} className="px-2 py-1.5 text-sm text-secondary" />
+                <td {...props} className="px-2 py-1.5 align-top text-[13px] tabular-nums text-[var(--text)]" />
             ),
             ul: (props: React.HTMLAttributes<HTMLUListElement>) => (
                 <ul
                     {...props}
-                    className="list-disc list-outside pl-6 mt-1 mb-2 text-secondary [&_ul]:my-1 [&_ol]:my-1"
+                    className="mt-1 mb-2 list-outside list-disc pl-5 text-[var(--text)] marker:text-[var(--text-dim)] [&_ul]:my-1 [&_ol]:my-1"
                 />
             ),
             ol: (props: React.HTMLAttributes<HTMLOListElement>) => (
                 <ol
                     {...props}
-                    className="list-decimal list-outside pl-6 mt-1 mb-2 text-secondary [&_ul]:my-1 [&_ol]:my-1"
+                    className="mt-1 mb-2 list-outside list-decimal pl-5 text-[var(--text)] marker:text-[var(--text-dim)] [&_ul]:my-1 [&_ol]:my-1"
                 />
             ),
             li: (props: React.HTMLAttributes<HTMLLIElement>) => (
-                <li {...props} className="text-secondary text-[15px] leading-relaxed mt-1" />
+                <li {...props} className="mt-0.5 text-[14px] leading-[1.55] text-[var(--text)]" />
             ),
             blockquote: (props: React.HTMLAttributes<HTMLQuoteElement>) => (
                 <blockquote
                     {...props}
-                    className="border-l-2 border-accent/40 bg-accent/5 pl-4 pr-3 py-2 my-3 text-secondary italic rounded-r-[2px]"
+                    className="my-2 border-l border-[var(--hairline-strong)] pl-3 text-[var(--text-dim)]"
                 />
             ),
             details: ({ children, ...props }) => {
@@ -309,7 +330,7 @@ export const WaveStreamdown = ({
                 <a {...props} className="text-accent hover:underline" />
             ),
             strong: (props: React.HTMLAttributes<HTMLElement>) => (
-                <strong {...props} className="font-semibold text-secondary" />
+                <strong {...props} className="font-semibold text-[var(--text)]" />
             ),
             em: (props: React.HTMLAttributes<HTMLElement>) => <em {...props} className="italic text-secondary" />,
         }),
