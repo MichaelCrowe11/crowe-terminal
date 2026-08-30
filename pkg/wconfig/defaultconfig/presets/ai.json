@@ -14,7 +14,7 @@
         "ai:name": "Crowe Logic",
         "ai:orgid": "",
         "ai:model": "crowelm-titan",
-        "ai:maxtokens": 8000,
+        "ai:maxtokens": 16000,
         "ai:timeoutms": 120000
     },
     "ai@crowelm-apex": {
@@ -27,7 +27,7 @@
         "ai:name": "Crowe Logic",
         "ai:orgid": "",
         "ai:model": "crowelm-coder",
-        "ai:maxtokens": 4000,
+        "ai:maxtokens": 16000,
         "ai:timeoutms": 60000
     },
     "ai@crowelm-auto": {
@@ -40,7 +40,7 @@
         "ai:name": "Crowe Logic",
         "ai:orgid": "",
         "ai:model": "crowelm-apex",
-        "ai:maxtokens": 4000,
+        "ai:maxtokens": 16000,
         "ai:timeoutms": 60000
     }
 }
