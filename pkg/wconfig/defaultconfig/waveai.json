@@ -54,11 +54,11 @@
         "display:name": "CroweLM Grow Ops",
         "display:order": 0,
         "display:icon": "leaf",
-        "display:description": "Cultivation operations, SOPs, contamination triage, and yield decisions.\nFast model with tools for on-the-floor questions.",
+        "display:description": "Cultivation operations, SOPs, contamination triage, and yield decisions.\nThe Grower tier: flagship model with the cultivation operations persona, tools, reads photos.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
-        "ai:model": "crowelm-flash",
+        "ai:model": "crowelm-grower",
         "ai:capabilities": [
             "tools"
         ],
