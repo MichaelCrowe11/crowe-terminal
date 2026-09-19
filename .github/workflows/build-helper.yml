@@ -32,15 +32,14 @@ jobs:
                       runner: "ubuntu-latest"
                     - platform: "linux"
                       runner: ubuntu-24.04-arm
-                    # Windows signing requires DigiCert Keylocker secrets
+                    # Windows builds are unsigned until the DigiCert Keylocker secrets
                     # (SM_HOST, SM_API_KEY, SM_CODE_SIGNING_CERT_SHA1_HASH,
-                    # SM_CLIENT_CERT_PASSWORD, SM_CLIENT_CERT_FILE_B64) which
-                    # are not yet configured for the Crowe Logic fork. Restore
-                    # this entry when Windows code-signing infrastructure exists.
-                    # - platform: "windows"
-                    #   runner: "windows-latest"
-                    # - platform: "windows"
-                    #   runner: "windows-11-arm64-16core"
+                    # SM_CLIENT_CERT_PASSWORD, SM_CLIENT_CERT_FILE_B64) exist and the
+                    # ENABLE_WINDOWS_SIGNING repository variable is set to "true".
+                    - platform: "windows"
+                      runner: "windows-latest"
+                    - platform: "windows"
+                      runner: "windows-11-arm"
         runs-on: ${{ matrix.runner }}
         timeout-minutes: 30
         steps:
@@ -118,12 +117,12 @@ jobs:
 
             # Windows Code Signing Setup
             - name: Set up certificate (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch'
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && vars.ENABLE_WINDOWS_SIGNING == 'true'
               run: |
                   echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
               shell: bash
             - name: Set signing variables (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch'
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && vars.ENABLE_WINDOWS_SIGNING == 'true'
               id: variables
               run: |
                   echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
@@ -137,7 +136,7 @@ jobs:
                   echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $GITHUB_PATH
               shell: bash
             - name: Setup Keylocker KSP (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch'
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && vars.ENABLE_WINDOWS_SIGNING == 'true'
               run: |
                   curl -X GET  https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
                   msiexec /i Keylockertools-windows-x64.msi /quiet /qn
@@ -178,8 +177,10 @@ jobs:
               run: task package
               env:
                   USE_SYSTEM_FPM: true # Ensure that the installed version of FPM is used rather than the bundled one.
-                  CSC_LINK: ${{ steps.variables.outputs.SM_CLIENT_CERT_FILE }}
-                  CSC_KEY_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+                  # Empty when signing is disabled; electron-builder treats empty CSC_LINK as unset
+                  # and electron-builder.config.cjs only signs when SM_CODE_SIGNING_CERT_SHA1_HASH is present.
+                  CSC_LINK: ${{ vars.ENABLE_WINDOWS_SIGNING == 'true' && steps.variables.outputs.SM_CLIENT_CERT_FILE || '' }}
+                  CSC_KEY_PASSWORD: ${{ vars.ENABLE_WINDOWS_SIGNING == 'true' && secrets.SM_CLIENT_CERT_PASSWORD || '' }}
                   STATIC_DOCSITE_PATH: ${{env.STATIC_DOCSITE_PATH}}
               shell: powershell # electron-builder's Windows code signing package has some compatibility issues with pwsh, so we need to use Windows Powershell
 
