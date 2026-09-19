@@ -206,6 +206,72 @@ jobs:
               with:
                   name: ${{ matrix.runner }}-log
                   path: /home/runner/.local/state/snapcraft/log
+    # Microsoft Store package. Independent of the DigiCert Authenticode pipeline: the Store
+    # signs the MSIX during ingestion. Requires the HYPHEUS_STORE_IDENTITY_NAME and
+    # HYPHEUS_STORE_PUBLISHER repository variables, copied from Partner Center after the app
+    # name is reserved. Runs WACK before upload so certification failures surface here.
+    build-store:
+        if: vars.HYPHEUS_STORE_IDENTITY_NAME != ''
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - arch: x64
+                      runner: windows-latest
+                    - arch: arm64
+                      runner: windows-11-arm
+        runs-on: ${{ matrix.runner }}
+        timeout-minutes: 45
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-go@v6
+              with:
+                  go-version: ${{env.GO_VERSION}}
+                  cache-dependency-path: |
+                      go.sum
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: ${{env.NODE_VERSION}}
+                  cache: npm
+                  cache-dependency-path: package-lock.json
+            - uses: nick-fields/retry@v4
+              name: npm ci
+              with:
+                  command: npm ci --no-audit --no-fund
+                  retry_on: error
+                  max_attempts: 3
+                  timeout_minutes: 5
+            - name: Install Task
+              uses: arduino/setup-task@v2
+              with:
+                  version: 3.x
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Build MSIX
+              run: task package:store -- --${{ matrix.arch }}
+              env:
+                  HYPHEUS_STORE_IDENTITY_NAME: ${{ vars.HYPHEUS_STORE_IDENTITY_NAME }}
+                  HYPHEUS_STORE_PUBLISHER: ${{ vars.HYPHEUS_STORE_PUBLISHER }}
+              shell: powershell
+            - name: Windows App Certification Kit
+              run: |
+                  $appx = Get-ChildItem make -Filter *.appx | Select-Object -First 1
+                  if (-not $appx) { throw "no .appx produced" }
+                  $report = Join-Path $PWD "make\wack-${{ matrix.arch }}.xml"
+                  & "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\appcert.exe" reset
+                  & "C:\Program Files (x86)\Windows Kits\10\App Certification Kit\appcert.exe" test -appxpackagepath $appx.FullName -reportoutputpath $report
+                  [xml]$xml = Get-Content $report
+                  $overall = $xml.REPORT.OVERALL_RESULT
+                  Write-Host "WACK overall result: $overall"
+                  if ($overall -ne "PASS") { exit 1 }
+              shell: powershell
+            - name: Upload Store artifacts
+              uses: actions/upload-artifact@v5
+              with:
+                  name: store-${{ matrix.arch }}
+                  path: |
+                      make/*.appx
+                      make/wack-*.xml
+
     create-release:
         runs-on: ubuntu-latest
         timeout-minutes: 30

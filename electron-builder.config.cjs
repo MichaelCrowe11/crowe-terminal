@@ -5,6 +5,13 @@ const path = require("path");
 
 const windowsShouldSign = !!process.env.SM_CODE_SIGNING_CERT_SHA1_HASH;
 
+// Microsoft Store (MSIX/appx) build. Partner Center assigns the identity values when the app
+// name is reserved; they must match exactly or Store ingestion rejects the package. The
+// Store signs the package itself, so no Authenticode cert is needed for this target.
+const buildForStore = process.env.HYPHEUS_STORE_BUILD === "1";
+const storeIdentityName = process.env.HYPHEUS_STORE_IDENTITY_NAME || "CroweLogicInc.Hypheus";
+const storePublisher = process.env.HYPHEUS_STORE_PUBLISHER || "CN=Crowe Logic Inc";
+
 const hasMacSigningCert = !!process.env.CSC_LINK || !!process.env.CSC_NAME;
 const hasMacNotarizeCreds =
     !!process.env.APPLE_TEAM_ID && !!process.env.APPLE_ID && !!process.env.APPLE_APP_SPECIFIC_PASSWORD;
@@ -108,13 +115,27 @@ const config = {
         afterInstall: "build/deb-postinstall.tpl",
     },
     win: {
-        target: ["nsis", "msi", "zip"],
-        signtoolOptions: windowsShouldSign && {
-            signingHashAlgorithms: ["sha256"],
-            publisherName: "Crowe Logic Inc",
-            certificateSubjectName: "Crowe Logic Inc",
-            certificateSha1: process.env.SM_CODE_SIGNING_CERT_SHA1_HASH,
-        },
+        target: buildForStore ? ["appx"] : ["nsis", "msi", "zip"],
+        signtoolOptions:
+            !buildForStore &&
+            windowsShouldSign && {
+                signingHashAlgorithms: ["sha256"],
+                publisherName: "Crowe Logic Inc",
+                certificateSubjectName: "Crowe Logic Inc",
+                certificateSha1: process.env.SM_CODE_SIGNING_CERT_SHA1_HASH,
+            },
+    },
+    appx: {
+        identityName: storeIdentityName,
+        publisher: storePublisher,
+        publisherDisplayName: "Crowe Logic Inc",
+        applicationId: "Hypheus",
+        displayName: pkg.productName,
+        backgroundColor: "#0b0f14",
+        languages: ["en-US"],
+        addAutoLaunchExtension: false,
+        showNameOnTiles: true,
+        artifactName: "${productName}-store-${arch}-${version}.${ext}",
     },
     appImage: {
         license: "LICENSE",

@@ -233,6 +233,13 @@ export async function configureAutoUpdater() {
         return;
     }
 
+    // Microsoft Store builds are updated by the Store. Self-update would fail against the
+    // read-only MSIX install root and violates Store certification policy 10.8.2.
+    if (process.windowsStore) {
+        console.log("skipping auto-updater in Microsoft Store build");
+        return;
+    }
+
     // simple lock to prevent multiple auto-update configuration attempts, this should be very rare
     if (autoUpdateLock) {
         console.log("auto-update configuration already in progress, skipping");
