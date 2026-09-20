@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { WaveStreamdown } from "@/app/element/streamdown";
@@ -268,7 +268,7 @@ export const AIMessage = memo(({ message, isStreaming }: AIMessageProps) => {
                     "[&>*:first-child]:!mt-0",
                     message.role === "user"
                         ? "max-w-[calc(100%-40px)] rounded-[var(--radius-md)] border border-[var(--hairline)] bg-[var(--wash-accent-faint)] px-3.5 py-2.5 text-[var(--text)] [box-shadow:inset_0_1px_0_var(--hair-top)]"
-                        : "min-w-[min(100%,500px)] px-1"
+                        : "min-w-0 flex-1 px-1 [overflow-wrap:anywhere]"
                 )}
             >
                 {displayParts.length === 0 && !isStreaming && !thinkingData ? (

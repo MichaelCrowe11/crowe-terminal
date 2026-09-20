@@ -13,6 +13,7 @@ type ctxKey int
 const (
 	ctxKeyBlockID ctxKey = iota
 	ctxKeyAgentSessionID
+	ctxKeyTabID
 )
 
 // WithBlockID stamps a block id onto the request context. Tool transports
@@ -32,6 +33,20 @@ func BlockIDFromContext(ctx context.Context) (string, bool) {
 		return "", false
 	}
 	v, ok := ctx.Value(ctxKeyBlockID).(string)
+	return v, ok && v != ""
+}
+
+// WithTabID is for transports with a trusted tab identity but no calling block.
+// Never populate it from a tool's model-supplied target.
+func WithTabID(ctx context.Context, tabID string) context.Context {
+	return context.WithValue(ctx, ctxKeyTabID, tabID)
+}
+
+func TabIDFromContext(ctx context.Context) (string, bool) {
+	if ctx == nil {
+		return "", false
+	}
+	v, ok := ctx.Value(ctxKeyTabID).(string)
 	return v, ok && v != ""
 }
 

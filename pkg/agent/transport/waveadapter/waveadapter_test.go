@@ -4,6 +4,7 @@
 package waveadapter
 
 import (
+	"context"
 	"testing"
 
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/uctypes"
@@ -24,7 +25,7 @@ func toolNames(defs []uctypes.ToolDefinition) map[string]bool {
 // cannot turn into image content; forwarding it would spend megabytes of context on
 // base64 text. aiusechat registers an image-capable capture_screenshot of its own.
 func TestScreenshotToolExcludedFromWavePath(t *testing.T) {
-	names := toolNames(AppendAgentTools(nil))
+	names := toolNames(AppendAgentTools(context.Background(), "", nil))
 	if names["widget_capture_screenshot"] {
 		t.Fatal("widget.capture_screenshot must not reach the Wave chat path")
 	}
@@ -38,7 +39,7 @@ func TestScreenshotToolExcludedFromWavePath(t *testing.T) {
 
 func TestAppendAgentToolsPreservesExisting(t *testing.T) {
 	existing := []uctypes.ToolDefinition{{Name: "already_here"}}
-	if names := toolNames(AppendAgentTools(existing)); !names["already_here"] {
+	if names := toolNames(AppendAgentTools(context.Background(), "", existing)); !names["already_here"] {
 		t.Fatal("AppendAgentTools dropped a tool Wave had already built")
 	}
 }

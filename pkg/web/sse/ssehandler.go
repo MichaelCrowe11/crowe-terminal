@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package sse
@@ -247,14 +247,14 @@ func (h *SSEHandlerCh) setError(err error) {
 // queueMessage queues an SSEMessage to be written
 func (h *SSEHandlerCh) queueMessage(msg SSEMessage) error {
 	h.lock.Lock()
-	closed := h.closed
-	h.lock.Unlock()
-
-	if closed {
+	defer h.lock.Unlock()
+	if h.closed || h.handlersRun {
 		return fmt.Errorf("SSE handler is closed")
 	}
-
-	if err := h.Err(); err != nil {
+	if h.err != nil {
+		return h.err
+	}
+	if err := h.ctx.Err(); err != nil {
 		return err
 	}
 
@@ -312,6 +312,9 @@ func (h *SSEHandlerCh) Err() error {
 	if h.err == nil && h.ctx.Err() != nil {
 		h.err = h.ctx.Err()
 	}
+	if h.err == nil && (h.closed || h.handlersRun) {
+		return fmt.Errorf("SSE handler is closed")
+	}
 	return h.err
 }
 
@@ -320,6 +323,10 @@ func (h *SSEHandlerCh) Err() error {
 func (h *SSEHandlerCh) RegisterOnClose(fn func()) string {
 	h.lock.Lock()
 	defer h.lock.Unlock()
+	if h.handlersRun {
+		go fn()
+		return ""
+	}
 	return h.onCloseHandlers.Register(fn)
 }
 
@@ -338,9 +345,9 @@ func (h *SSEHandlerCh) runOnCloseHandlers() {
 		return
 	}
 	h.handlersRun = true
+	handlers := h.onCloseHandlers.GetList()
 	h.lock.Unlock()
 
-	handlers := h.onCloseHandlers.GetList()
 	for _, fn := range handlers {
 		fn()
 	}

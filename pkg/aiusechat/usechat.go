@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package aiusechat
@@ -185,6 +185,7 @@ func GetGlobalRateLimit() *uctypes.RateLimitInfo {
 }
 
 func runAIChatStep(ctx context.Context, sseHandler *sse.SSEHandlerCh, backend UseChatBackend, chatOpts uctypes.WaveChatOpts, cont *uctypes.WaveContinueResponse) (*uctypes.WaveStopReason, []uctypes.GenAIMessage, error) {
+	chatOpts.RestrictToolCatalog()
 	if chatOpts.Config.APIType == uctypes.APIType_OpenAIResponses && shouldUseChatCompletionsAPI(chatOpts.Config.Model) {
 		return nil, nil, fmt.Errorf("Chat completions API not available (must use newer OpenAI models)")
 	}
@@ -245,20 +246,14 @@ func processToolCallInternal(backend UseChatBackend, toolCall uctypes.WaveToolCa
 		}
 	}
 
-	if toolDef != nil && toolDef.ToolVerifyInput != nil {
+	if toolCall.Name != "terminal_propose_command" && toolDef != nil && toolDef.ToolVerifyInput != nil {
 		if err := toolDef.ToolVerifyInput(toolCall.Input, toolCall.ToolUseData); err != nil {
-			errorMsg := fmt.Sprintf("Input validation failed: %v", err)
-			toolCall.ToolUseData.Status = uctypes.ToolUseStatusError
-			toolCall.ToolUseData.ErrorMessage = errorMsg
-			return uctypes.AIToolResult{
-				ToolName:  toolCall.Name,
-				ToolUseID: toolCall.ID,
-				ErrorText: errorMsg,
-			}
+			return toolCallError(toolCall, fmt.Errorf("Input validation failed: %w", err))
 		}
 		// ToolVerifyInput can modify the toolusedata.  re-send it here.
-		_ = sseHandler.AiMsgData("data-tooluse", toolCall.ID, *toolCall.ToolUseData)
-		updateToolUseDataInChat(backend, chatOpts, toolCall.ID, *toolCall.ToolUseData)
+		if err := publishToolUseData(backend, chatOpts, toolCall, sseHandler); err != nil {
+			return toolCallError(toolCall, err)
+		}
 	}
 
 	if toolCall.ToolUseData.Approval == uctypes.ApprovalNeedsApproval {
@@ -289,10 +284,14 @@ func processToolCallInternal(backend UseChatBackend, toolCall uctypes.WaveToolCa
 		}
 
 		// this still happens here because we need to update the FE to say the tool call was approved
-		_ = sseHandler.AiMsgData("data-tooluse", toolCall.ID, *toolCall.ToolUseData)
-		updateToolUseDataInChat(backend, chatOpts, toolCall.ID, *toolCall.ToolUseData)
+		if err := publishToolUseData(backend, chatOpts, toolCall, sseHandler); err != nil {
+			return toolCallError(toolCall, err)
+		}
 	}
 
+	if err := sseHandler.Err(); err != nil {
+		return toolCallError(toolCall, err)
+	}
 	toolCall.ToolUseData.RunTs = time.Now().UnixMilli()
 	result := ResolveToolCall(toolDef, toolCall, chatOpts)
 
@@ -332,25 +331,91 @@ func processToolCall(backend UseChatBackend, toolCall uctypes.WaveToolCall, chat
 	return result
 }
 
-func processAllToolCalls(backend UseChatBackend, stopReason *uctypes.WaveStopReason, chatOpts uctypes.WaveChatOpts, sseHandler *sse.SSEHandlerCh, metrics *uctypes.AIMetrics) {
+func toolCallError(toolCall uctypes.WaveToolCall, err error) uctypes.AIToolResult {
+	toolCall.ToolUseData.Status = uctypes.ToolUseStatusError
+	toolCall.ToolUseData.ErrorMessage = err.Error()
+	if toolCall.ToolUseData.Approval == uctypes.ApprovalNeedsApproval {
+		toolCall.ToolUseData.Approval = uctypes.ApprovalCanceled
+	}
+	return uctypes.AIToolResult{ToolName: toolCall.Name, ToolUseID: toolCall.ID, ErrorText: err.Error()}
+}
+
+func publishToolUseData(backend UseChatBackend, chatOpts uctypes.WaveChatOpts, toolCall uctypes.WaveToolCall, sseHandler *sse.SSEHandlerCh) error {
+	if err := sseHandler.Err(); err != nil {
+		return err
+	}
+	if err := backend.UpdateToolUseData(chatOpts.ChatId, toolCall.ID, *toolCall.ToolUseData); err != nil {
+		return fmt.Errorf("persist tool approval: %w", err)
+	}
+	return sseHandler.AiMsgData("data-tooluse", toolCall.ID, *toolCall.ToolUseData)
+}
+
+func prepareToolCall(toolCall *uctypes.WaveToolCall, chatOpts uctypes.WaveChatOpts) {
+	// Create toolUseData from the tool call input
+	argsBytes, err := json.Marshal(toolCall.Input)
+	toolUseData := aiutil.CreateToolUseData(toolCall.ID, toolCall.Name, string(argsBytes), chatOpts)
+	toolCall.ToolUseData = &toolUseData
+	if err != nil {
+		toolCallError(*toolCall, err)
+		return
+	}
+	if toolUseData.Status == uctypes.ToolUseStatusError {
+		return
+	}
+	toolDef := chatOpts.GetToolDefinition(toolCall.Name)
+	// Only terminal proposals need eager preparation; file verifiers may depend
+	// on earlier calls in this batch creating or changing their target files.
+	if toolCall.Name == "terminal_propose_command" && toolDef != nil && toolDef.ToolVerifyInput != nil {
+		if err := toolDef.ToolVerifyInput(toolCall.Input, toolCall.ToolUseData); err != nil {
+			toolCallError(*toolCall, fmt.Errorf("Input validation failed: %w", err))
+		}
+	}
+}
+
+func processAllToolCalls(backend UseChatBackend, stopReason *uctypes.WaveStopReason, chatOpts uctypes.WaveChatOpts, sseHandler *sse.SSEHandlerCh, metrics *uctypes.AIMetrics, seenCalls map[string]bool) error {
+	registered := make(map[string]bool)
+	counts := make(map[string]int)
+	for _, call := range stopReason.ToolCalls {
+		counts[call.ID]++
+		_, active := getToolApprovalRequest(call.ID)
+		if call.ID == "" || counts[call.ID] > 1 || seenCalls[call.ID] || active {
+			return fmt.Errorf("duplicate, stale, or invalid tool call id: %s", call.ID)
+		}
+	}
+	defer func() {
+		for id := range registered {
+			UnregisterToolApproval(id)
+		}
+		for _, call := range stopReason.ToolCalls {
+			if def := chatOpts.GetToolDefinition(call.Name); def != nil && def.ToolCallCleanup != nil {
+				def.ToolCallCleanup(call.ToolUseData)
+			}
+		}
+	}()
 	// Create and send all data-tooluse packets at the beginning
 	for i := range stopReason.ToolCalls {
 		toolCall := &stopReason.ToolCalls[i]
-		// Create toolUseData from the tool call input
-		var argsJSON string
-		if toolCall.Input != nil {
-			argsBytes, err := json.Marshal(toolCall.Input)
-			if err == nil {
-				argsJSON = string(argsBytes)
-			}
+		seenCalls[toolCall.ID] = true
+		if err := sseHandler.Err(); err != nil {
+			toolCall.ToolUseData = &uctypes.UIMessageDataToolUse{ToolCallId: toolCall.ID, ToolName: toolCall.Name}
+			toolCallError(*toolCall, err)
+			continue
 		}
-		toolUseData := aiutil.CreateToolUseData(toolCall.ID, toolCall.Name, argsJSON, chatOpts)
-		stopReason.ToolCalls[i].ToolUseData = &toolUseData
+		prepareToolCall(toolCall, chatOpts)
+		if toolCall.ToolUseData.Status != uctypes.ToolUseStatusError && toolCall.ToolUseData.Approval == uctypes.ApprovalNeedsApproval {
+			if err := RegisterToolApproval(toolCall.ID, sseHandler); err != nil {
+				toolCallError(*toolCall, err)
+				return err
+			}
+			registered[toolCall.ID] = true
+		}
 		log.Printf("AI data-tooluse %s\n", toolCall.ID)
-		_ = sseHandler.AiMsgData("data-tooluse", toolCall.ID, toolUseData)
-		updateToolUseDataInChat(backend, chatOpts, toolCall.ID, toolUseData)
-		if toolUseData.Approval == uctypes.ApprovalNeedsApproval {
-			RegisterToolApproval(toolCall.ID, sseHandler)
+		if err := publishToolUseData(backend, chatOpts, *toolCall, sseHandler); err != nil {
+			toolCallError(*toolCall, err)
+			if registered[toolCall.ID] {
+				UnregisterToolApproval(toolCall.ID)
+				delete(registered, toolCall.ID)
+			}
 		}
 	}
 	// At this point, all ToolCalls are guaranteed to have non-nil ToolUseData
@@ -368,7 +433,10 @@ func processAllToolCalls(backend UseChatBackend, stopReason *uctypes.WaveStopRea
 	// Cleanup: unregister approvals, remove incomplete/canceled tool calls, and filter results
 	var filteredResults []uctypes.AIToolResult
 	for i, toolCall := range stopReason.ToolCalls {
-		UnregisterToolApproval(toolCall.ID)
+		if registered[toolCall.ID] {
+			UnregisterToolApproval(toolCall.ID)
+			delete(registered, toolCall.ID)
+		}
 		hasResult := i < len(toolResults)
 		shouldRemove := !hasResult || (toolCall.ToolUseData != nil && toolCall.ToolUseData.Approval == uctypes.ApprovalCanceled)
 		if shouldRemove {
@@ -390,6 +458,7 @@ func processAllToolCalls(backend UseChatBackend, stopReason *uctypes.WaveStopRea
 			}
 		}
 	}
+	return sseHandler.Err()
 }
 
 func RunAIChat(ctx context.Context, sseHandler *sse.SSEHandlerCh, backend UseChatBackend, chatOpts uctypes.WaveChatOpts) (*uctypes.AIMetrics, error) {
@@ -418,6 +487,7 @@ func RunAIChat(ctx context.Context, sseHandler *sse.SSEHandlerCh, backend UseCha
 		AIProvider:    aiProvider,
 		IsLocal:       isLocal,
 	}
+	seenToolCalls := make(map[string]bool)
 	firstStep := true
 	var cont *uctypes.WaveContinueResponse
 	for {
@@ -486,7 +556,10 @@ func RunAIChat(ctx context.Context, sseHandler *sse.SSEHandlerCh, backend UseCha
 		}
 		if stopReason != nil && stopReason.Kind == uctypes.StopKindToolUse {
 			metrics.ToolUseCount += len(stopReason.ToolCalls)
-			processAllToolCalls(backend, stopReason, chatOpts, sseHandler, metrics)
+			if err := processAllToolCalls(backend, stopReason, chatOpts, sseHandler, metrics, seenToolCalls); err != nil {
+				metrics.HadError = true
+				return metrics, err
+			}
 			cont = &uctypes.WaveContinueResponse{
 				Model:            chatOpts.Config.Model,
 				ContinueFromKind: uctypes.StopKindToolUse,
@@ -511,7 +584,7 @@ func ResolveToolCall(toolDef *uctypes.ToolDefinition, toolCall uctypes.WaveToolC
 		}
 	}()
 
-	if toolDef == nil {
+	if chatOpts.GetToolDefinition(toolCall.Name) == nil || toolDef == nil {
 		result.ErrorText = fmt.Sprintf("tool '%s' not found", toolCall.Name)
 		return
 	}

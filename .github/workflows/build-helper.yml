@@ -18,7 +18,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+    validate-approval:
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-go@v6
+              with:
+                  go-version: ${{env.GO_VERSION}}
+                  cache-dependency-path: go.sum
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: ${{env.NODE_VERSION}}
+                  cache: npm
+            - name: Force git deps to HTTPS
+              run: |
+                  git config --global url.https://github.com/.insteadof ssh://git@github.com/
+                  git config --global url.https://github.com/.insteadof git@github.com:
+            - name: Install frontend test dependencies
+              run: npm ci --no-audit --no-fund
+              env:
+                  WAVETERM_SKIP_APP_DEPS: "1"
+            - name: Test scoped terminal approval
+              run: go test ./pkg/agent/tools/terminal ./pkg/agent/transport/waveadapter ./pkg/aiusechat ./pkg/aiusechat/uctypes ./pkg/blockcontroller -run '^Test(TerminalProposal|TerminalApproval|ScreenshotToolExcludedFromWavePath|AppendAgentToolsPreservesExisting)' -count=1 -timeout=90s
+            - name: Test restricted smoke tool dispatch
+              run: go test ./pkg/aiusechat ./pkg/aiusechat/uctypes -run '^TestTerminalApprovalSmoke' -count=1 -timeout=90s
+              env:
+                  CROWE_TERMINAL_APPROVAL_SMOKE: "1"
+            - name: Typecheck frontend
+              run: npx tsc --noEmit
+            - name: Test frontend
+              run: npm test -- --run
+            - name: Verify image optimizer engine
+              run: |
+                  node --input-type=module -e 'import { createRequire } from "node:module"; const require = createRequire(import.meta.url); const optimizerRequire = createRequire(require.resolve("vite-plugin-image-optimizer")); const sharp = optimizerRequire("sharp"); await sharp({ create: { width: 1, height: 1, channels: 4, background: "#fff" } }).png().toBuffer(); console.log("Sharp PNG conversion passed");'
     build-app:
+        needs: validate-approval
         outputs:
             version: ${{ steps.set-version.outputs.WAVETERM_VERSION }}
             productname: ${{ steps.set-version.outputs.PRODUCT_NAME }}
