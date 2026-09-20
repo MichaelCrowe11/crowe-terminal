@@ -178,6 +178,16 @@ tasks:
         deps:
             - docs:npm:install
 
+    check:models-key:
+        desc: Refuse to package a build whose CroweLM modes would have no credential. Set CROWE_MODELS_KEY, or HYPHEUS_ALLOW_KEYLESS=1 for a deliberately keyless build.
+        silent: true
+        cmds:
+            - |
+              if [ -z "$CROWE_MODELS_KEY" ] && [ -z "$HYPHEUS_ALLOW_KEYLESS" ]; then
+                echo "CROWE_MODELS_KEY is not set: the packaged CroweLM modes would fail with a missing credential. Export it, or set HYPHEUS_ALLOW_KEYLESS=1 to package without it." >&2
+                exit 1
+              fi
+
     package:
         desc: Package the application for the current platform.
         # clean must finish before the builds start. As deps these ran
@@ -186,6 +196,7 @@ tasks:
         # clean removed dist/, so the app packaged with no wavesrv or wsh at all
         # and failed to launch (spawn wavesrv.arm64 ENOENT). cmds run in order.
         cmds:
+            - task: check:models-key
             - task: clean
             - task: npm:install
             - task: build:backend
@@ -342,6 +353,7 @@ tasks:
         desc: Package the Microsoft Store MSIX (appx) on a Windows host. Requires HYPHEUS_STORE_IDENTITY_NAME and HYPHEUS_STORE_PUBLISHER from Partner Center; the Store signs the package, so no Authenticode cert is used.
         platforms: [windows]
         cmds:
+            - task: check:models-key
             - task: clean
             - task: npm:install
             - task: build:backend
@@ -353,6 +365,7 @@ tasks:
     package:linux:
         desc: Package the Linux AppImage from macOS. Cross-compiles wavesrv with zig, then runs electron-builder for the Linux x64 AppImage only. Does not clean make/, so existing artifacts for other platforms survive.
         cmds:
+            - task: check:models-key
             - task: build:server:linux:cross
             - npm run build:prod
             - npm exec electron-builder -- -c electron-builder.config.cjs --linux AppImage --x64 -p never {{.CLI_ARGS}}
