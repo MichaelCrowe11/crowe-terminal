@@ -12,8 +12,8 @@ mkdir -p "$DEST"
 sha_for() {
     curl -fsSL "https://github.com/$REPO/releases/download/v$VERSION/$1" | shasum -a 256 | awk '{print $1}'
 }
+# x64 only: the Windows arm64 build is not produced (see build-helper.yml).
 X64_SHA="$(sha_for "Hypheus-win32-x64-$VERSION.exe")"
-ARM64_SHA="$(sha_for "Hypheus-win32-arm64-$VERSION.exe")"
 TODAY="$(date -u +%F)"
 
 for f in "$TEMPLATE"/*.yaml; do
@@ -21,11 +21,7 @@ for f in "$TEMPLATE"/*.yaml; do
     sed -e "s/^PackageVersion: .*/PackageVersion: $VERSION/" \
         -e "s/^ReleaseDate: .*/ReleaseDate: $TODAY/" \
         -e "s#/v[0-9.]*/Hypheus-win32-x64-[0-9.]*\.exe#/v$VERSION/Hypheus-win32-x64-$VERSION.exe#" \
-        -e "s#/v[0-9.]*/Hypheus-win32-arm64-[0-9.]*\.exe#/v$VERSION/Hypheus-win32-arm64-$VERSION.exe#" \
+        -e "s/^\(\s*InstallerSha256:\) .*/\1 $X64_SHA/" \
         "$f" > "$out"
 done
-# Replace the two SHA lines in order: x64 first, arm64 second.
-awk -v a="$X64_SHA" -v b="$ARM64_SHA" '
-    /InstallerSha256:/ { n++; sub(/InstallerSha256: .*/, "InstallerSha256: " (n==1 ? a : b)) } { print }
-' "$DEST/CroweLogic.Hypheus.installer.yaml" > "$DEST/.tmp" && mv "$DEST/.tmp" "$DEST/CroweLogic.Hypheus.installer.yaml"
 echo "wrote $DEST"

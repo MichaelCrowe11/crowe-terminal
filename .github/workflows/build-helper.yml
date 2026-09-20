@@ -36,10 +36,13 @@ jobs:
                     # (SM_HOST, SM_API_KEY, SM_CODE_SIGNING_CERT_SHA1_HASH,
                     # SM_CLIENT_CERT_PASSWORD, SM_CLIENT_CERT_FILE_B64) exist and the
                     # ENABLE_WINDOWS_SIGNING repository variable is set to "true".
+                    # x64 only: on windows-11-arm the postinstall native rebuild
+                    # (@serialport/bindings-cpp, node-pty, better-sqlite3 for win32-arm64)
+                    # hung past 15 minutes in runs 35497887002 and 35503825166. Windows
+                    # on ARM runs the x64 build under emulation until prebuilt arm64
+                    # binaries exist for Electron 41.
                     - platform: "windows"
                       runner: "windows-latest"
-                    - platform: "windows"
-                      runner: "windows-11-arm"
         runs-on: ${{ matrix.runner }}
         timeout-minutes: 30
         steps:
@@ -263,10 +266,10 @@ jobs:
             fail-fast: false
             matrix:
                 include:
+                    # arm64 omitted for the same native-rebuild reason as build-app; the
+                    # Store serves the x64 MSIX to ARM devices.
                     - arch: x64
                       runner: windows-latest
-                    - arch: arm64
-                      runner: windows-11-arm
         runs-on: ${{ matrix.runner }}
         timeout-minutes: 45
         steps:
