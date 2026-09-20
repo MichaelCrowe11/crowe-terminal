@@ -81,7 +81,7 @@ const UpgradeOnboardingModal_v0_14_0_Content = () => {
                                 <strong>Image Support</strong> - Vision support in managed CroweLM conversations
                             </li>
                             <li>
-                                <strong>Stop Generation</strong> - Ability to stop AI responses mid-generation
+                                <strong>Stop Generation</strong> - Ability to stop operator responses mid-generation
                             </li>
                             <li>
                                 <strong>Improved Auto-scrolling</strong>

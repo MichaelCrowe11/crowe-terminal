@@ -27,8 +27,8 @@ function WaveAiDeprecatedView() {
             <div className="mx-auto flex w-full max-w-[760px] flex-col items-center">
                 <h2 className="text-xl font-semibold text-primary">This legacy Hypheus block is no longer supported</h2>
                 <p className="mt-3 text-sm leading-6 text-secondary">
-                    This older AI widget has been retired. Please use the modern operator panel for AI chats, terminal
-                    context, tools, and uploads going forward.
+                    This older widget has been retired. Use the operator panel for chats, terminal context, tools, and
+                    uploads.
                 </p>
                 <Button className="mt-6 cursor-pointer" onClick={handleOpenAIPanel}>
                     Open operator panel

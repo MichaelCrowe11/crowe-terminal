@@ -33,7 +33,7 @@ const UpgradeOnboardingModal_v0_14_5_Content = () => {
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>
-                                <strong>Quake Mode</strong> &mdash; global hotkey (
+                                <strong>Quake Mode</strong> - global hotkey (
                                 <code>app:globalhotkey</code>) now toggles a Hypheus window visible and invisible
                             </li>
                             <li>

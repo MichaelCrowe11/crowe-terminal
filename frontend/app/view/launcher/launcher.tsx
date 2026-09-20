@@ -31,8 +31,6 @@ type WorkspaceAction = {
     blockdef: BlockDef;
 };
 
-const CROWE_WEB_IDE_URL = "https://crowecode-web-production.up.railway.app/ide?surface=crowe-terminal";
-
 const WORKSPACE_ACTIONS: WorkspaceAction[] = [
     {
         id: "account",
@@ -40,16 +38,8 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
         name: "Sign in",
         tagline: "Use the managed Crowe Logic workspace. No API keys or model setup.",
         status: "secure",
-        // Temporary fallback while crowecode.com DNS/TLS is being finalized.
-        blockdef: { meta: { view: "web", url: "https://www.crowelogic.com/account" } },
-    },
-    {
-        id: "crowecode-web",
-        eyebrow: "Web IDE",
-        name: "CroweCode Web",
-        tagline: "Run the live CroweCode workspace natively inside Hypheus.",
-        status: "native",
-        blockdef: { meta: { view: "web", url: CROWE_WEB_IDE_URL } },
+        // Crowe ID account console (Keycloak realm "crowe"); crowelogic.com/account does not exist.
+        blockdef: { meta: { view: "web", url: "https://id.crowelogic.com/realms/crowe/account" } },
     },
     {
         id: "code",

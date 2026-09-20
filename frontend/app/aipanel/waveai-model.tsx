@@ -662,7 +662,7 @@ export class WaveAIModel {
         const blockDef: BlockDef = {
             meta: {
                 view: "web",
-                url: "https://crowecode.com/account",
+                url: "https://id.crowelogic.com/realms/crowe/account",
             },
         };
         await createBlock(blockDef, false, true);

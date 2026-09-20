@@ -27,7 +27,7 @@ const UpgradeOnboardingModal_v0_12_3_Content = () => {
                                 <strong>Thinking Mode Toggle</strong> - New dropdown to select between Quick, Balanced,
                                 and Deep thinking modes
                             </li>
-                            <li>Fixed path mismatch issue when restoring AI write file backups</li>
+                            <li>Fixed path mismatch issue when restoring operator write file backups</li>
                         </ul>
                     </div>
                 </div>

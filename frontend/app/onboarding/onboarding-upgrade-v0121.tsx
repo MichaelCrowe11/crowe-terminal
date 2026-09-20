@@ -44,13 +44,13 @@ const UpgradeOnboardingModal_v0_12_1_Content = () => {
                     </div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
-                            <li>Display reasoning summaries while waiting for AI responses</li>
+                            <li>Display reasoning summaries while waiting for operator responses</li>
                             <li>
-                                Enhanced terminal context - AI now has access to shell state, current directory, command
-                                history, and exit codes
+                                Enhanced terminal context - the operator now has access to shell state, current
+                                directory, command history, and exit codes
                             </li>
-                            <li>Added feedback buttons (thumbs up/down) for AI responses</li>
-                            <li>Added copy button to easily copy AI responses to clipboard</li>
+                            <li>Added feedback buttons (thumbs up/down) for operator responses</li>
+                            <li>Added copy button to easily copy operator responses to clipboard</li>
                         </ul>
                     </div>
                 </div>

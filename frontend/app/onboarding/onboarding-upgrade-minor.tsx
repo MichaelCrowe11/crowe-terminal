@@ -28,7 +28,7 @@ const UpgradeMinorWelcomePage = ({ onMaybeLater }: UpgradeMinorWelcomePageProps)
                 <div className="flex justify-center">
                     <Logo />
                 </div>
-                <div className="text-center text-[25px] font-normal text-foreground">Welcome to Hypheus v0.14!</div>
+                <div className="text-center text-[25px] font-normal text-foreground">Welcome to Hypheus 0.15</div>
             </header>
             <OverlayScrollbarsComponent
                 className="flex-1 overflow-y-auto min-h-0"
@@ -42,23 +42,24 @@ const UpgradeMinorWelcomePage = ({ onMaybeLater }: UpgradeMinorWelcomePageProps)
                                 <span className="font-bold ml-2 font-mono">Hypheus</span>
                             </div>
                             <div className="flex h-[52px] px-3 items-center rounded-lg bg-hover text-[18px]">
-                                <i className="fa-sharp fa-solid fa-shield text-sky-500" />
-                                <span className="font-bold ml-2 text-accent">Durable SSH Sessions</span>
+                                <i className="fa-sharp fa-solid fa-diagram-project text-accent" />
+                                <span className="font-bold ml-2 text-accent">CroweLM modes</span>
                             </div>
                         </div>
                         <div className="text-secondary leading-relaxed max-w-[600px] text-left">
                             <p className="mb-4">
-                                Hypheus is your terminal operator with full context. It can read your terminal output,
-                                analyze widgets, read and write files, and help you solve problems&nbsp;faster.
+                                Hypheus is your terminal operator with full context. It reads your terminal output,
+                                analyzes widgets, reads and writes files, and helps you solve problems&nbsp;faster.
                             </p>
                             <p className="mb-4">
-                                <span className="font-semibold text-foreground">New in v0.13:</span> Crowe Logic now
-                                supports local models and bring-your-own-key! Use Ollama, LM Studio, vLLM, OpenRouter,
-                                or any OpenAI-compatible provider.
+                                <span className="font-semibold text-foreground">New in 0.15:</span> the CroweLM modes
+                                run on Crowe Logic's model edge. Workspace, Code, Deep Work, Grow Ops, and Cultivation
+                                Research work as installed, with tools. No local server, no keys, no setup.
                             </p>
                             <p className="mb-4">
-                                <span className="font-semibold text-foreground">New in v0.14:</span> Durable SSH
-                                sessions survive network drops, laptop sleep, and restarts, with no tmux or screen.
+                                <span className="font-semibold text-foreground">Since 0.14:</span> durable SSH sessions
+                                survive network drops, laptop sleep, and restarts, with no tmux or screen. Your own
+                                keys and local models still work through the engine presets.
                             </p>
                         </div>
                     </div>

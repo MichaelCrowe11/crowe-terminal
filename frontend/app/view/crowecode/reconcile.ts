@@ -74,5 +74,5 @@ export function describeReload(fileName: string | undefined, lines: number[], or
     const hi = Math.max(...lines);
     const where = lo === hi ? `line ${lo}` : `lines ${lo} to ${hi}`;
     const by = origin === "agent" ? " by the agent" : origin === "external" ? " by an external edit" : "";
-    return `${base} reloaded — ${where} changed${by}.`;
+    return `${base} reloaded: ${where} changed${by}.`;
 }

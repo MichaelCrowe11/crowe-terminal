@@ -20,7 +20,7 @@ const chatConfigs: ChatConfig[] = [
         markdownResponse: `Here's a quick, file-structure–driven overview of this repo (Hypheus):
 
 ## What it is
-- Electron + React front end with a Go backend ("wavesrv"). Provides a terminal with GUI widgets, previews, web, and AI. (README.md)
+- Electron + React front end with a Go backend ("wavesrv"). Provides a terminal with GUI widgets, previews, web, and an operator panel. (README.md)
 - Licensed Apache-2.0. (LICENSE)
 
 ## Architecture at a glance
@@ -86,7 +86,7 @@ const AIThinking = memo(() => (
             <i className="fa fa-circle text-[10px] mx-1"></i>
             <i className="fa fa-circle text-[10px]"></i>
         </div>
-        <span className="text-sm text-gray-400">AI is thinking...</span>
+        <span className="text-sm text-gray-400">Thinking...</span>
     </div>
 ));
 

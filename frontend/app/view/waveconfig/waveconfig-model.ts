@@ -92,7 +92,7 @@ const deprecatedConfigFiles: ConfigFile[] = [
         hasJsonView: true,
     },
     {
-        name: "AI Presets",
+        name: "Engine Presets",
         path: "presets/ai.json",
         language: "json",
         deprecated: true,

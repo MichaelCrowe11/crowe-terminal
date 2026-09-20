@@ -411,7 +411,7 @@ export class TermViewModel implements ViewModel {
                 elemtype: "iconbutton",
                 icon,
                 className: "text-muted",
-                title: "No shell integration — Hypheus unable to run commands.",
+                title: "No shell integration. Hypheus cannot run commands here.",
                 noAction: true,
             };
         }
@@ -420,14 +420,14 @@ export class TermViewModel implements ViewModel {
                 elemtype: "iconbutton",
                 icon,
                 className: "text-accent",
-                title: "Shell ready — Hypheus can run commands in this terminal.",
+                title: "Shell ready. Hypheus can run commands in this terminal.",
                 noAction: true,
             };
         }
         if (shellIntegrationStatus === "running-command") {
             let title = claudeCodeActive
                 ? "Claude Code Detected"
-                : "Shell busy — Hypheus unable to run commands while another command is running.";
+                : "Shell busy. Hypheus cannot run commands while another command is running.";
 
             if (this.termRef.current) {
                 const inAltBuffer = this.termRef.current.terminal?.buffer?.active?.type === "alternate";

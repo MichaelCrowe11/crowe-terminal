@@ -40,7 +40,7 @@ const UpgradeOnboardingModal_v0_14_2_Content = () => {
                             </li>
                             <li>
                                 <strong>Claude Code Integration</strong> - Use <code>wsh badge</code> with Claude Code
-                                hooks to surface AI task status as tab bar notifications{" "}
+                                hooks to surface operator task status as tab bar notifications{" "}
                                 <button
                                     onClick={() =>
                                         waveEnv.electron.openExternal("https://docs.crowelogic.com/terminal/claude-code")

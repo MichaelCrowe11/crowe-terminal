@@ -119,7 +119,7 @@ const BuilderBuildPanel = memo(() => {
                         className="px-3 py-1 text-sm font-medium rounded transition-colors bg-accent/80 text-white hover:bg-accent cursor-pointer"
                         onClick={handleSendToAI}
                     >
-                        Send Output to AI
+                        Send Output to Operator
                     </button>
                     <button
                         className="px-3 py-1 text-sm font-medium rounded transition-colors bg-accent/80 text-white hover:bg-accent cursor-pointer"

@@ -73,7 +73,7 @@ export const DurableSessionPage = ({
                                 enable durability on any SSH session.
                             </p>
 
-                            <EmojiButton emoji="🔥" isClicked={fireClicked} onClick={handleFireClick} />
+                            <EmojiButton icon="fire" isClicked={fireClicked} onClick={handleFireClick} />
                         </div>
                     </div>
                 </div>

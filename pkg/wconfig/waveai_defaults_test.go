@@ -21,6 +21,7 @@ func TestShippedCroweLMModesUseTheModelEdge(t *testing.T) {
 		"crowelm-apex": true, "crowelm-titan": true, "crowelm-reason": true, "crowelm-quasar": true,
 		"crowelm-quasar-fast": true, "crowelm-flash": true, "crowelm-swift": true, "crowelm-vector": true,
 		"crowelm-herald": true, "crowelm-eclipse": true, "crowelm-coder": true,
+		"crowelm-grower": true, "crowelm-kernel": true, "crowelm-kb": true, "crowelm-vision": true,
 	}
 	raw, err := defaultconfig.ConfigFS.ReadFile("waveai.json")
 	if err != nil {

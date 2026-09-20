@@ -12,12 +12,12 @@ const EmptyStateView = memo(() => {
     return (
         <div className="w-full h-full flex items-center justify-center bg-background">
             <div className="flex flex-col items-center gap-6 max-w-[500px] text-center px-8">
-                <div className="text-6xl">🏗️</div>
+                <i className="fa-solid fa-hammer text-6xl text-accent" />
                 <div className="flex flex-col gap-3">
                     <h2 className="text-2xl font-semibold text-primary">No App to Preview</h2>
                     <p className="text-base text-secondary leading-relaxed">
-                        Get started by using the AI chat interface on the left to create your Crowe App. Describe what you
-                        want to build, and the AI will help you generate the code.
+                        Get started in the operator panel on the left. Describe what you want to build and the operator
+                        generates the code for your Crowe App.
                     </p>
                 </div>
                 <div className="text-base text-secondary mt-2">
@@ -66,7 +66,7 @@ const ErrorStateView = memo(({ errorMsg }: { errorMsg: string }) => {
         return (
             <div className="w-full h-full flex items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-6 max-w-2xl text-center px-8">
-                    <div className="text-6xl">🔐</div>
+                    <i className="fa-solid fa-lock text-6xl text-error" />
                     <div className="flex flex-col gap-3">
                         <h2 className="text-2xl font-semibold text-error">Secrets Required</h2>
                         <p className="text-base text-secondary leading-relaxed">
@@ -102,13 +102,13 @@ const ErrorStateView = memo(({ errorMsg }: { errorMsg: string }) => {
                                 onClick={handleAddToContext}
                                 className="px-4 py-2 bg-panel text-primary border border-border rounded hover:bg-panel/80 transition-colors cursor-pointer"
                             >
-                                Add Error to AI Context
+                                Add Error to Operator Context
                             </button>
                             <button
                                 onClick={handleAskAIToFix}
                                 className="px-4 py-2 bg-accent/80 text-primary font-semibold rounded hover:bg-accent transition-colors cursor-pointer"
                             >
-                                Ask AI to Fix
+                                Ask the Operator to Fix
                             </button>
                         </div>
                     )}
@@ -124,7 +124,7 @@ const BuildingStateView = memo(() => {
     return (
         <div className="w-full h-full flex items-center justify-center bg-background">
             <div className="flex flex-col items-center gap-6 max-w-[500px] text-center px-8">
-                <div className="text-6xl">⚙️</div>
+                <i className="fa-solid fa-gear text-6xl text-accent" />
                 <div className="flex flex-col gap-3">
                     <h2 className="text-2xl font-semibold text-primary">App is Building...</h2>
                     <p className="text-base text-secondary leading-relaxed">

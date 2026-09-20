@@ -41,7 +41,7 @@ const UpgradeOnboardingModal_v0_12_2_Content = () => {
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
                     <div className="text-foreground text-base font-semibold leading-[18px]">
-                        Additional AI Improvements
+                        Additional Operator Improvements
                     </div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">

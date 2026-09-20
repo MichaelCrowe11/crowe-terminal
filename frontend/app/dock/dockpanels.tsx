@@ -107,7 +107,7 @@ export const TelemetryPanel = () => {
             )}
             <Sparkline data={history} />
             {!hasRun && (
-                <div className="crowe-empty">Send a message in the AI panel to see live inference telemetry.</div>
+                <div className="crowe-empty">Send a message in the operator panel to see live inference telemetry.</div>
             )}
         </div>
     );
@@ -125,12 +125,12 @@ export const ModelPanel = () => {
     );
 
     if (entries.length === 0) {
-        return <div className="crowe-empty">No AI modes configured.</div>;
+        return <div className="crowe-empty">No CroweLM modes configured.</div>;
     }
 
     return (
         <div className="crowe-panel">
-            <div className="crowe-panel-hint">The model the AI panel routes to. Changes apply to the next message.</div>
+            <div className="crowe-panel-hint">The engine the operator panel routes to. Changes apply to the next message.</div>
             <div className="crowe-model-list">
                 {entries.map(([key, cfg]) => {
                     const active = key === current;
@@ -188,7 +188,7 @@ export const ThinkingPanel = () => {
             <div className="crowe-panel crowe-think crowe-think-idle">
                 <div className="crowe-think-glyph" />
                 <div className="crowe-empty">
-                    The model is idle. Ask something in the AI panel and this shows live cognition.
+                    The engine is idle. Ask something in the operator panel and this shows live cognition.
                 </div>
             </div>
         );
@@ -355,7 +355,7 @@ export const MyceliumPanel = () => {
 
     return (
         <div className="crowe-panel">
-            <div className="crowe-panel-hint">Live workspace graph — one node per block in this tab.</div>
+            <div className="crowe-panel-hint">Live workspace graph: one node per block in this tab.</div>
             {blockIds.length === 0 ? (
                 <div className="crowe-empty">No blocks in this tab yet.</div>
             ) : (

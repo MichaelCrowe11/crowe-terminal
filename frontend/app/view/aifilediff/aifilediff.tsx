@@ -48,7 +48,7 @@ export class AiFileDiffViewModel implements ViewModel {
         this.errorAtom = jotai.atom(null) as jotai.PrimitiveAtom<string | null>;
         this.loadingAtom = jotai.atom<boolean>(true);
         this.viewIcon = jotai.atom("file-lines");
-        this.viewName = jotai.atom("AI Diff Viewer");
+        this.viewName = jotai.atom("Diff Viewer");
         this.viewText = jotai.atom((get) => {
             const diffData = get(this.diffDataAtom);
             return diffData?.fileName ?? "";

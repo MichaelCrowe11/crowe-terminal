@@ -41,14 +41,14 @@ describe("changedLineRange", () => {
 describe("describeReload", () => {
     it("attributes an agent change with a line range", () => {
         expect(describeReload("/tmp/foo/service.go", [10, 11, 12], "agent")).toBe(
-            "service.go reloaded — lines 10 to 12 changed by the agent."
+            "service.go reloaded: lines 10 to 12 changed by the agent."
         );
     });
     it("attributes an external change to a single line", () => {
-        expect(describeReload("/x/a.ts", [4], "external")).toBe("a.ts reloaded — line 4 changed by an external edit.");
+        expect(describeReload("/x/a.ts", [4], "external")).toBe("a.ts reloaded: line 4 changed by an external edit.");
     });
     it("omits attribution when origin is unknown", () => {
-        expect(describeReload("a.ts", [1], "")).toBe("a.ts reloaded — line 1 changed.");
+        expect(describeReload("a.ts", [1], "")).toBe("a.ts reloaded: line 1 changed.");
     });
     it("handles no changed lines", () => {
         expect(describeReload("a.ts", [], "agent")).toBe("a.ts reloaded.");

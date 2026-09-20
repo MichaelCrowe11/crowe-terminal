@@ -88,7 +88,7 @@ export const WaveAIPage = ({ onNext, onSkip }: { onNext: () => void; onSkip: () 
                                 </p>
                             </div>
 
-                            <EmojiButton emoji="🔥" isClicked={fireClicked} onClick={handleFireClick} />
+                            <EmojiButton icon="fire" isClicked={fireClicked} onClick={handleFireClick} />
                         </div>
                     </div>
                 </div>
@@ -157,7 +157,7 @@ export const MagnifyBlocksPage = ({
                         <p>
                             A quick {shortcutKey}-M to magnify and another {shortcutKey}-M to unmagnify
                         </p>
-                        <EmojiButton emoji="🔥" isClicked={fireClicked} onClick={handleFireClick} />
+                        <EmojiButton icon="fire" isClicked={fireClicked} onClick={handleFireClick} />
                     </div>
                 </div>
                 <div className="w-[2px] bg-border flex-shrink-0"></div>
@@ -248,7 +248,7 @@ export const FilesPage = ({ onFinish, onPrev }: { onFinish: () => void; onPrev?:
                                 and edit files wherever they are.
                             </p>
 
-                            <EmojiButton emoji="🔥" isClicked={fireClicked} onClick={handleFireClick} />
+                            <EmojiButton icon="fire" isClicked={fireClicked} onClick={handleFireClick} />
                         </div>
                     </div>
                 </div>

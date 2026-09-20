@@ -45,7 +45,7 @@ const SecretRow = memo(({ secretName, secretMeta, currentBinding, availableSecre
                 {secretMeta.optional && (
                     <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-500 rounded">Optional</span>
                 )}
-                {secretMeta.desc && <span className="text-sm text-secondary">— {secretMeta.desc}</span>}
+                {secretMeta.desc && <span className="text-sm text-secondary">{secretMeta.desc}</span>}
             </div>
             <div className="flex items-center gap-2">
                 {!isMapped && hasMatchingSecret && (

@@ -57,7 +57,7 @@ const UpgradeOnboardingModal_v0_14_1_Content = () => {
                                 <strong>Vim-Style Block Navigation</strong> - Ctrl+Shift+H/J/K/L to navigate blocks
                             </li>
                             <li>
-                                <strong>New AI Providers</strong> - Added Groq and NanoGPT as built-in presets
+                                <strong>New Engine Providers</strong> - Added Groq and NanoGPT as built-in presets
                             </li>
                         </ul>
                     </div>
