@@ -2,9 +2,9 @@
 
 ## Decision
 
-**Do not cut or publish a follow-up release yet.** Build validation passed. After three HTTP 429 failures, the fourth unchanged-default CroweLM attempt returned exactly `HYPHEUS_SMOKE_OK` around 21:40 UTC. The next request reached a terminal approval card, but it did not display the proposed command arguments. On a fifth run, the harness verified exact `pwd` arguments through the app's existing read-only chat endpoint before clicking Approve. The tool then failed with `block not found: b248deda`; no command was typed and Enter was not pressed. The approved terminal-action gate remains failed. Passing the actual approval smoke makes the release eligible for final packaging and release review, not automatic publication. No version bump, tag, release publication, or distribution-host change was made.
+**Do not cut or publish a follow-up release yet.** The new signed macOS arm64 artifact from `418622bc` passed the actual terminal-approval subgate on 2026-09-21: unchanged-default CroweLM, exact visible `pwd` proposal/canonical target, approval typing without Enter, separate verified Enter, and exact isolated cwd output with a returned prompt. That first terminal-success run stopped later at browser setup. After a reviewed harness-only viewport correction, a fresh run passed the entire agreed smoke, including viewport/composer checks, same-block example.com navigation, and opt-in MCP startup. Four-platform CI packaging passed. The historical failures below remain evidence, not the current terminal result. Passing validation makes the release eligible for review, not automatic publication. No version bump, tag, release publication, or distribution-host change was made.
 
-## Follow-up implementation in progress
+## Follow-up implementation and validation
 
 The subsequent end-to-end implementation is authorized to commit reviewed fixes on `release/validate-0.15.7`, push that branch, and manually dispatch Build Helper. The user also authorized exactly `pwd` in a fresh test profile, with separate verified typing and Enter phases bound to the same canonical terminal and tool call. These permissions do not authorize a tag, release, update-feed change, or another terminal command.
 
@@ -12,7 +12,7 @@ The missing image-optimizer dependency is now declared directly: Sharp 0.34.5. I
 
 Both local frontend builds (`npm run build:dev` and `npm run build:prod`) subsequently passed with all four PNGs optimized, followed by a passing TypeScript check. The frontend suite initially passed 99 tests in 18 files, including 27 new approval tests. After the independent-review corrections, it passed 116 tests in 18 files, including 44 approval tests; TypeScript and `git diff --check` also passed. Independent review and full-panel browser validation are separate gates and are not implied by these unit/build results.
 
-All runtime/build evidence below still refers to the original manual CI commit unless explicitly superseded by a new artifact result. Terminal repair, full-panel regression, and independent source review are complete; final backend suites passed with the race detector and two repetitions. New CI packaging and a new-artifact smoke remain pending. The old signed binary is not evidence for the new source changes.
+All runtime/build evidence below still refers to the original manual CI commit unless explicitly superseded by a new artifact result. Terminal repair, full-panel regression, and independent source review are complete; final backend suites passed with the race detector and two repetitions. New CI packaging and the complete signed-artifact follow-up smoke subsequently passed as recorded below. The old signed binary is not evidence for the new source changes.
 
 ### Follow-up CI attempt
 
@@ -20,9 +20,58 @@ All runtime/build evidence below still refers to the original manual CI commit u
 
 The MCP fixture had started a real WOS object load before seeding its object; seeding did not cancel the pending fetch. It now seeds the existing in-memory WaveEnv store and redirects only the model's global WOS atom lookup to that store. A fail-fast fetch guard and metadata/zero-fetch regression fail deterministically before the fixture correction and pass after it. The local full suite now passes 117 tests in 18 files without unhandled errors; TypeScript, touched-test formatting, smoke-driver syntax, and diff checks pass. No production MCP behavior or CI failure detection was changed.
 
-A separate smoke-driver preflight corrected an assertion contradicted by prior macOS evidence: Electron's native `app.getPath("home")` remains the account home even with explicit `HOME`. The driver now verifies inherited `HOME`, records native home separately as a limitation, and retains independent checks for fresh userData, backend config/data, shell cwd, unique prompt, exact typing, separate Enter, and exact cwd output. Independent review found no weakening of those terminal checks. This correction is source-only until the new signed-artifact smoke runs.
+A separate smoke-driver preflight corrected an assertion contradicted by prior macOS evidence: Electron's native `app.getPath("home")` remains the account home even with explicit `HOME`. The driver now verifies inherited `HOME`, records native home separately as a limitation, and retains independent checks for fresh userData, backend config/data, shell cwd, unique prompt, exact typing, separate Enter, and exact cwd output. Independent review found no weakening of those terminal checks. The later signed `418622bc` runs passed these corrected runtime-identity checks; no app bundle modification was needed.
 
-## Revision and build provenance
+### New artifact: commit `418622bc`
+
+[Build Helper run 35553768975](https://github.com/MichaelCrowe11/crowe-terminal/actions/runs/35553768975) passed the validation gate and all four platform jobs on `418622bce356d95045ab966d9a5746ba3f368223`. Store and release jobs were skipped. No tag or publication occurred.
+
+| Actions artifact | Artifact ID | GitHub archive SHA-256 |
+| --- | --- | --- |
+| macos-latest | 10619753314 | `ae0523e00b2e5092ca657ca6270e1f197026972197d1b70527629ac1e213b33f` |
+| windows-latest | 10619528594 | `29d67990195bac1c64341754f7c0cdc20d7dad334f53f44c19a1f9c66173fb76` |
+| ubuntu-latest | 10619103976 | `7b0b9a2ad4285510a5638ba4eed9c548292fea3f73ff9a35aecd6c8128cdd87f` |
+| ubuntu-24.04-arm | 10619008938 | `a791978442b95f00415e5b0c1b53c86d8f17ec11a8225bdfed8471b5046dc467` |
+
+The macOS archive digest was independently verified. Only the arm64 DMG and release ZIP were extracted locally. DMG integrity, signature, stapled notarization ticket, and Gatekeeper passed. The ZIP-extracted arm64 app passed deep/strict signature verification, Developer ID/hardened-runtime inspection, and Gatekeeper (`Notarized Developer ID`). New Linux/Windows and Intel runtime checks were not performed.
+
+Receipts and binary hashes: `/private/tmp/hypheus-validation-418622bc-1hy08p0g/{build-final.json,artifacts.json,verification.json,provenance.json}`. The first launch attempt using the correct artifact path reached verified packaged runtime identity but failed before any model request: the harness attempted a screenshot of a zero-width page. No command approval or Enter occurred; owned-process cleanup recorded zero survivors. Evidence: `hypheus-terminal-approval-0UZvk3/result.json` and `cleanup.json` under that directory. An earlier CLI invocation contained a path typo and failed before app launch. Neither attempt is a terminal-action pass.
+
+A reviewed harness-only change now selects the visible, initialized native tab renderer with matching packaged URL and window/tab IDs, instead of the first Playwright page. The next attempt (`hypheus-terminal-approval-LjdEMi`) passed renderer readiness and produced an inspected app screenshot, but stopped at the exact initial prompt/cursor check before any model request. The visible random prompt matched the configured label; visual similarity alone was not accepted as terminal-state evidence. Cleanup again recorded zero survivors. A bounded exact-prompt wait and pre-assertion observations were added because shell OSC readiness precedes prompt rendering. The following attempt (`hypheus-terminal-approval-ilxDwi`) still timed out before model use. Its structured evidence identified the actual comparison defect: the cursor was exactly at column 18 and xterm retained the explicitly printed trailing prompt space, while the harness compared against a trimmed expected string. The corrected assertion compares the complete physical row against the exact ASCII prompt/command padded to the terminal width, with the exact cursor column and blank rows below. Nine inert harness tests pass, covering trailing-space representation, typed `pwd`, altered cursor/input, row coverage, wrap rejection, and logical cwd output reconstruction. Independent review caught that physical padding alone would accept an extra explicit trailing space followed by cursor reset; the final assertion also checks xterm's trimmed-row representation, and regressions reject that case for both the empty prompt and typed command. The actual captured failing initial prompt also passes this corrected assertion, while an altered cursor fails. These are harness checks, not a terminal-action pass.
+
+### Signed terminal subgate passed; first full run stopped at browser
+
+Run `8c8bb517-f39d-4263-8bf8-a55b3aa74db9`, evidence `hypheus-terminal-approval-Zd7Mic` under the new artifact directory, ran from 2026-09-21 03:07:34–03:07:57 UTC. Its terminal subgate passed, but `result.json` correctly reports **failed**, phase `browser-example`, error `Expected one existing browser URL field`.
+
+- Unchanged `waveai@crowelm-auto` returned exactly `HYPHEUS_SMOKE_OK`.
+- Call `toolu_01RZWoAqdb3uYm66Ygg9tSKJ` proposed exactly `pwd` for local terminal `ccb5323d-020d-4f63-a11a-78fb5012efed`, tab `3dd9b6e7-349b-49e1-b6e9-5ccb171dbb76`. The visible command, full canonical target, raw arguments, and prepared metadata matched before approval.
+- `typed-not-executed.json` records exact `pwd` at the prompt, no executed command, and a successful tool result with `awaits: user_enter`. A distinct `authorization-enter.json` preceded the one Enter input.
+- `pwd-result.json` records exactly `/private/tmp/hypheus-validation-418622bc-1hy08p0g/hypheus-terminal-approval-Zd7Mic/home`, reconstructed only across xterm-marked soft wraps, and one new ready prompt. Pending/typed/executed screenshots were inspected.
+- Renderer viewport widths 1280/1000/800 passed multiline-composer containment and panel horizontal-overflow checks. The AI pane remained 458px wide; this is not signed-artifact 320/450/720px pane-resize coverage.
+- The 800px screenshot showed collapsed browser header controls. The driver now restores the original renderer viewport before finding the existing same-tab browser by canonical block UUID and navigating through its visible address input. Navigation must be confirmed on that same embedded webview.
+- MCP's final check was not reached. Cleanup recorded no survivors. The executable, app.asar, and wavesrv hashes were independently rechecked after this failed overall run and still matched provenance.
+
+### Complete signed-app follow-up: passed
+
+Run `631f7896-d154-426d-8240-d8549c58c568` ran from **2026-09-21 03:17:47–03:18:07 UTC**, exited **0**, and recorded `status: passed` in `/private/tmp/hypheus-validation-418622bc-1hy08p0g/hypheus-terminal-approval-ij3tPy/result.json`. It used a new profile and the same unmodified signed `418622bce356d95045ab966d9a5746ba3f368223` artifact, not a rebuilt or re-signed app. The follow-up harness/evidence commit is separate from that tested binary revision.
+
+| Check | Measured result |
+| --- | --- |
+| Packaged launch and onboarding | Visible initialized native renderer, packaged URL/window/tab identity, isolated userData/config/data/HOME and exact fresh shell prompt passed. |
+| Default CroweLM | Unchanged `waveai@crowelm-auto`, exactly `HYPHEUS_SMOKE_OK`, no tool calls in the response check. |
+| Exact visible proposal | `pwd`, local terminal `fea547fc-25dd-4163-9cd2-9277d7c3b99b`, tab `55584659-811c-4f6b-8ccb-b9dd0448b768`, call `toolu_01KRA5mwqmU1JUAdoJj2J5Zz`; visible plaintext, raw arguments, prepared metadata, and canonical target matched. |
+| Approval typing only | Call-scoped Approve typing succeeded; terminal contained `HYPHEUS_24163778> pwd`, `lastcommand` remained null, no Enter/input or execution observed. Tool result reported `awaits: user_enter`. |
+| Separate Enter and output | Revalidated the same call/target and exact typed line, sent one Enter (`\r`), observed exactly `pwd`, exact fresh-profile `.../hypheus-terminal-approval-ij3tPy/home` output and one new ready prompt. |
+| Chat/composer layout | Renderer viewport widths 1280/1000/800; pane 458px, client/scroll widths both 454px, composer 432×63px and contained. Actual pane resizing to 320/450/720px was not tested in the signed app; the source-browser matrix covers those widths. |
+| Browser navigation | Restored original 1396×799 renderer viewport. Filled and submitted the existing browser address input. That same webview block `b06a3567-8d47-4e09-8d93-adf6e269f668` returned `https://example.com/` and title `Example Domain`; inspected screenshot shows the page. Narrow browser content clipping remains a limitation, not a general browser-layout pass. |
+| MCP startup | Fresh owned-app diagnostic `[agent-playwright] registered 25 playwright tools`; explicit headless/isolated command. No MCP tool invoked, no agent HTTP health check, no other MCP family tested. |
+| Integrity and cleanup | Executable, app.asar, and wavesrv hashes still matched provenance at the end. Cleanup recorded zero owned-process survivors. Existing services were not stopped. |
+
+Inspected screenshots: `04-pending-proposal.png`, `05-pwd-typed-not-executed.png`, `06-pwd-executed.png`, `07-layout-800.png`, and `08-browser-example.png`. Structured receipts include `verified-proposal.json`, `authorization-type.json`, `typed-not-executed.json`, `authorization-enter.json`, `pwd-result.json`, `layout.json`, `browser-example.json`, `mcp-startup.json`, and `cleanup.json`. The final browser and test-runner filename corrections received independent read-only review with no confirmed blocker; the Node regressions, full frontend suite, and TypeScript passed before this live run.
+
+This is the agreed macOS validation pass, not approval to publish, broad platform-runtime certification, a persistent resolution of upstream rate limits, or a security sandbox claim. Evidence is local temporary data and is not guaranteed to survive cleanup; the checked-in report retains the measured result and provenance identifiers.
+
+## Original artifact: revision and build provenance
 
 - Source: `7fb93dd4a5ccf5b65d2dcc9a843c57d836bd8f24`.
 - Version embedded in these validation artifacts: `0.15.7`.
@@ -136,7 +185,7 @@ PLAYWRIGHT_MODULE=/absolute/path/to/playwright-core node scripts/check-chat-over
 
 Frontend checks: `npx tsc --noEmit` passed; `npm test -- --run` passed all 72 tests in 17 files. `npm run build:dev` emitted bundles and exited 0, but the image optimizer reported missing `sharp` for four PNGs. It also reported Node module-registration deprecation, Electron `fs`/`path` browser externalization, and a `cytoscape`/`mermaid` circular chunk. This is not a clean packaging/signing result. No dependency or packaging changes were made to address those diagnostics. `git diff --check` passed. Prettier passed for the streamdown renderer and new regression files; `aimessage.tsx` already fails Prettier on `HEAD`, so unrelated whole-file formatting was left unchanged.
 
-**The layout fix is not in the signed CI artifact tested above.** It has not been packaged or published and does not clear the failed terminal-action release gate.
+**This source-preview subsection records the original `7fb93dd4` validation stage.** The layout fix was not in that original artifact; it is included in the new signed `418622bc` artifact described above. The 320/450/720px matrix remains source-preview evidence, not signed-app pane-resize coverage.
 
 ## Full-panel source integration
 
@@ -156,7 +205,7 @@ The fixture recorded 15 exact fake typing events and zero executions/newline add
 
 After review fixes, the expanded matrix passed **48/48**, and overflow passed **15/15** again. Added browser cases exercise acknowledged stream completion/Stop/error without false nonapproval, real 10-second RPC timeout and explicit retry without automatic retry, bidi rejection, and stable DOM identity plus keyboard focus across five file-batch membership transitions. The run recorded 27 exact fake typing events, 54 decision attempts including retries, and zero executions, unexpected requests, or page errors. Final screenshots were inspected. Evidence: `hypheus-terminal-approval-rHRWei/results.json` in the temporary macOS directory and `/private/tmp/hypheus-overflow-review.RsE61n`. The fixture waits for the composer's existing deferred post-submit focus before testing batch-focus preservation. Its owned preview server was stopped. This is final source-browser evidence, not a signed-artifact smoke. Review identified a missing approval-RPC deadline, ambiguous bidirectional Unicode preview text, false nonapproval messaging after an acknowledged decision loses its status stream, and unstable file-batch keys. All four were corrected and independently re-verified: a 10-second RPC deadline with unknown-outcome messaging/no automatic retry, matching bidi-control rejection, preserved acknowledged-but-unconfirmed state, and stable batch-category keys. Backend review also found eager validation could break an ordered write-then-read tool batch; unrelated verifiers now retain their per-call timing, with an inert regression test. Only terminal proposals prepare eagerly.
 
-Static smoke-driver review found that a natural-language request and after-the-fact polling cannot enforce the user's exact-`pwd` authorization: widget access otherwise exposes additional tools, including command execution. The implementation now provides `CROWE_TERMINAL_APPROVAL_SMOKE=1`, read at process startup, enforcing a deny-only restriction at backend lookup and dispatch as well as both outgoing tool catalogs. Only terminal listing and approved command proposal remain; provider-native web search is disabled. The driver requires the exact fresh startup marker before sending any model request. Default application behavior is unchanged. Inert env-on tests and independent source review verified the restriction. The driver also reconstructs only xterm-marked soft-wrapped lines before exact cwd comparison. This is a model-tool restriction, not an OS sandbox; live artifact validation remains pending.
+Static smoke-driver review found that a natural-language request and after-the-fact polling cannot enforce the user's exact-`pwd` authorization: widget access otherwise exposes additional tools, including command execution. The implementation now provides `CROWE_TERMINAL_APPROVAL_SMOKE=1`, read at process startup, enforcing a deny-only restriction at backend lookup and dispatch as well as both outgoing tool catalogs. Only terminal listing and approved command proposal remain; provider-native web search is disabled. The driver requires the exact fresh startup marker before sending any model request. Default application behavior is unchanged. Inert env-on tests and independent source review verified the restriction. The driver also reconstructs only xterm-marked soft-wrapped lines before exact cwd comparison. This is a model-tool restriction, not an OS sandbox. The later signed `418622bc` terminal smoke verified its startup marker before model requests; the env-on unit tests establish lookup/dispatch rejection behavior.
 
 The backend's exact-text guarantee binds the prepared preview to the bytes sent. Direct raw terminal transport rejects malformed UTF-8/surrogates before JSON decoding, but provider adapters already decode their arguments and can replace malformed input first. This is not a guarantee that every malformed character in original provider JSON is rejected.
 
@@ -169,7 +218,7 @@ go test ./pkg/agent/tools/terminal ./pkg/agent/transport/waveadapter ./pkg/aiuse
 CROWE_TERMINAL_APPROVAL_SMOKE=1 go test ./pkg/aiusechat ./pkg/aiusechat/uctypes -run '^TestTerminalApprovalSmoke' -count=1 -timeout=90s
 ```
 
-The new `scripts/smoke-terminal-approval.cjs` passed syntax checking and independent static review. It requires a newly verified artifact, hash/provenance JSON, explicit `--approve-exact-pwd`, a fresh profile and evidence directory, and the backend tool-restriction marker. Runtime success cannot be inferred from syntax checking. No prior approval marker is reused.
+The new `scripts/smoke-terminal-approval.cjs` passed syntax checking and independent static review. Its inert Node regressions run explicitly with `node --test scripts/smoke-terminal-approval.check.cjs`. The first filename ended in `.test.cjs`, causing Vitest to collect a Node-only suite and fail with `No test suite found` despite all 117 frontend assertions passing; the file was renamed rather than weakening Vitest configuration or failure detection. The subsequent explicit Node run passed all nine checks, the full frontend suite passed 117 tests in 18 files, and TypeScript and diff checks passed. It requires a newly verified artifact, hash/provenance JSON, explicit `--approve-exact-pwd`, a fresh profile and evidence directory, and the backend tool-restriction marker. Runtime success cannot be inferred from syntax checking. No prior approval marker is reused.
 
 ## Linux and Windows evidence
 
@@ -184,11 +233,12 @@ The new `scripts/smoke-terminal-approval.cjs` passed syntax checking and indepen
 
 The public GitHub `v0.15.7` release was rechecked and contains macOS assets only. Current Linux/Windows validation artifacts exist in Actions but are **not published releases**. No S3 upload was performed; `ENABLE_S3_STAGING` remains the workflow gate for optional staging/publishing. The configured generic update feed was not changed or validated.
 
-Remaining active validation gate:
+Completed validation gates; publication remains held:
 
 1. **Passed around 21:40 UTC:** the unchanged default CroweLM response recovered without substituting a model or bypassing authentication. Earlier rate-limit root cause remains undiagnosed.
-2. In the actual app, request exactly `pwd` through `terminal.propose_command`, inspect it, click Approve, confirm it is typed without execution, press Enter, and verify output.
+2. **Passed on 2026-09-21 at 03:07 UTC in signed `418622bc`:** exact `pwd` proposal, visible canonical target, approved typing only, separate Enter, exact cwd output and returned prompt.
+3. **Passed on 2026-09-21 at 03:18 UTC in a fresh signed `418622bc` run:** repeated terminal approval/output, viewport/composer containment, browser navigation and opt-in MCP startup. The earlier partial run remains recorded as failed; the distinct `ij3tPy` run supplies the overall pass.
 
-Other validation is outside the remaining task; the measured platform limitations above remain explicit rather than being promoted to passes. If both steps pass, stop for final packaging and release review. Do not bump the version, tag, cut, or publish the follow-up release under the current authorization. Any later authorized release review must verify its own artifacts and distribution state; this manual build does not prove tag-only behavior or update-feed publication.
+The measured platform limitations above remain explicit rather than being promoted to passes. The follow-up smoke passed; stop for final packaging and release review. Do not bump the version, tag, cut, or publish the follow-up release under the current authorization. Any later authorized release review must verify its own artifacts and distribution state; this manual build does not prove tag-only behavior or update-feed publication.
 
 No local `task package`, direct `go build`, or `go run` was run. The original artifact validation did not run local Go tests; the follow-up implementation added focused inert Go tests and ran them from the repository root. New tests use fake stores/events, buffered input channels, and a fake durable-job sink, not real terminal commands. CI exercised `task package` on all four runners for the original artifact. The independent Astra reasoning service returned HTTP 400, so it supplied no review result.

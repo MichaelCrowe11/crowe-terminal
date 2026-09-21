@@ -5,6 +5,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
+const { pathToFileURL } = require("node:url");
 const crypto = require("node:crypto");
 const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
@@ -195,6 +196,67 @@ async function cleanup() {
     if (trackingFailure) throw trackingFailure;
 }
 
+async function visibleNativeRenderers() {
+    return app.evaluate(({ BaseWindow }) => BaseWindow.getAllWindows().flatMap((win) => {
+        if (win.isDestroyed() || !win.isVisible() || win.isMinimized()) return [];
+        const view = win.activeTabView;
+        if (!view || view.isDestroyed || !view.isActiveTab || !view.isInitialized || !view.isWaveReady ||
+            !win.contentView.children.includes(view) || view.webContents.isDestroyed()) return [];
+        const bounds = view.getBounds();
+        const content = win.getContentBounds();
+        if (bounds.x !== 0 || bounds.y !== 0 || bounds.width <= 0 || bounds.height <= 0 || content.width <= 0 || content.height <= 0) return [];
+        return [{ nativewindowid: win.id, windowid: win.waveWindowId, tabid: view.waveTabId,
+            viewwindowid: view.waveWindowId, webcontentsid: view.webContents.id, url: view.webContents.getURL(), bounds, content }];
+    }));
+}
+
+async function selectVisibleRenderer(expectedUrl) {
+    let lastNative = [];
+    let lastPages = [];
+    try {
+        return await until("visible initialized packaged app renderer", async () => {
+            lastNative = await visibleNativeRenderers();
+            check(lastNative.length <= 1, "Multiple visible active app renderers; refusing ambiguous surface selection");
+            if (lastNative.length === 0) return false;
+            const native = lastNative[0];
+            check(native.url === expectedUrl && UUID.test(native.windowid) && UUID.test(native.tabid) && native.viewwindowid === native.windowid,
+                "Visible native surface has unexpected packaged URL or window/tab identity");
+            const matches = [];
+            lastPages = [];
+            for (const candidate of app.windows()) {
+                if (candidate.isClosed() || candidate.url() !== expectedUrl) continue;
+                const renderer = await candidate.evaluate(() => {
+                    const store = window.globalStore;
+                    const atoms = window.globalAtoms;
+                    const main = document.getElementById("main");
+                    const bounds = main?.getBoundingClientRect();
+                    return {
+                        url: location.href, ready: document.readyState, visibility: document.visibilityState,
+                        width: innerWidth, height: innerHeight, mainwidth: bounds?.width ?? 0, mainheight: bounds?.height ?? 0,
+                        populated: Boolean(main?.childElementCount),
+                        windowid: store && atoms?.uiContext ? store.get(atoms.uiContext).windowid : null,
+                        tabid: store && atoms?.staticTabId ? store.get(atoms.staticTabId) : null,
+                    };
+                });
+                lastPages.push(renderer);
+                if (renderer.windowid !== native.windowid || renderer.tabid !== native.tabid || renderer.url !== expectedUrl) continue;
+                if (renderer.ready === "loading" || renderer.visibility !== "visible" || renderer.width <= 0 || renderer.height <= 0 ||
+                    renderer.mainwidth <= 0 || renderer.mainheight <= 0 || !renderer.populated) continue;
+                matches.push({ candidate, renderer });
+            }
+            check(matches.length <= 1, "Multiple Playwright pages match the visible app identity");
+            if (matches.length === 0) return false;
+            const current = await visibleNativeRenderers();
+            if (current.length !== 1 || current[0].webcontentsid !== native.webcontentsid || current[0].tabid !== native.tabid) return false;
+            record("renderer-ready", { native: current[0], renderer: matches[0].renderer });
+            return matches[0].candidate;
+        });
+    } catch (error) {
+        record("renderer-selection-failure", { native: lastNative, renderers: lastPages });
+        throw error;
+    }
+}
+
 async function capture(name) {
     const file = path.join(root, `${name}.png`);
     fs.writeFileSync(file, await page.screenshot({ timeout: 10000 }), { flag: "wx", mode: 0o600 });
@@ -315,10 +377,18 @@ function targetReady(term, target, home) {
 }
 
 function lineReady(term, text) {
-    check(term.cols > text.length + 1, "Prompt/command would wrap; insufficient shell evidence");
-    check(!term.physicalrows[term.cursory]?.wrapped, "Current prompt is a continuation of wrapped output");
-    check(term.rows[term.cursory] === text.trimEnd() && term.cursorx === text.length, "Terminal line/cursor is not the exact expected prompt and input");
-    check(term.rows.slice(term.cursory + 1).every((row) => row === ""), "Unexpected output below the shell prompt");
+    check(/^[\x20-\x7e]+$/.test(text), "Expected prompt/command must be printable ASCII");
+    check(Number.isInteger(term.cols) && term.cols > text.length + 1, "Prompt/command would wrap; insufficient shell evidence");
+    check(Number.isInteger(term.cursory) && term.cursory >= 0 && term.cursory < term.physicalrows.length &&
+        term.physicalrows.length === term.rows.length, "Missing or inconsistent physical terminal rows");
+    check(!term.physicalrows[term.cursory].wrapped, "Current prompt is a continuation of wrapped output");
+    // xterm trimRight removes empty cells, not explicit space characters emitted by the shell.
+    check((term.rows[term.cursory] === text || term.rows[term.cursory] === text.trimEnd()) &&
+        term.physicalrows[term.cursory].text === text.padEnd(term.cols, " ") && term.cursorx === text.length,
+        "Terminal line/cursor is not the exact expected prompt and input");
+    check(term.rows.slice(term.cursory + 1).every((row) => row === "") &&
+        term.physicalrows.slice(term.cursory + 1).every((row) => !row.wrapped && row.text === " ".repeat(term.cols)),
+        "Unexpected output below the shell prompt");
 }
 
 function logicalOutput(term, firstrow, endrow) {
@@ -540,9 +610,10 @@ async function main(opts) {
         "Launched app is not the expected packaged artifact");
     check(info.userdata === dirs.electron && info.envhome === dirs.home && info.arch === process.arch, "Runtime profile/HOME/architecture is not isolated as expected");
     if (info.home !== dirs.home) Evidence.limitations.push("Electron native home remains the macOS account home; HOME, backend config/data, shell cwd, and prompt are checked separately");
-    page = await app.firstWindow({ timeout: 60000 });
+    phase = "renderer-readiness";
+    page = await selectVisibleRenderer(pathToFileURL(path.join(files.asar, "dist/frontend/index.html")).href);
     page.setDefaultTimeout(10000);
-    await page.waitForLoadState("domcontentloaded");
+    const originalViewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
     await capture("01-startup");
     for (let i = 0; i < 8; i++) {
         const next = page.getByText(/^(Continue|Skip Feature Tour >|Get Started)$/).filter({ visible: true });
@@ -563,17 +634,46 @@ async function main(opts) {
         return state.status === "ready" && state.chatid && state;
     });
     check(initial.calls.length === 0 && initial.assistants.length === 0, "Chat is not fresh; refusing to clear or reuse it");
-    await until("isolated shell readiness", async () => {
-        const term = await terminalState();
-        return term.loaded && term.state === "ready" && term.cwd === dirs.home && term;
-    });
-    await installObserver();
-    const baseline = await terminalState();
-    const target = { blockid: baseline.blockid, tabid: baseline.tabid, connection: baseline.connection };
-    targetReady(baseline, target, dirs.home);
-    lineReady(baseline, prompt);
-    check(baseline.lastcommand == null, "Fresh terminal has already executed a command");
-    record("terminal-baseline", { target, baseline });
+    phase = "shell-readiness";
+    let shellObserved;
+    let lineError;
+    let baseline;
+    let target;
+    let samples = 0;
+    try {
+        await until("isolated shell integration readiness", async () => {
+            shellObserved = await terminalState();
+            if (samples++ === 0) record("terminal-first-observation", { expectedprompt: prompt, expectedcwd: dirs.home, terminal: shellObserved });
+            check(shellObserved.lastcommand == null, "Fresh terminal has already executed a command");
+            return shellObserved.loaded && shellObserved.state === "ready" && shellObserved.cwd === dirs.home;
+        });
+        await installObserver();
+        shellObserved = await terminalState();
+        target = { blockid: shellObserved.blockid, tabid: shellObserved.tabid, connection: shellObserved.connection };
+        record("terminal-prompt-observation", { target, expectedprompt: prompt, terminal: shellObserved });
+        // OSC A is emitted from precmd, before zsh renders the prompt and places the input cursor.
+        baseline = await until("exact empty isolated shell prompt", async () => {
+            shellObserved = await terminalState();
+            samples++;
+            targetReady(shellObserved, target, dirs.home);
+            check(shellObserved.lastcommand == null && shellObserved.observer.events.every((event) =>
+                event.kind !== "input" && event.lastcommand == null && event.state === "ready"),
+                "Unexpected input or execution while waiting for the initial prompt");
+            try { lineReady(shellObserved, prompt); } catch (error) {
+                lineError = error.message;
+                return false;
+            }
+            return shellObserved;
+        }, 15000);
+        record("terminal-baseline", { target, expectedprompt: prompt, samples, baseline });
+        targetReady(baseline, target, dirs.home);
+        lineReady(baseline, prompt);
+        check(baseline.lastcommand == null, "Fresh terminal has already executed a command");
+    } catch (error) {
+        record("terminal-readiness-failure", { target, expectedprompt: prompt, expectedcwd: dirs.home,
+            samples, lineerror: lineError, terminal: shellObserved });
+        throw error;
+    }
     await capture("02-onboarded");
 
     phase = "tool-dispatch-guard";
@@ -726,22 +826,47 @@ async function main(opts) {
         await capture(`07-layout-${width}`);
     }
     await input.fill("");
-    record("layout", { observations: layout, scope: "Window resizing and multiline composer; not a substitute for exact 320/450/720 panel-width tests" });
+    record("layout", { observations: layout, scope: "Renderer viewport resizing and multiline composer only; the AI pane was not independently resized or tested at 320/450/720px" });
+    phase = "restore-viewport";
+    await page.setViewportSize(originalViewport);
+    await until("original renderer viewport restored", () => page.evaluate((expected) =>
+        innerWidth === expected.width && innerHeight === expected.height && document.visibilityState === "visible", originalViewport), 10000);
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    record("viewport-restored", { original: originalViewport, actual: await page.evaluate(() => ({ width: innerWidth, height: innerHeight })) });
     if (opts["browser-example"]) {
         phase = "browser-example";
-        const url = page.locator("input.url-input");
-        check(await url.count() === 1, "Expected one existing browser URL field");
+        const webblock = await page.evaluate((tabid) => {
+            const tab = window.WOS.getObjectValue(`tab:${tabid}`);
+            const blocks = (tab?.blockids ?? []).map((id) => window.WOS.getObjectValue(`block:${id}`)).filter((block) => block?.meta?.view === "web");
+            return blocks.map((block) => ({ blockid: block.oid, hidenav: block.meta["web:hidenav"] === true }));
+        }, target.tabid);
+        check(webblock.length === 1 && UUID.test(webblock[0].blockid) && !webblock[0].hidenav, "Expected one existing browser block with navigation enabled");
+        const browserBlockId = webblock[0].blockid;
+        const browserFrame = page.locator(`.block-frame-default[data-blockid="${browserBlockId}"]:not(.block-preview)`);
+        const url = browserFrame.locator("input.block-frame-input.url-input");
+        await until("existing browser address input visible after viewport restoration", async () => {
+            check(await browserFrame.count() <= 1 && await url.count() <= 1, "Ambiguous existing browser address input");
+            return await url.count() === 1 && await url.isVisible() && await url.isEnabled();
+        }, 15000);
+        await url.scrollIntoViewIfNeeded();
+        record("browser-address-ready", { blockid: browserBlockId, viewport: originalViewport, selector: "input.block-frame-input.url-input", bounds: await url.boundingBox() });
+        active();
         await url.fill("https://example.com");
+        check(await url.inputValue() === "https://example.com", "Browser address input did not retain exact example.com URL");
         await url.press("Enter");
-        const browsers = await until("example.com navigation", () => app.evaluate(({ webContents }) => {
-            const views = webContents.getAllWebContents().filter((wc) => wc.getType() === "webview");
-            const matches = views.filter((wc) => wc.getURL() === "https://example.com/" && wc.getTitle() === "Example Domain");
-            return matches.length === 1 ? matches.map((wc) => ({ url: wc.getURL(), title: wc.getTitle() })) : null;
-        }), 30000);
+        const browsers = await until("example.com navigation", () => page.evaluate((blockid) => {
+            const matches = [...document.querySelectorAll("webview.webview")].filter((view) => view.getAttribute("data-blockid") === blockid);
+            if (matches.length !== 1) throw new Error("Existing browser webview is missing or ambiguous");
+            const view = matches[0];
+            const url = view.getURL();
+            const title = view.getTitle();
+            return url === "https://example.com/" && title === "Example Domain" ? [{ blockid, url, title }] : null;
+        }, browserBlockId), 30000);
         record("browser-example", { browsers });
         await capture("08-browser-example");
     } else Evidence.limitations.push("Browser example.com navigation not opted in");
     if (mcp) {
+        phase = "mcp-startup";
         scanStartupLog();
         check(mcpRegistered, "Opt-in MCP startup not observed; no tool invocation will be used to force it");
         record("mcp-startup", { script: mcp, registered: true, toolsinvoked: false, diagnostics });
@@ -792,4 +917,8 @@ async function run() {
     }
 }
 
-run().catch((error) => { console.error(redact(error.message)); process.exitCode = 1; });
+if (require.main === module) {
+    run().catch((error) => { console.error(redact(error.message)); process.exitCode = 1; });
+}
+
+module.exports = { lineReady, logicalOutput };

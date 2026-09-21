@@ -4,9 +4,11 @@ Hypheus is our fork of Wave Terminal: a multi-pane terminal whose side panel let
 
 ## Status
 
-Release validation in progress. The default CroweLM response recovered on 2026-09-20; the follow-up release remains on hold pending the approved terminal-action smoke test.
+Release validation completed for the agreed macOS smoke scope on 2026-09-21. The signed `418622bc` build passed default CroweLM, exact-`pwd` approval and execution, viewport/composer checks, browser navigation, and opt-in MCP startup. Ready for final packaging and release review; do not tag or publish yet.
 
 Version 0.15.7 (`package.json`). On 2026-09-20, [Build Helper run 35526236572](https://github.com/MichaelCrowe11/crowe-terminal/actions/runs/35526236572) passed on commit `7fb93dd4` for macOS, Linux x64, Linux arm64, and Windows x64. It was a manual validation run, not a release. Its artifacts still identify as 0.15.7 but are newer than the published `v0.15.7` assets; do not treat them as identical builds.
+
+The following table records the original `7fb93dd4` run; the `418622bc` follow-up below supersedes its terminal result.
 
 | Platform | Build evidence on 2026-09-20 | Runtime verification | Distribution / signing |
 | --- | --- | --- | --- |
@@ -17,7 +19,7 @@ Version 0.15.7 (`package.json`). On 2026-09-20, [Build Helper run 35526236572](h
 | Windows x64 | NSIS EXE, MSI, ZIP built on `windows-2025-vs2026` | Install and app launch not tested | CI artifacts only; downloaded installer EXE and app EXE have no Authenticode signature. |
 | Windows arm64 | Native target excluded from CI | x64 emulation not tested | No native artifact or verified ARM support. |
 
-Follow-up source validation now covers exact command/target previews, scoped terminal approval, and narrow chat layout: 116 frontend tests, 48 full-panel browser cases, and 15 overflow cases passed. These are source-level results, not a new packaged-app pass; the signed-artifact terminal-action gate remains open. See [release validation evidence](docs/release-validation-2026-09-20.md) for scope, checks, and remaining release gates.
+Follow-up validation covers exact command/target previews, scoped terminal approval, and narrow chat layout: 117 frontend tests, 48 full-panel browser cases, and 15 overflow cases passed. [Build Helper run 35553768975](https://github.com/MichaelCrowe11/crowe-terminal/actions/runs/35553768975) passed all four platforms on commit `418622bc`; the new arm64 macOS artifact passed local signature/notarization/Gatekeeper checks. After renderer/prompt harness corrections, its signed-app terminal subgate passed with a visible canonical `pwd` proposal, approved typing without Enter, separate verified Enter, and exact cwd output. A subsequent fresh run passed the entire smoke after a browser-viewport harness correction, including same-block `https://example.com/` navigation and registration of 25 Playwright MCP tools without invoking them. Viewport/composer checks passed at 1280/1000/800px; the chat pane stayed 458px wide, so this is not signed-app 320/450/720px pane-resize coverage. Nine inert harness tests pass. See [release validation evidence](docs/release-validation-2026-09-20.md) for scope, checks, and remaining release gates.
 
 ## Install and first run
 
@@ -83,7 +85,7 @@ Each item names where it lives.
 
 ## Roadmap
 
-`ROADMAP.md` in this repo is upstream Wave Terminal's roadmap, not ours. The default CroweLM response has recovered. The remaining active gate is to inspect the actual proposed command and complete the approved terminal action. Passing makes the release eligible for final packaging and release review; it does not authorize a version bump, tag, or publication. Current Linux and Windows packages build in CI but have not been published; their runtime limitations remain as stated above.
+`ROADMAP.md` in this repo is upstream Wave Terminal's roadmap, not ours. The default CroweLM response, signed-app approved terminal action, viewport/composer, browser, and MCP startup checks have passed. Stop for final packaging and release review; no version bump, tag, or publication is authorized. Current Linux and Windows packages build in CI but have not been published; their runtime limitations remain as stated above.
 
 ## Limits
 
@@ -97,7 +99,7 @@ Platforms. The support matrix above distinguishes successful builds from runtime
 
 Signing. The 2026-09-20 CI macOS artifacts passed Developer ID, hardened-runtime, notarization, and Gatekeeper checks. This does not retroactively verify older public artifacts. Local builds without signing credentials remain ad-hoc. Windows manual builds are unsigned; enabling signing for a tagged build requires separate verification. Store packaging was skipped and is not verified.
 
-Runtime limits. The default CroweLM request failed on three attempts with upstream HTTP 429 on 2026-09-20, then returned exactly `HYPHEUS_SMOKE_OK` on the fourth attempt around 21:40 UTC without local app, routing, or quota changes. A subsequent request reached the terminal approval card, but the card showed only a generic tool description, not the proposed command. On a subsequent run, the harness inspected exact `pwd` arguments through the app's read-only chat endpoint, then clicked Approve. The call failed with `block not found: b248deda`; nothing was typed and Enter was not pressed. App and edge source inspection preserve an explicit 4,096-token output budget; the upstream 10,000,000 tokens/minute figure describes the rate-limit tier, not the requested budget. The cause of the upstream rate limiting remains unverified. The browser block navigated to `https://example.com/` and returned its title/body, although the captured narrow pane clipped the page. Playwright MCP 0.0.82 initialized and registered 25 tools with explicit headless/isolated settings; browser-tool execution, the other MCP families, and standalone `crowe-mcp` were not tested in this run. Also unverified: local source packaging, `go test`, Intel/Linux/Windows runtime and installer behavior, sign-in/billing, automatic updates, and `jj`.
+Original `7fb93dd4` runtime limits (the follow-up result above supersedes its terminal failure). The default CroweLM request failed on three attempts with upstream HTTP 429 on 2026-09-20, then returned exactly `HYPHEUS_SMOKE_OK` on the fourth attempt around 21:40 UTC without local app, routing, or quota changes. A subsequent request reached the terminal approval card, but the card showed only a generic tool description, not the proposed command. On a subsequent run, the harness inspected exact `pwd` arguments through the app's read-only chat endpoint, then clicked Approve. The call failed with `block not found: b248deda`; nothing was typed and Enter was not pressed. App and edge source inspection preserve an explicit 4,096-token output budget; the upstream 10,000,000 tokens/minute figure describes the rate-limit tier, not the requested budget. The cause of the upstream rate limiting remains unverified. The browser block navigated to `https://example.com/` and returned its title/body, although the captured narrow pane clipped the page. Playwright MCP 0.0.82 initialized and registered 25 tools with explicit headless/isolated settings; browser-tool execution, the other MCP families, and standalone `crowe-mcp` were not tested in this run. Also unverified: local source packaging, `go test`, Intel/Linux/Windows runtime and installer behavior, sign-in/billing, automatic updates, and `jj`.
 
 ## Credit
 
