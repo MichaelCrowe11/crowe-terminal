@@ -533,12 +533,13 @@ async function main(opts) {
     };
     const info = await app.evaluate(({ app }) => ({
         packaged: app.isPackaged, version: app.getVersion(), apppath: app.getAppPath(), executable: process.execPath,
-        userdata: app.getPath("userData"), home: app.getPath("home"), resources: process.resourcesPath, arch: process.arch,
+        userdata: app.getPath("userData"), home: app.getPath("home"), envhome: process.env.HOME, resources: process.resourcesPath, arch: process.arch,
     }));
     record("runtime-identity", info);
     check(info.packaged && fs.realpathSync(info.executable) === executable && info.resources === resources && info.apppath === files.asar,
         "Launched app is not the expected packaged artifact");
-    check(info.userdata === dirs.electron && info.home === dirs.home && info.arch === process.arch, "Runtime profile/home/architecture is not isolated as expected");
+    check(info.userdata === dirs.electron && info.envhome === dirs.home && info.arch === process.arch, "Runtime profile/HOME/architecture is not isolated as expected");
+    if (info.home !== dirs.home) Evidence.limitations.push("Electron native home remains the macOS account home; HOME, backend config/data, shell cwd, and prompt are checked separately");
     page = await app.firstWindow({ timeout: 60000 });
     page.setDefaultTimeout(10000);
     await page.waitForLoadState("domcontentloaded");

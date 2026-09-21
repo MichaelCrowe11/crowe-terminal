@@ -14,6 +14,14 @@ Both local frontend builds (`npm run build:dev` and `npm run build:prod`) subseq
 
 All runtime/build evidence below still refers to the original manual CI commit unless explicitly superseded by a new artifact result. Terminal repair, full-panel regression, and independent source review are complete; final backend suites passed with the race detector and two repetitions. New CI packaging and a new-artifact smoke remain pending. The old signed binary is not evidence for the new source changes.
 
+### Follow-up CI attempt
+
+[Build Helper run 35553118190](https://github.com/MichaelCrowe11/crowe-terminal/actions/runs/35553118190) manually tested reviewed commit `e7d47a46a7ac93b102bf2743e5491835a2423e3b` on `release/validate-0.15.7`. Scoped backend tests, restricted-tool dispatch tests, and frontend typechecking passed. All 116 frontend assertions passed, but Vitest correctly failed on an unhandled `fetch failed` rejection attributed to `mcpui.test.tsx` after teardown (`getaddrinfo EAI_AGAIN undefined`). The Sharp probe and all packaging jobs were skipped; no new signed artifact was produced. Store and release jobs were skipped. The test isolation failure must be corrected before a new artifact smoke; the validation gate was not bypassed.
+
+The MCP fixture had started a real WOS object load before seeding its object; seeding did not cancel the pending fetch. It now seeds the existing in-memory WaveEnv store and redirects only the model's global WOS atom lookup to that store. A fail-fast fetch guard and metadata/zero-fetch regression fail deterministically before the fixture correction and pass after it. The local full suite now passes 117 tests in 18 files without unhandled errors; TypeScript, touched-test formatting, smoke-driver syntax, and diff checks pass. No production MCP behavior or CI failure detection was changed.
+
+A separate smoke-driver preflight corrected an assertion contradicted by prior macOS evidence: Electron's native `app.getPath("home")` remains the account home even with explicit `HOME`. The driver now verifies inherited `HOME`, records native home separately as a limitation, and retains independent checks for fresh userData, backend config/data, shell cwd, unique prompt, exact typing, separate Enter, and exact cwd output. Independent review found no weakening of those terminal checks. This correction is source-only until the new signed-artifact smoke runs.
+
 ## Revision and build provenance
 
 - Source: `7fb93dd4a5ccf5b65d2dcc9a843c57d836bd8f24`.
