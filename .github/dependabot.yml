@@ -8,6 +8,11 @@ updates:
           time: "09:00"
           timezone: "America/Los_Angeles"
       groups:
+          npm-security:
+              applies-to: security-updates
+              patterns:
+                  - "*"
+
           dev-dependencies-patch:
               dependency-type: "development"
               exclude-patterns:
@@ -150,6 +155,21 @@ updates:
           day: "friday"
           time: "09:00"
           timezone: "America/Los_Angeles"
+      groups:
+          gomod-security:
+              applies-to: security-updates
+              patterns:
+                  - "*"
+          gomod-patch:
+              patterns:
+                  - "*"
+              update-types:
+                  - "patch"
+          gomod-minor:
+              patterns:
+                  - "*"
+              update-types:
+                  - "minor"
     - package-ecosystem: "github-actions"
       directory: "/.github/workflows"
       schedule:
@@ -157,3 +177,11 @@ updates:
           day: "friday"
           time: "09:00"
           timezone: "America/Los_Angeles"
+      groups:
+          github-actions-security:
+              applies-to: security-updates
+              patterns:
+                  - "*"
+          github-actions:
+              patterns:
+                  - "*"
