@@ -54,7 +54,6 @@ const ToolLabels: Record<string, string> = {
 };
 
 const ToolFamilies: Record<string, string> = {
-    farm: "Farm",
     vcs: "Repository",
     editor: "Editor",
     browser: "Browser",
@@ -80,35 +79,112 @@ export function describeTool(toolName: string): string {
     return family && phrase ? `${family}: ${phrase}` : phrase || toolName;
 }
 
+// Plain-language sentences per tool and status. {target} is the first quoted
+// name in the backend description (a file or directory), when there is one.
+// Anything not listed falls back to describeTool, so new tools still read.
+type StepPhrase = { done: string; doing: string; failed: string };
+
+const StepPhrases: Record<string, StepPhrase> = {
+    read_text_file: { done: "Read {target}", doing: "Reading {target}", failed: "Couldn't read {target}" },
+    read_file: { done: "Read {target}", doing: "Reading {target}", failed: "Couldn't read {target}" },
+    read_dir: { done: "Looked in {target}", doing: "Looking in {target}", failed: "Couldn't open {target}" },
+    write_text_file: { done: "Wrote {target}", doing: "Writing {target}", failed: "Couldn't write {target}" },
+    edit_text_file: { done: "Edited {target}", doing: "Editing {target}", failed: "Couldn't edit {target}" },
+    delete_text_file: { done: "Deleted {target}", doing: "Deleting {target}", failed: "Couldn't delete {target}" },
+    term_command_output: {
+        done: "Read the last command's output",
+        doing: "Reading the last command's output",
+        failed: "Couldn't read the last command's output",
+    },
+    term_get_scrollback: {
+        done: "Read the terminal output",
+        doing: "Reading the terminal output",
+        failed: "Couldn't read the terminal output",
+    },
+    terminal_read_scrollback: {
+        done: "Read the terminal output",
+        doing: "Reading the terminal output",
+        failed: "Couldn't read the terminal output",
+    },
+    terminal_propose_command: {
+        done: "Typed a command into your terminal",
+        doing: "Wants to type a command into your terminal",
+        failed: "Couldn't type the command",
+    },
+    terminal_exec_safe: { done: "Ran a command", doing: "Running a command", failed: "The command failed" },
+};
+
 // The backend describes a call as "running <tool id>" while it is in flight;
 // that repeats the label, so the card drops it.
 function isRedundantDesc(desc: string | string[], toolName: string): boolean {
-    const text = Array.isArray(desc) ? desc.join("\n") : desc;
     const fold = (s: string) => s.toLowerCase().replace(/[._\-\s]/g, "");
-    return fold(text) === fold("running " + toolName);
+    return fold(descText(desc)) === fold("running " + toolName);
 }
 
-interface StatusDotProps {
+function toolKey(toolName: string): string {
+    return toolName.toLowerCase().replace(/[.-]/g, "_");
+}
+
+function descText(desc: string | string[]): string {
+    return Array.isArray(desc) ? desc.join("\n") : (desc ?? "");
+}
+
+export function summarizeStep(toolName: string, desc: string | string[], status: string): string {
+    const target = /"([^"]+)"/.exec(descText(desc))?.[1];
+    const phrase = StepPhrases[toolKey(toolName)];
+    if (phrase == null || (phrase.done.includes("{target}") && !target)) {
+        const label = describeTool(toolName);
+        const base = status === "error" ? `${label} (failed)` : label;
+        return target ? `${base}: ${target}` : base;
+    }
+    const template = status === "error" ? phrase.failed : status === "pending" ? phrase.doing : phrase.done;
+    return template.replace("{target}", target ?? "");
+}
+
+interface StatusIconProps {
     status: string;
+    waiting?: boolean;
     className?: string;
 }
 
-const StatusDot = memo(({ status, className }: StatusDotProps) => {
-    const tone =
-        status === "completed"
-            ? "bg-[var(--text-dim)]"
-            : status === "error"
-              ? "bg-[var(--crowe-error)]"
-              : "border border-[var(--text-dim)] bg-transparent motion-safe:animate-pulse";
+const StatusIcon = memo(({ status, waiting, className }: StatusIconProps) => {
+    const [icon, tone, label] = waiting
+        ? ["fa-hand", "text-[var(--accent)]", "Needs your approval"]
+        : status === "completed"
+          ? ["fa-check", "text-[var(--text-dim)]", "Done"]
+          : status === "error"
+            ? ["fa-xmark", "text-[var(--crowe-error)]", "Failed"]
+            : ["fa-circle-notch motion-safe:fa-spin", "text-[var(--text-dim)]", "In progress"];
     return (
-        <span
-            aria-hidden="true"
-            className={cn("inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full", tone, className)}
-        />
+        <span className={cn("inline-flex w-4 flex-shrink-0 justify-center text-[12px]", tone, className)}>
+            <i className={cn("fa", icon)} aria-hidden="true" />
+            <span className="sr-only">{label}</span>
+        </span>
     );
 });
 
-StatusDot.displayName = "StatusDot";
+StatusIcon.displayName = "StatusIcon";
+
+interface StepRawProps {
+    toolName: string;
+    desc?: string | string[];
+    children?: React.ReactNode;
+}
+
+// Raw tool ids and backend descriptions help when debugging but read as noise
+// in the conversation, so callers put them behind a native disclosure.
+const StepRaw = memo(({ toolName, desc, children }: StepRawProps) => {
+    const text = desc ? descText(desc) : "";
+    return (
+        <div className="mt-1 space-y-1 border-l border-[var(--hairline)] pl-3 font-mono text-[12px] text-[var(--text-dim)] select-text [overflow-wrap:anywhere]">
+            <div>{toolName}</div>
+            {text && <ToolDesc text={text} />}
+            {children}
+        </div>
+    );
+});
+
+StepRaw.displayName = "StepRaw";
 
 interface ToolDescLineProps {
     text: string;
@@ -336,27 +412,37 @@ function TerminalProposalPreview({ part }: { part: ToolUsePart }) {
     }
     const proposal = part.data.terminalproposal;
     return (
-        <div className="min-w-0 space-y-1 text-[12px]">
-            <div className="text-[var(--text-dim)]">Exact text to type</div>
+        <div className="min-w-0 space-y-2 text-[13px]">
             <pre
                 data-testid="terminal-command"
-                className="max-w-full select-text overflow-x-auto whitespace-pre rounded border border-[var(--hairline)] p-2 font-mono"
+                className="max-w-full select-text whitespace-pre-wrap [overflow-wrap:anywhere] rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-sunken)] px-3 py-2 font-mono text-[13px] text-[var(--text)]"
             >
                 {proposal.command}
             </pre>
-            <div className="select-text [overflow-wrap:anywhere]">
-                Terminal: <span data-testid="terminal-target">{proposal.blockid}</span>
-            </div>
-            <div className="select-text [overflow-wrap:anywhere]">Tab: {proposal.tabid}</div>
-            <div className="select-text whitespace-pre-wrap [overflow-wrap:anywhere]">
-                Destination: {proposal.connection === "" ? "Local" : proposal.connection}
+            <div className="select-text whitespace-pre-wrap text-[var(--text)] [overflow-wrap:anywhere]">
+                Destination: {proposal.connection === "" ? "Local" : proposal.connection} terminal
             </div>
             <div className="text-[var(--text-dim)]">
-                Types text only; does not press Enter. Enter is a separate terminal action. Confirm the destination is
-                ready for input.
+                Approving types this text only. Enter is a separate terminal action, so nothing runs until you press it
+                in the terminal.
             </div>
             {part.data.status === "completed" && <div>Text typed; Enter was not sent.</div>}
         </div>
+    );
+}
+
+function TerminalProposalIds({ part }: { part: ToolUsePart }) {
+    if (!hasValidTerminalProposal(part)) {
+        return null;
+    }
+    const proposal = part.data.terminalproposal;
+    return (
+        <>
+            <div className="font-mono">
+                Terminal: <span data-testid="terminal-target">{proposal.blockid}</span>
+            </div>
+            <div className="font-mono">Tab: {proposal.tabid}</div>
+        </>
     );
 }
 
@@ -375,12 +461,14 @@ const AIToolUseBatchItem = memo(({ part, isStreaming }: AIToolUseBatchItemProps)
     const effectiveErrorMessage = part.data.errormessage || (effectiveApproval === "timeout" ? "Not approved" : null);
 
     return (
-        <div data-toolcallid={part.data.toolcallid} className="flex items-start gap-2 text-[13px]">
-            <StatusDot status={part.data.status} className="mt-[6px]" />
-            <div className="min-w-0 flex-1">
-                <span className="text-[var(--text)]">{part.data.tooldesc}</span>
+        <div data-toolcallid={part.data.toolcallid} className="flex items-start gap-2 text-[13px] leading-5">
+            <StatusIcon status={part.data.status} waiting={effectiveApproval === "needs-approval"} className="mt-0.5" />
+            <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                <span className="text-[var(--text)]">
+                    {summarizeStep(part.data.toolname, part.data.tooldesc, part.data.status)}
+                </span>
                 {effectiveErrorMessage && (
-                    <div className="mt-0.5 text-[12px] text-[var(--text-dim)]">{effectiveErrorMessage}</div>
+                    <div className="mt-0.5 text-[12px] text-[var(--crowe-error)]">{effectiveErrorMessage}</div>
                 )}
                 <AIToolApproval part={part} isStreaming={isStreaming} />
             </div>
@@ -410,13 +498,22 @@ const AIToolUseBatch = memo(({ parts, isStreaming }: AIToolUseBatchProps) => {
         pendingParts.forEach((part) => fireAndForget(() => model.toolUseSendApproval(part.data.toolcallid, decision)));
     };
 
+    const waiting = pendingParts.length > 0;
     return (
-        <div className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-2 [box-shadow:inset_0_1px_0_var(--hair-top)]">
+        <div
+            className={cn(
+                "flex items-start gap-2",
+                waiting &&
+                    "rounded-[var(--radius-sm)] border border-[var(--crowe-gold-40)] bg-[var(--surface-raised)] p-3 [box-shadow:inset_0_1px_0_var(--hair-top)]"
+            )}
+        >
             <div className="min-w-0 flex-1">
-                <div className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-dim)]">
-                    Reading files
-                </div>
-                <div className="mt-1.5 space-y-1">
+                {waiting && (
+                    <div className="mb-2 text-[13px] font-medium text-[var(--text)]">
+                        Hypheus wants to read {pendingParts.length === 1 ? "a file" : `${pendingParts.length} files`}
+                    </div>
+                )}
+                <div className="space-y-1">
                     {parts.map((part) => (
                         <AIToolUseBatchItem key={part.data.toolcallid} part={part} isStreaming={isStreaming} />
                     ))}
@@ -449,9 +546,6 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
     const showRestoreModal = restoreModalToolCallId === toolData.toolcallid;
     const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const highlightedBlockIdRef = useRef<string | null>(null);
-
-    const toolLabel = describeTool(toolData.toolname);
-    const showDesc = toolData.tooldesc && !isRedundantDesc(toolData.tooldesc, toolData.toolname);
 
     const effectiveApproval = getEffectiveApprovalStatus(toolData.approval, isStreaming, requests[toolData.toolcallid]);
     const terminalProposal = isTerminalProposal(part);
@@ -506,23 +600,47 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
         fireAndForget(() => WaveAIModel.getInstance().openDiff(toolData.inputfilename, toolData.toolcallid));
     };
 
+    const waiting = effectiveApproval === "needs-approval";
+    const errorText = toolData.errormessage || (effectiveApproval === "timeout" ? "Not approved" : null);
+    const summary = summarizeStep(toolData.toolname, toolData.tooldesc, toolData.status);
+    // Tools without a phrase entry only have a generic label, so their backend
+    // description still carries the useful part and stays visible.
+    const showDesc =
+        !StepPhrases[toolKey(toolData.toolname)] &&
+        toolData.tooldesc &&
+        !isRedundantDesc(toolData.tooldesc, toolData.toolname);
+
     return (
         <div
             data-toolcallid={toolData.toolcallid}
-            className="min-w-0 flex flex-col gap-1 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-2 [box-shadow:inset_0_1px_0_var(--hair-top)]"
+            className={cn(
+                "min-w-0 flex flex-col text-[13px] leading-5",
+                waiting &&
+                    "rounded-[var(--radius-sm)] border border-[var(--crowe-gold-40)] bg-[var(--surface-raised)] p-3 [box-shadow:inset_0_1px_0_var(--hair-top)]"
+            )}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <div className="flex items-center gap-2">
-                <StatusDot status={toolData.status} />
-                <div className="min-w-0 truncate text-[13px] font-medium text-[var(--text)]">{toolLabel}</div>
-                <div className="flex-1" />
-                <span
-                    className="hidden max-w-[45%] truncate font-mono text-[10px] text-[var(--text-dim)] @[260px]:inline"
-                    title={toolData.toolname}
-                >
-                    {toolData.toolname}
-                </span>
+            <div className="flex items-start gap-2">
+                <StatusIcon status={toolData.status} waiting={waiting} className="mt-0.5" />
+                {waiting ? (
+                    <div className="min-w-0 flex-1 font-medium text-[var(--text)] [overflow-wrap:anywhere]">
+                        {summary}
+                    </div>
+                ) : (
+                    <details className="group min-w-0 flex-1">
+                        <summary className="flex cursor-pointer list-none items-start gap-1.5 text-[var(--text)] select-none [&::-webkit-details-marker]:hidden">
+                            <span className="min-w-0 [overflow-wrap:anywhere]">{summary}</span>
+                            <i
+                                className="fa fa-chevron-right mt-[6px] text-[9px] text-[var(--text-dim)] opacity-0 transition group-open:rotate-90 group-open:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100"
+                                aria-hidden="true"
+                            />
+                        </summary>
+                        <StepRaw toolName={toolData.toolname} desc={toolData.tooldesc}>
+                            {terminalProposal && <TerminalProposalIds part={part} />}
+                        </StepRaw>
+                    </details>
+                )}
                 {isFileWriteTool &&
                     toolData.inputfilename &&
                     toolData.writebackupfilename &&
@@ -533,33 +651,51 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
                                 recordTEvent("waveai:revertfile", { "waveai:action": "revertfile:open" });
                                 model.openRestoreBackupModal(toolData.toolcallid);
                             }}
-                            className="flex flex-shrink-0 items-center gap-1 rounded-[var(--radius-xs)] border border-[var(--hairline)] px-1.5 py-0.5 text-[var(--text-dim)] transition-colors hover:border-[var(--crowe-gold-40)] hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer"
-                            title="Restore backup file"
+                            className="flex flex-shrink-0 items-center gap-1 rounded-[var(--radius-xs)] border border-[var(--hairline)] px-1.5 py-0.5 text-[12px] text-[var(--text-dim)] transition-colors hover:border-[var(--crowe-gold-40)] hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer"
+                            title="Restore the file from the backup taken before this change"
                         >
-                            <span className="text-xs">Revert File</span>
-                            <i className="fa fa-clock-rotate-left text-xs"></i>
+                            <i className="fa fa-clock-rotate-left" aria-hidden="true"></i>
+                            <span>Revert file</span>
                         </button>
                     )}
                 {isFileWriteTool && toolData.inputfilename && (
                     <button
                         onClick={handleOpenDiff}
-                        className="flex flex-shrink-0 items-center gap-1 rounded-[var(--radius-xs)] border border-[var(--hairline)] px-1.5 py-0.5 text-[var(--text-dim)] transition-colors hover:border-[var(--crowe-gold-40)] hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer"
-                        title="Open in diff viewer"
+                        className="flex flex-shrink-0 items-center gap-1 rounded-[var(--radius-xs)] border border-[var(--hairline)] px-1.5 py-0.5 text-[12px] text-[var(--text-dim)] transition-colors hover:border-[var(--crowe-gold-40)] hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer"
+                        title="Open the change in the diff viewer"
                     >
-                        <span className="text-xs">Show Diff</span>
-                        <i className="fa fa-arrow-up-right-from-square text-xs"></i>
+                        <span>See changes</span>
+                        <i className="fa fa-arrow-up-right-from-square" aria-hidden="true"></i>
                     </button>
                 )}
             </div>
-            {showDesc && <ToolDesc text={toolData.tooldesc} className="pl-[14px] text-[13px] text-[var(--text-dim)]" />}
-            {terminalProposal && <TerminalProposalPreview part={part} />}
-            {(toolData.errormessage || effectiveApproval === "timeout") && (
-                <div className="pl-[14px] text-[12px] text-[var(--text-dim)]">
-                    {toolData.errormessage || "Not approved"}
-                </div>
-            )}
-            <div className="pl-[14px]">
+            <div className="pl-6">
+                {showDesc && <ToolDesc text={toolData.tooldesc} className="text-[12px] text-[var(--text-dim)]" />}
+                {errorText && (
+                    <div className="mt-0.5 text-[12px] text-[var(--crowe-error)] [overflow-wrap:anywhere]">
+                        {errorText}
+                    </div>
+                )}
+                {terminalProposal && (
+                    <div className="mt-2">
+                        <TerminalProposalPreview part={part} />
+                    </div>
+                )}
                 <AIToolApproval part={part} isStreaming={isStreaming} />
+                {waiting && (
+                    <details className="group mt-2 text-[12px] text-[var(--text-dim)]">
+                        <summary className="inline-flex cursor-pointer list-none items-center gap-1 select-none hover:text-[var(--text)] [&::-webkit-details-marker]:hidden">
+                            <i
+                                className="fa fa-chevron-right text-[9px] transition-transform group-open:rotate-90"
+                                aria-hidden="true"
+                            />
+                            Details
+                        </summary>
+                        <StepRaw toolName={toolData.toolname} desc={toolData.tooldesc}>
+                            {terminalProposal && <TerminalProposalIds part={part} />}
+                        </StepRaw>
+                    </details>
+                )}
             </div>
             {showRestoreModal && <RestoreBackupModal part={part} />}
         </div>
@@ -576,13 +712,18 @@ const AIToolProgress = memo(({ part }: AIToolProgressProps) => {
     const progressData = part.data;
 
     return (
-        <div className="flex flex-col gap-1 p-2 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] [box-shadow:inset_0_1px_0_var(--hair-top)]">
-            <div className="flex items-center gap-2">
-                <i className="fa fa-spinner fa-spin text-[var(--text-dim)]"></i>
-                <div className="font-semibold">{progressData.toolname}</div>
+        <div className="flex flex-col text-[13px] leading-5">
+            <div className="flex items-start gap-2">
+                <StatusIcon status="pending" className="mt-0.5" />
+                <div className="min-w-0 flex-1 text-[var(--text)]">
+                    {summarizeStep(progressData.toolname, "", "pending")}
+                </div>
             </div>
             {progressData.statuslines && progressData.statuslines.length > 0 && (
-                <ToolDesc text={progressData.statuslines} className="text-sm text-[var(--text-dim)] pl-6 space-y-0.5" />
+                <ToolDesc
+                    text={progressData.statuslines}
+                    className="space-y-0.5 pl-6 text-[12px] text-[var(--text-dim)] [overflow-wrap:anywhere]"
+                />
             )}
         </div>
     );

@@ -1,18 +1,15 @@
 // Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import croweMark from "@/app/asset/hypheus-mark.png";
 import { WaveStreamdown } from "@/app/element/streamdown";
 import { cn } from "@/util/util";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef } from "react";
 import { getFileIcon } from "./ai-utils";
 import { AIFeedbackButtons } from "./aifeedbackbuttons";
 import { AIToolUseGroup } from "./aitooluse";
 import { WaveUIMessage, WaveUIMessagePart } from "./aitypes";
 import { WaveAIModel } from "./waveai-model";
-import croweMark from "@/app/asset/hypheus-mark.png";
-
-// Mycelium cognition verbs, shared vocabulary with the dock Cognition panel.
-const CognitionVerbs = ["Germinating", "Branching", "Colonizing", "Synthesizing", "Reasoning", "Cultivating"];
 
 const AIThinking = memo(
     ({
@@ -25,24 +22,12 @@ const AIThinking = memo(
         isWaitingApproval?: boolean;
     }) => {
         const scrollRef = useRef<HTMLDivElement>(null);
-        const [verbIdx, setVerbIdx] = useState(0);
-        // Cycle the cognition verb only while actively working (no reasoning
-        // trace to show and nothing pending approval).
-        const cycleVerb = !isWaitingApproval && !reasoningText;
 
         useEffect(() => {
             if (scrollRef.current && reasoningText) {
                 scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             }
         }, [reasoningText]);
-
-        useEffect(() => {
-            if (!cycleVerb) {
-                return;
-            }
-            const id = setInterval(() => setVerbIdx((i) => (i + 1) % CognitionVerbs.length), 1600);
-            return () => clearInterval(id);
-        }, [cycleVerb]);
 
         const displayText = reasoningText
             ? (() => {
@@ -52,10 +37,10 @@ const AIThinking = memo(
             : "";
 
         const label = isWaitingApproval
-            ? message || "Waiting for approvals"
+            ? message || "Waiting for your approval"
             : reasoningText
-              ? "Reasoning"
-              : CognitionVerbs[verbIdx];
+              ? "Reasoning…"
+              : "Thinking…";
 
         return (
             <div className="flex flex-col gap-1.5">
@@ -68,17 +53,14 @@ const AIThinking = memo(
                             className="inline-block h-[13px] w-[2px] animate-pulse rounded-[1px] bg-[var(--accent)] shadow-[0_0_6px_var(--glow-gold)]"
                         />
                     )}
-                    <span
-                        key={label}
-                        className="crowe-cognition-verb font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--text-dim)]"
-                    >
+                    <span key={label} className="crowe-cognition-verb text-[13px] text-[var(--text-dim)]">
                         {label}
                     </span>
                 </div>
                 {displayText && (
                     <div
                         ref={scrollRef}
-                        className="crowe-scroll-thin ml-[3px] h-[3lh] max-w-[600px] overflow-y-auto border-l border-[var(--hairline-faint)] pl-4 text-[12px] leading-relaxed text-[var(--crowe-parchment-45)]"
+                        className="crowe-scroll-thin ml-[3px] h-[3lh] max-w-[600px] overflow-y-auto border-l border-[var(--hairline-faint)] pl-4 text-[12px] leading-relaxed text-[var(--text-dim)]"
                     >
                         {displayText}
                     </div>
@@ -224,7 +206,7 @@ const getThinkingMessage = (
     );
 
     if (hasPendingApprovals) {
-        return { message: "Waiting for Tool Approvals...", isWaitingApproval: true };
+        return { message: "Waiting for your approval above", isWaitingApproval: true };
     }
 
     const lastPart = parts[parts.length - 1];
