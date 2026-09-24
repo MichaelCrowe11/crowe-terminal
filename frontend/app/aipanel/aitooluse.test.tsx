@@ -8,7 +8,7 @@ import { setDefaultRouter } from "@/app/store/wshrpcutil-base";
 import { PrimitiveAtom, Provider, atom } from "jotai";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AIToolUseGroup, hasValidTerminalProposal } from "./aitooluse";
+import { AIToolUseGroup, hasValidTerminalProposal, summarizeStep } from "./aitooluse";
 import { WaveUIMessagePart } from "./aitypes";
 import { WaveAIModel } from "./waveai-model";
 
@@ -282,5 +282,35 @@ describe("per-call approval requests", () => {
             "Invalid approval request"
         );
         expect(RpcApi.WaveAIToolApproveCommand).not.toHaveBeenCalled();
+    });
+});
+
+describe("step summaries", () => {
+    it("names the file or directory the backend described", () => {
+        expect(summarizeStep("read_text_file", 'reading "vite.config.ts" (entire file)', "completed")).toBe(
+            "Read vite.config.ts"
+        );
+        expect(summarizeStep("read_text_file", 'reading "a.ts" (first 40 lines)', "pending")).toBe("Reading a.ts");
+        expect(summarizeStep("read_dir", 'reading directory "src" (entire directory)', "error")).toBe(
+            "Couldn't open src"
+        );
+        expect(summarizeStep("edit_text_file", 'editing "x.go" (2 edits)', "completed")).toBe("Edited x.go");
+    });
+
+    it("falls back to the generic label when there is no phrase or no target", () => {
+        expect(summarizeStep("read_text_file", "", "completed")).toBe("Read a file");
+        expect(summarizeStep("farm.read_sensors", "", "completed")).toBe("Farm: Read sensors");
+        expect(summarizeStep("vcs_diff", "", "error")).toBe("Read the diff (failed)");
+    });
+
+    it("hides raw tool ids behind details and keeps the plain summary visible", () => {
+        const part = makePart("call-read");
+        part.data.toolname = "term_command_output";
+        part.data.tooldesc = "reading last command output from 11111111";
+        part.data.status = "completed";
+        part.data.approval = "auto-approved";
+        const markup = renderCards([part]);
+        expect(markup).toContain("Read the last command&#x27;s output");
+        expect(markup).toMatch(/<details[^>]*>[\s\S]*term_command_output/);
     });
 });
