@@ -4,15 +4,12 @@
 import croweMark from "@/app/asset/hypheus-mark.png";
 import { WaveStreamdown } from "@/app/element/streamdown";
 import { cn } from "@/util/util";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef } from "react";
 import { getFileIcon } from "./ai-utils";
 import { AIFeedbackButtons } from "./aifeedbackbuttons";
 import { AIToolUseGroup } from "./aitooluse";
 import { WaveUIMessage, WaveUIMessagePart } from "./aitypes";
 import { WaveAIModel } from "./waveai-model";
-
-// Mycelium cognition verbs, shared vocabulary with the dock Cognition panel.
-const CognitionVerbs = ["Germinating", "Branching", "Colonizing", "Synthesizing", "Reasoning", "Cultivating"];
 
 const AIThinking = memo(
     ({
@@ -25,24 +22,12 @@ const AIThinking = memo(
         isWaitingApproval?: boolean;
     }) => {
         const scrollRef = useRef<HTMLDivElement>(null);
-        const [verbIdx, setVerbIdx] = useState(0);
-        // Cycle the cognition verb only while actively working (no reasoning
-        // trace to show and nothing pending approval).
-        const cycleVerb = !isWaitingApproval && !reasoningText;
 
         useEffect(() => {
             if (scrollRef.current && reasoningText) {
                 scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
             }
         }, [reasoningText]);
-
-        useEffect(() => {
-            if (!cycleVerb) {
-                return;
-            }
-            const id = setInterval(() => setVerbIdx((i) => (i + 1) % CognitionVerbs.length), 1600);
-            return () => clearInterval(id);
-        }, [cycleVerb]);
 
         const displayText = reasoningText
             ? (() => {
@@ -55,7 +40,7 @@ const AIThinking = memo(
             ? message || "Waiting for your approval"
             : reasoningText
               ? "Reasoning…"
-              : `${CognitionVerbs[verbIdx]}…`;
+              : "Thinking…";
 
         return (
             <div className="flex flex-col gap-1.5">
