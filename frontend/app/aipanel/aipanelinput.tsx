@@ -37,7 +37,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
     } else if (model.inBuilder) {
         placeholder = "What would you like to build...";
     } else {
-        placeholder = "Ask Hypheus anything...";
+        placeholder = widgetAccess ? "Ask about your terminal, code, or files..." : "Ask Hypheus anything...";
     }
 
     const resizeTextarea = useCallback(() => {
@@ -162,20 +162,6 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                     )}
                 >
                     <div className="relative">
-                        <span
-                            aria-hidden="true"
-                            title={widgetAccess ? "tools on" : "tools off (sandboxed)"}
-                            className={cn(
-                                "absolute left-2.5 top-2 select-none font-mono text-[13px] transition-colors",
-                                !widgetAccess
-                                    ? "text-[var(--text-dim)]"
-                                    : isFocused
-                                      ? "text-[var(--accent)]"
-                                      : "text-[var(--crowe-gold-50)]"
-                            )}
-                        >
-                            $
-                        </span>
                         <textarea
                             ref={textareaRef}
                             value={input}
@@ -184,7 +170,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                             onFocus={handleFocus}
                             onBlur={handleBlur}
                             placeholder={placeholder}
-                            className="w-full resize-none overflow-auto bg-transparent py-2 pl-6 pr-3 text-[var(--text)] placeholder-[var(--crowe-parchment-40)] focus:outline-none"
+                            className="w-full resize-none overflow-auto bg-transparent py-2 px-3 text-[var(--text)] placeholder-[var(--crowe-parchment-40)] focus:outline-none"
                             style={{ fontSize: "13px" }}
                             rows={2}
                         />
@@ -201,8 +187,8 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                             </button>
                         </Tooltip>
                         <div className="flex items-center gap-2">
-                            <span className="hidden select-none font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--crowe-parchment-40)] @[300px]:inline">
-                                {status === "streaming" ? "streaming" : "enter to send"}
+                            <span className="hidden select-none text-[11px] text-[var(--text-dim)] @[300px]:inline">
+                                {status === "streaming" ? "Responding..." : "Enter to send, Shift+Enter for a new line"}
                             </span>
                             {status === "streaming" ? (
                                 <Tooltip content="Stop response" placement="top">

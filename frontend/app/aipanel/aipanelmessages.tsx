@@ -16,6 +16,7 @@ interface AIPanelMessagesProps {
 export const AIPanelMessages = memo(({ messages, status, onContextMenu }: AIPanelMessagesProps) => {
     const model = WaveAIModel.getInstance();
     const isPanelOpen = useAtomValue(model.getPanelVisibleAtom());
+    const widgetAccess = useAtomValue(model.widgetAccessAtom);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const prevStatusRef = useRef<string>(status);
@@ -87,10 +88,10 @@ export const AIPanelMessages = memo(({ messages, status, onContextMenu }: AIPane
             className="crowe-scroll-thin flex-1 space-y-4 overflow-y-auto p-2"
             onContextMenu={onContextMenu}
         >
-            <div className="mb-1 flex items-center gap-3 px-1 text-[var(--crowe-parchment-40)]">
-                <span className="h-px flex-1 bg-[var(--hairline-faint)]" />
-                <span className="font-mono text-[9px] uppercase tracking-[0.2em]">CroweLM · managed workspace</span>
-                <span className="h-px flex-1 bg-[var(--hairline-faint)]" />
+            <div className="mb-1 border-b border-[var(--hairline-faint)] px-1 pb-2 text-center text-[11px] text-[var(--text-dim)]">
+                {widgetAccess
+                    ? "Hypheus can read your terminal and files. It asks before changing files or typing in the terminal."
+                    : "Chat only. Hypheus can't see your terminal or files."}
             </div>
             {messages.map((message, index) => {
                 const isLastMessage = index === messages.length - 1;
