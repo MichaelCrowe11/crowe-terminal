@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fileURLToPath } from "node:url";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
     root: fileURLToPath(new URL(".", import.meta.url)),
-    resolve: {
-        alias: { "@": fileURLToPath(new URL("./frontend", import.meta.url)) },
-    },
+    plugins: [tsconfigPaths()],
     esbuild: { jsx: "automatic" },
     test: {
         environment: "node",

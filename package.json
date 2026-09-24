@@ -44,7 +44,7 @@
         "@types/throttle-debounce": "^5",
         "@types/ws": "^8",
         "@vitejs/plugin-react-swc": "4.2.3",
-        "@vitest/coverage-istanbul": "^3.0.9",
+        "@vitest/coverage-istanbul": "^4.1.11",
         "electron": "^41.1.0",
         "electron-builder": "^26.8",
         "electron-vite": "^5.0",
@@ -56,7 +56,7 @@
         "prettier-plugin-jsdoc": "^1.8.0",
         "prettier-plugin-organize-imports": "^4.3.0",
         "sass": "1.91.0",
-        "sharp": "^0.34.5",
+        "sharp": "^0.35.4",
         "tailwindcss": "^4.2.1",
         "ts-node": "^10.9.2",
         "tsx": "^4.21.0",
@@ -66,7 +66,7 @@
         "vite-plugin-image-optimizer": "^2.0.3",
         "vite-plugin-svgr": "^4.5.0",
         "vite-tsconfig-paths": "^5.1.4",
-        "vitest": "^3.0.9"
+        "vitest": "^4.1.11"
     },
     "dependencies": {
         "@ai-sdk/react": "^2.0.104",
@@ -165,6 +165,27 @@
         },
         "@codingame/monaco-vscode-api": {
             "dompurify": "$dompurify"
+        },
+        "@ai-sdk/provider-utils": {
+            "undici": "^6.28.1"
+        },
+        "express": {
+            "qs": "^6.16.0"
+        },
+        "copy-webpack-plugin": {
+            "serialize-javascript": "^7.0.5"
+        },
+        "css-minimizer-webpack-plugin": {
+            "serialize-javascript": "^7.0.5"
+        },
+        "sockjs": {
+            "uuid": "^11.1.1"
+        },
+        "@docusaurus/lqip-loader": {
+            "sharp": "^0.35.4"
+        },
+        "@docusaurus/plugin-ideal-image": {
+            "sharp": "^0.35.4"
         }
     },
     "packageManager": "npm@10.9.2",
