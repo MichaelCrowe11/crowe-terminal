@@ -1,14 +1,14 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { BlockModel } from "@/app/block/block-model";
 import { recordTEvent } from "@/app/store/global";
 import { cn, fireAndForget } from "@/util/util";
 import { useAtomValue } from "jotai";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef } from "react";
 import { WaveUIMessagePart } from "./aitypes";
 import { RestoreBackupModal } from "./restorebackupmodal";
-import { WaveAIModel } from "./waveai-model";
+import { ToolApprovalRequest, WaveAIModel } from "./waveai-model";
 
 // matches pkg/filebackup/filebackup.go
 const BackupRetentionDays = 5;
@@ -173,56 +173,216 @@ const ToolDesc = memo(({ text, className }: ToolDescProps) => {
 
 ToolDesc.displayName = "ToolDesc";
 
-function getEffectiveApprovalStatus(baseApproval: string, isStreaming: boolean): string {
-    return !isStreaming && baseApproval === "needs-approval" ? "timeout" : baseApproval;
+function getEffectiveApprovalStatus(baseApproval: string, isStreaming: boolean, request?: ToolApprovalRequest): string {
+    if (baseApproval !== "needs-approval") {
+        return baseApproval;
+    }
+    if (request?.status === "submitted") {
+        return "decision-received";
+    }
+    if (!isStreaming && request != null) {
+        return "outcome-unconfirmed";
+    }
+    return isStreaming ? baseApproval : "timeout";
+}
+
+const CanonicalUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+type ToolUsePart = WaveUIMessagePart & { type: "data-tooluse" };
+
+function isTerminalProposal(part: ToolUsePart): boolean {
+    return part.data.toolname.replace(/[.-]/g, "_") === "terminal_propose_command";
+}
+
+function isDisplaySafe(text: unknown): text is string {
+    if (typeof text !== "string") {
+        return false;
+    }
+    for (const character of text) {
+        const codepoint = character.codePointAt(0);
+        if (
+            codepoint <= 0x1f ||
+            (codepoint >= 0x7f && codepoint <= 0x9f) ||
+            codepoint === 0x2028 ||
+            codepoint === 0x2029 ||
+            codepoint === 0x061c ||
+            codepoint === 0x200e ||
+            codepoint === 0x200f ||
+            (codepoint >= 0x202a && codepoint <= 0x202e) ||
+            (codepoint >= 0x2066 && codepoint <= 0x2069) ||
+            (codepoint >= 0xd800 && codepoint <= 0xdfff)
+        ) {
+            return false;
+        }
+    }
+    return true;
+}
+
+export function hasValidTerminalProposal(part: ToolUsePart): boolean {
+    const proposal = part.data.terminalproposal;
+    return (
+        proposal != null &&
+        isDisplaySafe(proposal.command) &&
+        proposal.command.trim().length > 0 &&
+        typeof proposal.blockid === "string" &&
+        CanonicalUuid.test(proposal.blockid) &&
+        typeof proposal.tabid === "string" &&
+        CanonicalUuid.test(proposal.tabid) &&
+        isDisplaySafe(proposal.connection) &&
+        (!part.data.blockid || part.data.blockid === proposal.blockid)
+    );
 }
 
 interface AIToolApprovalButtonsProps {
     count: number;
     onApprove: () => void;
     onDeny: () => void;
+    pending?: boolean;
+    approveDisabled?: boolean;
+    typing?: boolean;
 }
 
-const AIToolApprovalButtons = memo(({ count, onApprove, onDeny }: AIToolApprovalButtonsProps) => {
-    const approveText = count > 1 ? `Approve All (${count})` : "Approve";
-    const denyText = count > 1 ? "Deny All" : "Deny";
+const AIToolApprovalButtons = memo(
+    ({ count, onApprove, onDeny, pending, approveDisabled, typing }: AIToolApprovalButtonsProps) => {
+        const approveText = typing ? "Approve typing" : count > 1 ? `Approve All (${count})` : "Approve";
+        const denyText = count > 1 ? "Deny All" : "Deny";
 
-    return (
-        <div className="mt-2 flex items-center gap-2 border-t border-[var(--hairline-faint)] pt-2">
-            <button
-                onClick={onApprove}
-                className="rounded-[var(--radius-sm)] bg-[var(--accent)] px-3 py-1 text-[13px] font-medium text-[var(--accent-ink)] transition-colors hover:bg-[var(--accent-bright)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] cursor-pointer"
+        return (
+            <div
+                className="mt-2 flex flex-wrap items-center gap-2 border-t border-[var(--hairline-faint)] pt-2"
+                aria-busy={pending}
             >
-                {approveText}
-            </button>
-            <button
-                onClick={onDeny}
-                className="rounded-[var(--radius-sm)] border border-[var(--hairline)] px-3 py-1 text-[13px] text-[var(--text-dim)] transition-colors hover:border-[var(--hairline-strong)] hover:text-[var(--text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] cursor-pointer"
-            >
-                {denyText}
-            </button>
-        </div>
-    );
-});
+                <button
+                    disabled={pending || approveDisabled}
+                    onClick={onApprove}
+                    className="rounded-[var(--radius-sm)] bg-[var(--accent)] px-3 py-1 text-[13px] font-medium text-[var(--accent-ink)] transition-colors hover:bg-[var(--accent-bright)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] cursor-pointer"
+                >
+                    {approveText}
+                </button>
+                <button
+                    disabled={pending}
+                    onClick={onDeny}
+                    className="rounded-[var(--radius-sm)] border border-[var(--hairline)] px-3 py-1 text-[13px] text-[var(--text-dim)] transition-colors hover:border-[var(--hairline-strong)] hover:text-[var(--text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] cursor-pointer"
+                >
+                    {denyText}
+                </button>
+            </div>
+        );
+    }
+);
 
 AIToolApprovalButtons.displayName = "AIToolApprovalButtons";
 
-interface AIToolUseBatchItemProps {
-    part: WaveUIMessagePart & { type: "data-tooluse" };
-    effectiveApproval: string;
+function AIToolApproval({ part, isStreaming }: { part: ToolUsePart; isStreaming: boolean }) {
+    const model = WaveAIModel.getInstance();
+    const requests = useAtomValue(model.toolApprovalRequests);
+    const request = requests[part.data.toolcallid];
+    const approval = getEffectiveApprovalStatus(part.data.approval, isStreaming, request);
+    const typing = isTerminalProposal(part);
+    if (part.data.status !== "pending") {
+        return null;
+    }
+    if (approval === "decision-received" || approval === "outcome-unconfirmed") {
+        return (
+            <div role="status" className="mt-2 text-[12px] text-[var(--text-dim)]">
+                {approval === "decision-received"
+                    ? isStreaming
+                        ? "Decision received. Waiting for tool status."
+                        : "Decision received. Tool outcome unconfirmed; the response ended before confirmation."
+                    : "Decision delivery and tool outcome unconfirmed; the response ended before confirmation."}
+            </div>
+        );
+    }
+    if (approval !== "needs-approval") {
+        return null;
+    }
+    const canApprove = !typing || hasValidTerminalProposal(part);
+    return (
+        <div>
+            <AIToolApprovalButtons
+                count={1}
+                typing={typing}
+                pending={request?.status === "pending"}
+                approveDisabled={!canApprove}
+                onApprove={() => {
+                    if (canApprove) {
+                        fireAndForget(() => model.toolUseSendApproval(part.data.toolcallid, "user-approved"));
+                    }
+                }}
+                onDeny={() => fireAndForget(() => model.toolUseSendApproval(part.data.toolcallid, "user-denied"))}
+            />
+            {request?.status === "pending" && (
+                <div role="status" className="mt-1 text-[12px]">
+                    Sending decision…
+                </div>
+            )}
+            {request?.status === "error" && (
+                <div role="alert" className="mt-1 text-[12px] text-error [overflow-wrap:anywhere]">
+                    Could not confirm decision: {request.error}. It may already have been received; the tool outcome is
+                    unknown. No automatic retry was sent. Retry or deny only while this request is still pending.
+                </div>
+            )}
+        </div>
+    );
 }
 
-const AIToolUseBatchItem = memo(({ part, effectiveApproval }: AIToolUseBatchItemProps) => {
+function TerminalProposalPreview({ part }: { part: ToolUsePart }) {
+    if (!hasValidTerminalProposal(part)) {
+        return (
+            <div role="alert" className="text-[12px] text-error">
+                Command preview missing or invalid. Typing cannot be approved.
+            </div>
+        );
+    }
+    const proposal = part.data.terminalproposal;
+    return (
+        <div className="min-w-0 space-y-1 text-[12px]">
+            <div className="text-[var(--text-dim)]">Exact text to type</div>
+            <pre
+                data-testid="terminal-command"
+                className="max-w-full select-text overflow-x-auto whitespace-pre rounded border border-[var(--hairline)] p-2 font-mono"
+            >
+                {proposal.command}
+            </pre>
+            <div className="select-text [overflow-wrap:anywhere]">
+                Terminal: <span data-testid="terminal-target">{proposal.blockid}</span>
+            </div>
+            <div className="select-text [overflow-wrap:anywhere]">Tab: {proposal.tabid}</div>
+            <div className="select-text whitespace-pre-wrap [overflow-wrap:anywhere]">
+                Destination: {proposal.connection === "" ? "Local" : proposal.connection}
+            </div>
+            <div className="text-[var(--text-dim)]">
+                Types text only; does not press Enter. Enter is a separate terminal action. Confirm the destination is
+                ready for input.
+            </div>
+            {part.data.status === "completed" && <div>Text typed; Enter was not sent.</div>}
+        </div>
+    );
+}
+
+interface AIToolUseBatchItemProps {
+    part: WaveUIMessagePart & { type: "data-tooluse" };
+    isStreaming: boolean;
+}
+
+const AIToolUseBatchItem = memo(({ part, isStreaming }: AIToolUseBatchItemProps) => {
+    const requests = useAtomValue(WaveAIModel.getInstance().toolApprovalRequests);
+    const effectiveApproval = getEffectiveApprovalStatus(
+        part.data.approval,
+        isStreaming,
+        requests[part.data.toolcallid]
+    );
     const effectiveErrorMessage = part.data.errormessage || (effectiveApproval === "timeout" ? "Not approved" : null);
 
     return (
-        <div className="flex items-start gap-2 text-[13px]">
+        <div data-toolcallid={part.data.toolcallid} className="flex items-start gap-2 text-[13px]">
             <StatusDot status={part.data.status} className="mt-[6px]" />
             <div className="min-w-0 flex-1">
                 <span className="text-[var(--text)]">{part.data.tooldesc}</span>
                 {effectiveErrorMessage && (
                     <div className="mt-0.5 text-[12px] text-[var(--text-dim)]">{effectiveErrorMessage}</div>
                 )}
+                <AIToolApproval part={part} isStreaming={isStreaming} />
             </div>
         </div>
     );
@@ -236,24 +396,18 @@ interface AIToolUseBatchProps {
 }
 
 const AIToolUseBatch = memo(({ parts, isStreaming }: AIToolUseBatchProps) => {
-    const [userApprovalOverride, setUserApprovalOverride] = useState<string | null>(null);
-
-    const firstTool = parts[0].data;
-    const baseApproval = userApprovalOverride || firstTool.approval;
-    const effectiveApproval = getEffectiveApprovalStatus(baseApproval, isStreaming);
-
-    const handleApprove = () => {
-        setUserApprovalOverride("user-approved");
-        parts.forEach((part) => {
-            WaveAIModel.getInstance().toolUseSendApproval(part.data.toolcallid, "user-approved");
-        });
-    };
-
-    const handleDeny = () => {
-        setUserApprovalOverride("user-denied");
-        parts.forEach((part) => {
-            WaveAIModel.getInstance().toolUseSendApproval(part.data.toolcallid, "user-denied");
-        });
+    const model = WaveAIModel.getInstance();
+    const requests = useAtomValue(model.toolApprovalRequests);
+    const pendingParts = parts.filter(
+        (part) =>
+            isStreaming &&
+            part.data.status === "pending" &&
+            part.data.approval === "needs-approval" &&
+            requests[part.data.toolcallid]?.status !== "submitted"
+    );
+    const hasPendingRequest = pendingParts.some((part) => requests[part.data.toolcallid]?.status === "pending");
+    const sendAll = (decision: "user-approved" | "user-denied") => {
+        pendingParts.forEach((part) => fireAndForget(() => model.toolUseSendApproval(part.data.toolcallid, decision)));
     };
 
     return (
@@ -263,12 +417,17 @@ const AIToolUseBatch = memo(({ parts, isStreaming }: AIToolUseBatchProps) => {
                     Reading files
                 </div>
                 <div className="mt-1.5 space-y-1">
-                    {parts.map((part, idx) => (
-                        <AIToolUseBatchItem key={idx} part={part} effectiveApproval={effectiveApproval} />
+                    {parts.map((part) => (
+                        <AIToolUseBatchItem key={part.data.toolcallid} part={part} isStreaming={isStreaming} />
                     ))}
                 </div>
-                {effectiveApproval === "needs-approval" && (
-                    <AIToolApprovalButtons count={parts.length} onApprove={handleApprove} onDeny={handleDeny} />
+                {pendingParts.length > 1 && (
+                    <AIToolApprovalButtons
+                        count={pendingParts.length}
+                        pending={hasPendingRequest}
+                        onApprove={() => sendAll("user-approved")}
+                        onDeny={() => sendAll("user-denied")}
+                    />
                 )}
             </div>
         </div>
@@ -284,9 +443,9 @@ interface AIToolUseProps {
 
 const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
     const toolData = part.data;
-    const [userApprovalOverride, setUserApprovalOverride] = useState<string | null>(null);
     const model = WaveAIModel.getInstance();
     const restoreModalToolCallId = useAtomValue(model.restoreBackupModalToolCallId);
+    const requests = useAtomValue(model.toolApprovalRequests);
     const showRestoreModal = restoreModalToolCallId === toolData.toolcallid;
     const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const highlightedBlockIdRef = useRef<string | null>(null);
@@ -294,8 +453,8 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
     const toolLabel = describeTool(toolData.toolname);
     const showDesc = toolData.tooldesc && !isRedundantDesc(toolData.tooldesc, toolData.toolname);
 
-    const baseApproval = userApprovalOverride || toolData.approval;
-    const effectiveApproval = getEffectiveApprovalStatus(baseApproval, isStreaming);
+    const effectiveApproval = getEffectiveApprovalStatus(toolData.approval, isStreaming, requests[toolData.toolcallid]);
+    const terminalProposal = isTerminalProposal(part);
 
     const isFileWriteTool = toolData.toolname === "write_text_file" || toolData.toolname === "edit_text_file";
 
@@ -306,16 +465,6 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
             }
         };
     }, []);
-
-    const handleApprove = () => {
-        setUserApprovalOverride("user-approved");
-        WaveAIModel.getInstance().toolUseSendApproval(toolData.toolcallid, "user-approved");
-    };
-
-    const handleDeny = () => {
-        setUserApprovalOverride("user-denied");
-        WaveAIModel.getInstance().toolUseSendApproval(toolData.toolcallid, "user-denied");
-    };
 
     const handleMouseEnter = () => {
         if (!toolData.blockid) return;
@@ -359,7 +508,8 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
 
     return (
         <div
-            className="flex flex-col gap-1 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-2 [box-shadow:inset_0_1px_0_var(--hair-top)]"
+            data-toolcallid={toolData.toolcallid}
+            className="min-w-0 flex flex-col gap-1 rounded-[var(--radius-sm)] border border-[var(--hairline)] bg-[var(--surface-raised)] p-2 [box-shadow:inset_0_1px_0_var(--hair-top)]"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
@@ -402,16 +552,15 @@ const AIToolUse = memo(({ part, isStreaming }: AIToolUseProps) => {
                 )}
             </div>
             {showDesc && <ToolDesc text={toolData.tooldesc} className="pl-[14px] text-[13px] text-[var(--text-dim)]" />}
+            {terminalProposal && <TerminalProposalPreview part={part} />}
             {(toolData.errormessage || effectiveApproval === "timeout") && (
                 <div className="pl-[14px] text-[12px] text-[var(--text-dim)]">
                     {toolData.errormessage || "Not approved"}
                 </div>
             )}
-            {effectiveApproval === "needs-approval" && (
-                <div className="pl-[14px]">
-                    <AIToolApprovalButtons count={1} onApprove={handleApprove} onDeny={handleDeny} />
-                </div>
-            )}
+            <div className="pl-[14px]">
+                <AIToolApproval part={part} isStreaming={isStreaming} />
+            </div>
             {showRestoreModal && <RestoreBackupModal part={part} />}
         </div>
     );
@@ -447,7 +596,11 @@ interface AIToolUseGroupProps {
 }
 
 type ToolGroupItem =
-    | { type: "batch"; parts: Array<WaveUIMessagePart & { type: "data-tooluse" }> }
+    | {
+          type: "batch";
+          category: "needs-approval" | "other";
+          parts: Array<WaveUIMessagePart & { type: "data-tooluse" }>;
+      }
     | { type: "single"; part: WaveUIMessagePart & { type: "data-tooluse" } }
     | { type: "progress"; part: WaveUIMessagePart & { type: "data-toolprogress" } };
 
@@ -494,12 +647,12 @@ export const AIToolUseGroup = memo(({ parts, isStreaming }: AIToolUseGroupProps)
 
         if (isFileOpPart && partNeedsApproval) {
             if (!addedApprovalBatch) {
-                groupedItems.push({ type: "batch", parts: readFileNeedsApproval });
+                groupedItems.push({ type: "batch", category: "needs-approval", parts: readFileNeedsApproval });
                 addedApprovalBatch = true;
             }
         } else if (isFileOpPart && !partNeedsApproval) {
             if (!addedOtherBatch) {
-                groupedItems.push({ type: "batch", parts: readFileOther });
+                groupedItems.push({ type: "batch", category: "other", parts: readFileOther });
                 addedOtherBatch = true;
             }
         } else {
@@ -513,22 +666,22 @@ export const AIToolUseGroup = memo(({ parts, isStreaming }: AIToolUseGroupProps)
 
     return (
         <>
-            {groupedItems.map((item, idx) => {
+            {groupedItems.map((item) => {
                 if (item.type === "batch") {
                     return (
-                        <div key={idx} className="mt-2">
+                        <div key={`batch:${item.category}`} className="mt-2">
                             <AIToolUseBatch parts={item.parts} isStreaming={isStreaming} />
                         </div>
                     );
                 } else if (item.type === "progress") {
                     return (
-                        <div key={idx} className="mt-2">
+                        <div key={`progress:${item.part.data.toolcallid}`} className="mt-2">
                             <AIToolProgress part={item.part} />
                         </div>
                     );
                 } else {
                     return (
-                        <div key={idx} className="mt-2">
+                        <div key={`tool:${item.part.data.toolcallid}`} className="mt-2">
                             <AIToolUse part={item.part} isStreaming={isStreaming} />
                         </div>
                     );

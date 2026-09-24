@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { RpcApi } from "@/app/store/wshclientapi";
@@ -396,6 +396,9 @@ async function appMain() {
         await runWaveSrv(handleWSEvent);
     } catch (e) {
         console.log(e.toString());
+        if (process.env.CROWE_REHEARSAL_OFFLINE === "1") {
+            throw e;
+        }
     }
     const ready = await getWaveSrvReady();
     console.log("wavesrv ready signal received", ready, Date.now() - startTs, "ms");

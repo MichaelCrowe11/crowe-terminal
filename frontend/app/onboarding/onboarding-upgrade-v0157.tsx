@@ -17,12 +17,13 @@ const UpgradeOnboardingModal_v0_15_7_Content = () => {
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
                     <div className="text-foreground text-base font-semibold leading-[18px]">
-                        CroweLM modes work as installed
+                        Connect CroweLM with your own credential
                     </div>
                     <div className="text-secondary leading-5">
                         Workspace, Code, Deep Work, Grow Ops, and Cultivation Research run on Crowe Logic's model edge
-                        with tools. No local server, no keys, no Python. Set a{" "}
-                        <span className="font-mono">CROWE_MODELS_KEY</span> secret to route on your own account.
+                        with tools. No local model server or Python is required for these modes. In Settings, open
+                        Secrets, choose Add New Secret, and save your own model-edge credential as{" "}
+                        <span className="font-mono">CROWE_MODELS_KEY</span> before sending a request.
                     </div>
                 </div>
             </div>

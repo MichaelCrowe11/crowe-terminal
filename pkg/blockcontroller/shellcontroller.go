@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package blockcontroller
@@ -138,7 +138,48 @@ func (sc *ShellController) GetRuntimeStatus() *BlockControllerRuntimeStatus {
 }
 
 func (sc *ShellController) GetConnName() string {
+	sc.Lock.Lock()
+	defer sc.Lock.Unlock()
 	return sc.ConnName
+}
+
+func (sc *ShellController) prepareInputSender() (func(context.Context, *BlockInputUnion) error, error) {
+	var shellInputCh chan *BlockInputUnion
+	var shellProc *shellexec.ShellProc
+	sc.WithLock(func() {
+		shellInputCh = sc.ShellInputCh
+		shellProc = sc.ShellProc
+	})
+	if shellInputCh == nil || shellProc == nil {
+		return nil, fmt.Errorf("no running shell input destination")
+	}
+	return func(ctx context.Context, input *BlockInputUnion) (err error) {
+		// The original process may close its channel after validation. Never retry
+		// against a new channel, since approval only covered the captured process.
+		defer func() {
+			if recover() != nil {
+				err = fmt.Errorf("approved shell input destination closed")
+			}
+		}()
+		var unchanged bool
+		sc.WithLock(func() {
+			unchanged = sc.ShellInputCh == shellInputCh && sc.ShellProc == shellProc && sc.ProcStatus == Status_Running
+		})
+		if !unchanged {
+			return fmt.Errorf("approved shell input destination changed")
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-shellProc.DoneCh:
+			return fmt.Errorf("approved shell process exited")
+		case shellInputCh <- input:
+			return nil
+		}
+	}, nil
 }
 
 func (sc *ShellController) SendInput(inputUnion *BlockInputUnion) error {
@@ -524,7 +565,7 @@ func (bc *ShellController) setupAndStartShellProcess(logCtx context.Context, rc 
 
 func (bc *ShellController) manageRunningShellProcess(shellProc *shellexec.ShellProc, rc *RunShellOpts, blockMeta waveobj.MetaMapType) error {
 	shellInputCh := make(chan *BlockInputUnion, 32)
-	bc.ShellInputCh = shellInputCh
+	bc.WithLock(func() { bc.ShellInputCh = shellInputCh })
 
 	go func() {
 		// handles regular output from the pty (goes to the blockfile and xterm)

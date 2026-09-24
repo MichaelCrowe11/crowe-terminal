@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package blockcontroller
@@ -200,6 +200,40 @@ func (dsc *DurableShellController) Stop(graceful bool, newStatus string, destroy
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	jobcontroller.TerminateAndDetachJob(ctx, jobId)
+}
+
+func (dsc *DurableShellController) prepareInputSender() (func(context.Context, *BlockInputUnion) error, error) {
+	return dsc.prepareJobInputSender(jobcontroller.SendInput)
+}
+
+func (dsc *DurableShellController) prepareJobInputSender(send func(context.Context, wshrpc.CommandJobInputData) error) (func(context.Context, *BlockInputUnion) error, error) {
+	var jobID, sessionID string
+	dsc.WithLock(func() { jobID, sessionID = dsc.JobId, dsc.InputSessionId })
+	if jobID == "" {
+		return nil, fmt.Errorf("no job attached to controller")
+	}
+	return func(ctx context.Context, input *BlockInputUnion) error {
+		var seqNum int
+		var unchanged bool
+		dsc.WithLock(func() {
+			unchanged = dsc.JobId == jobID && dsc.InputSessionId == sessionID
+			if unchanged {
+				dsc.inputSeqNum++
+				seqNum = dsc.inputSeqNum
+			}
+		})
+		if !unchanged {
+			return fmt.Errorf("approved durable terminal destination changed")
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		return send(ctx, wshrpc.CommandJobInputData{
+			JobId: jobID, InputSessionId: sessionID, SeqNum: seqNum,
+			InputData64: base64.StdEncoding.EncodeToString(input.InputData),
+			TermSize:    input.TermSize, SigName: input.SigName,
+		})
+	}, nil
 }
 
 func (dsc *DurableShellController) SendInput(inputUnion *BlockInputUnion) error {

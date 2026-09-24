@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { ChatRequestOptions, FileUIPart, UIMessage, UIMessagePart } from "ai";
@@ -21,6 +21,12 @@ type WaveUIDataTypes = {
         errormessage?: string;
         approval?: "needs-approval" | "user-approved" | "user-denied" | "auto-approved" | "timeout";
         blockid?: string;
+        terminalproposal?: {
+            command: string;
+            blockid: string;
+            tabid: string;
+            connection: string;
+        };
         writebackupfilename?: string;
         inputfilename?: string;
     };

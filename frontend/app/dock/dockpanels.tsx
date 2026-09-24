@@ -39,12 +39,27 @@ const Sparkline = ({ data }: { data: number[] }) => {
     );
 };
 
-const PhaseLabels: Record<string, string> = {
-    idle: "idle",
-    reasoning: "reasoning",
-    responding: "responding",
-    tool: "tool call",
-};
+export function activityLabel(status: string, phase: string, tool: string): string {
+    if (status === "error") return "Run ended with an error";
+    if (status === "done") return "Run complete";
+    if (status !== "running") return "No active run";
+    if (phase === "tool") return tool ? `Tool event: ${tool}` : "Tool event received";
+    if (phase === "reasoning") return "Receiving reasoning output";
+    if (phase === "responding") return "Receiving response";
+    return "Waiting for response";
+}
+
+export function endpointDisplay(value: string): { origin: string; location: string } {
+    if (!value?.trim()) return { origin: "Not specified", location: "Unknown endpoint" };
+    try {
+        const url = new URL(value);
+        if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error();
+        const loopback = url.hostname === "localhost" || url.hostname === "[::1]" || /^127\./.test(url.hostname);
+        return { origin: url.origin, location: loopback ? "Loopback endpoint" : "Remote endpoint" };
+    } catch {
+        return { origin: "Invalid endpoint", location: "Unknown endpoint" };
+    }
+}
 
 export const TelemetryPanel = () => {
     const t = TelemetryModel.getInstance();
@@ -61,16 +76,15 @@ export const TelemetryPanel = () => {
     const hasRun = useAtomValue(t.hasRunAtom);
     const live = useAtomValue(t.liveAtom);
 
-    const statusLabel =
-        status === "running" ? (phase !== "idle" ? PhaseLabels[phase] : "generating") : status;
+    const statusLabel = activityLabel(status, phase, currentTool);
 
     return (
         <div className="crowe-panel">
             <div className={cn("crowe-status-line", `crowe-status-${status}`)}>
                 <span className="crowe-status-dot" />
                 <span>{statusLabel}</span>
-                <span className="crowe-status-src" title={live ? "Live foundry event stream" : "Estimated from message stream"}>
-                    {live ? "live" : "est"}
+                <span className="crowe-status-src" title="Connection status is separate from estimated token counts.">
+                    {live ? "Event stream connected" : "Message stream fallback"}
                 </span>
             </div>
             <div className="crowe-metrics">
@@ -84,11 +98,11 @@ export const TelemetryPanel = () => {
                 </div>
                 <div className="crowe-metric">
                     <span className="crowe-metric-val">{tokens > 0 ? tokens : "--"}</span>
-                    <span className="crowe-metric-lbl">answer tok</span>
+                    <span className="crowe-metric-lbl">answer tok est</span>
                 </div>
                 <div className="crowe-metric">
                     <span className="crowe-metric-val">{reasoningTokens > 0 ? reasoningTokens : "--"}</span>
-                    <span className="crowe-metric-lbl">reasoning tok</span>
+                    <span className="crowe-metric-lbl">reasoning tok est</span>
                 </div>
                 <div className="crowe-metric">
                     <span className="crowe-metric-val">{toolCount > 0 ? toolCount : "--"}</span>
@@ -96,15 +110,10 @@ export const TelemetryPanel = () => {
                 </div>
                 <div className="crowe-metric">
                     <span className="crowe-metric-val">{fmtMs(elapsed)}</span>
-                    <span className="crowe-metric-lbl">elapsed</span>
+                    <span className="crowe-metric-lbl">elapsed at last event</span>
                 </div>
             </div>
-            {currentTool && (
-                <div className="crowe-status-line">
-                    <span>running</span>
-                    <span className="crowe-note-target">{currentTool}</span>
-                </div>
-            )}
+            <div className="crowe-panel-hint">Token counts and throughput are estimated from output characters, not provider usage.</div>
             <Sparkline data={history} />
             {!hasRun && (
                 <div className="crowe-empty">Send a message in the operator panel to see live inference telemetry.</div>
@@ -130,17 +139,20 @@ export const ModelPanel = () => {
 
     return (
         <div className="crowe-panel">
-            <div className="crowe-panel-hint">The engine the operator panel routes to. Changes apply to the next message.</div>
+            <div className="crowe-panel-hint">Configured engines and endpoint origins. A loopback endpoint may relay to a remote engine. Changes apply to the next message.</div>
             <div className="crowe-model-list">
                 {entries.map(([key, cfg]) => {
                     const active = key === current;
                     const cloud = cfg["waveai:cloud"];
+                    const endpoint = endpointDisplay(cfg["ai:endpoint"]);
+                    const proxy = cfg["ai:proxyurl"] ? endpointDisplay(cfg["ai:proxyurl"]) : null;
                     return (
                         <button
                             key={key}
                             type="button"
                             className={cn("crowe-model-item cursor-pointer", active && "crowe-model-item-active")}
                             onClick={() => model.setAIMode(key)}
+                            aria-pressed={active}
                         >
                             <div className="crowe-model-row">
                                 <span className="crowe-model-name">{cfg["display:name"] ?? key}</span>
@@ -150,9 +162,11 @@ export const ModelPanel = () => {
                                 <div className="crowe-model-desc">{cfg["display:description"]}</div>
                             )}
                             <div className="crowe-model-meta">
-                                <span>{cloud ? "cloud" : "local"}</span>
-                                {cfg["ai:model"] && <span>{cfg["ai:model"]}</span>}
-                                {cfg["ai:provider"] && <span>{cfg["ai:provider"]}</span>}
+                                <span>{cloud ? "Managed route" : "Configured route"}</span>
+                                <span>Engine: {cfg["ai:model"] || "Not specified"}</span>
+                                {cfg["ai:provider"] && <span>Provider: {cfg["ai:provider"]}</span>}
+                                <span>{endpoint.location}: {endpoint.origin}</span>
+                                {proxy && <span>Proxy origin: {proxy.origin}</span>}
                             </div>
                         </button>
                     );
@@ -164,57 +178,22 @@ export const ModelPanel = () => {
 
 // --- Thinking indicator ----------------------------------------------------
 
-const CognitionVerbs = ["Germinating", "Branching", "Colonizing", "Synthesizing", "Reasoning", "Cultivating"];
-
 export const ThinkingPanel = () => {
-    const model = WaveAIModel.getInstance();
     const t = TelemetryModel.getInstance();
-    const streaming = useAtomValue(model.isAIStreaming);
+    const status = useAtomValue(t.statusAtom);
     const phase = useAtomValue(t.phaseAtom);
     const currentTool = useAtomValue(t.currentToolAtom);
     const elapsed = useAtomValue(t.elapsedMsAtom);
-    const [verbIdx, setVerbIdx] = useState(0);
-
-    useEffect(() => {
-        if (!streaming) {
-            return;
-        }
-        const id = setInterval(() => setVerbIdx((i) => (i + 1) % CognitionVerbs.length), 1400);
-        return () => clearInterval(id);
-    }, [streaming]);
-
-    if (!streaming) {
-        return (
-            <div className="crowe-panel crowe-think crowe-think-idle">
-                <div className="crowe-think-glyph" />
-                <div className="crowe-empty">
-                    The engine is idle. Ask something in the operator panel and this shows live cognition.
-                </div>
-            </div>
-        );
-    }
-
-    let verb = CognitionVerbs[verbIdx];
-    if (phase === "tool" && currentTool) {
-        verb = `Running ${currentTool}`;
-    } else if (phase === "reasoning") {
-        verb = "Reasoning";
-    } else if (phase === "responding") {
-        verb = "Responding";
-    }
+    const hasRun = useAtomValue(t.hasRunAtom);
 
     return (
-        <div className="crowe-panel crowe-think">
-            <div className="crowe-think-glyph crowe-think-glyph-live" />
-            <div className="crowe-think-verb">
-                {verb}
-                <span className="crowe-think-dots">
-                    <span>.</span>
-                    <span>.</span>
-                    <span>.</span>
-                </span>
+        <div className="crowe-panel crowe-activity">
+            <div role="status" aria-live="polite" className={cn("crowe-status-line", `crowe-status-${status}`)}>
+                <span className="crowe-status-dot" aria-hidden="true" />
+                <span>{activityLabel(status, phase, currentTool)}</span>
             </div>
-            <div className="crowe-think-timer">{(elapsed / 1000).toFixed(1)}s</div>
+            {hasRun && <div className="crowe-think-timer">Elapsed at last event: {fmtMs(elapsed)}</div>}
+            <div className="crowe-panel-hint">Activity reflects received output and tool events, not internal cognition.</div>
         </div>
     );
 };

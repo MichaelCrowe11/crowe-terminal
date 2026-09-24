@@ -1,11 +1,13 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package uctypes
 
 import (
 	"fmt"
+	"log"
 	"net/url"
+	"os"
 	"slices"
 	"strings"
 )
@@ -114,6 +116,7 @@ type ToolDefinition struct {
 	ToolApproval     func(any) string                              `json:"-"`
 	ToolVerifyInput  func(any, *UIMessageDataToolUse) error        `json:"-"` // *UIMessageDataToolUse will NOT be nil
 	ToolProgressDesc func(any) ([]string, error)                   `json:"-"`
+	ToolCallCleanup  func(*UIMessageDataToolUse)                   `json:"-"`
 }
 
 func (td *ToolDefinition) Clean() *ToolDefinition {
@@ -196,18 +199,26 @@ const (
 	ApprovalCanceled      = "canceled"
 )
 
+type TerminalProposal struct {
+	Command    string `json:"command"`
+	BlockId    string `json:"blockid"`
+	TabId      string `json:"tabid"`
+	Connection string `json:"connection"`
+}
+
 // when updating this struct, also modify frontend/app/aipanel/aitypes.ts WaveUIDataTypes.tooluse
 type UIMessageDataToolUse struct {
-	ToolCallId          string `json:"toolcallid"`
-	ToolName            string `json:"toolname"`
-	ToolDesc            string `json:"tooldesc"`
-	Status              string `json:"status"`
-	RunTs               int64  `json:"runts,omitempty"`
-	ErrorMessage        string `json:"errormessage,omitempty"`
-	Approval            string `json:"approval,omitempty"`
-	BlockId             string `json:"blockid,omitempty"`
-	WriteBackupFileName string `json:"writebackupfilename,omitempty"`
-	InputFileName       string `json:"inputfilename,omitempty"`
+	ToolCallId          string            `json:"toolcallid"`
+	ToolName            string            `json:"toolname"`
+	ToolDesc            string            `json:"tooldesc"`
+	Status              string            `json:"status"`
+	RunTs               int64             `json:"runts,omitempty"`
+	ErrorMessage        string            `json:"errormessage,omitempty"`
+	Approval            string            `json:"approval,omitempty"`
+	BlockId             string            `json:"blockid,omitempty"`
+	WriteBackupFileName string            `json:"writebackupfilename,omitempty"`
+	InputFileName       string            `json:"inputfilename,omitempty"`
+	TerminalProposal    *TerminalProposal `json:"terminalproposal,omitempty"`
 }
 
 func (d *UIMessageDataToolUse) IsApproved() bool {
@@ -526,7 +537,47 @@ type WaveChatOpts struct {
 	PlatformInfo   string
 }
 
+var terminalApprovalSmoke = os.Getenv("CROWE_TERMINAL_APPROVAL_SMOKE") == "1"
+
+func init() {
+	if terminalApprovalSmoke {
+		log.Printf("[terminal-approval-smoke] restricted tools: terminal_list_blocks,terminal_propose_command\n")
+	}
+}
+
+func toolAllowed(toolName string, restricted bool) bool {
+	return !restricted || toolName == "terminal_list_blocks" || toolName == "terminal_propose_command"
+}
+
+func filterToolCatalog(tools []ToolDefinition, restricted bool) []ToolDefinition {
+	if !restricted {
+		return tools
+	}
+	filtered := make([]ToolDefinition, 0, len(tools))
+	for _, tool := range tools {
+		if toolAllowed(tool.Name, true) {
+			filtered = append(filtered, tool)
+		}
+	}
+	return filtered
+}
+
+func (opts *WaveChatOpts) RestrictToolCatalog() {
+	if terminalApprovalSmoke {
+		opts.AllowNativeWebSearch = false
+	}
+	opts.Tools = filterToolCatalog(opts.Tools, terminalApprovalSmoke)
+	opts.TabTools = filterToolCatalog(opts.TabTools, terminalApprovalSmoke)
+}
+
 func (opts *WaveChatOpts) GetToolDefinition(toolName string) *ToolDefinition {
+	return opts.getToolDefinition(toolName, terminalApprovalSmoke)
+}
+
+func (opts *WaveChatOpts) getToolDefinition(toolName string, restricted bool) *ToolDefinition {
+	if !toolAllowed(toolName, restricted) {
+		return nil
+	}
 	for _, tool := range opts.Tools {
 		if tool.Name == toolName {
 			return &tool

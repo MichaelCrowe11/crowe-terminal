@@ -119,6 +119,7 @@ export function isBridgeReady(): boolean {
 }
 
 export async function startFoundryBridge(): Promise<boolean> {
+    if (process.env.CROWE_FOUNDRY_DISABLED === "1") return false;
     if (bridgeProc) return bridgeReady;
 
     if (await probeBridge(800)) {

@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package aiusechat
@@ -166,7 +166,7 @@ func GenerateTabStateAndTools(ctx context.Context, tabid string, widgetAccess bo
 		// - openai-responses API type
 		// - google-gemini API type with Gemini 3+ models
 		if chatOpts.Config.APIType == uctypes.APIType_OpenAIResponses ||
-		   (chatOpts.Config.APIType == uctypes.APIType_GoogleGemini && aiutil.GeminiSupportsImageToolResults(chatOpts.Config.Model)) {
+			(chatOpts.Config.APIType == uctypes.APIType_GoogleGemini && aiutil.GeminiSupportsImageToolResults(chatOpts.Config.Model)) {
 			tools = append(tools, GetCaptureScreenshotToolDefinition(tabid))
 		}
 		tools = append(tools, GetReadTextFileToolDefinition())
@@ -203,7 +203,7 @@ func GenerateTabStateAndTools(ctx context.Context, tabid string, widgetAccess bo
 	// approval cards uniformly. Only add when widget access is granted —
 	// the agent tools touch the local machine.
 	if widgetAccess {
-		tools = waveadapter.AppendAgentTools(tools)
+		tools = waveadapter.AppendAgentTools(ctx, tabid, tools)
 	}
 	return tabState, tools, nil
 }

@@ -9,9 +9,9 @@
 //
 // This is the second leg of the "triple tool" architecture:
 //
-//   1. HTTP/Foundry adapter  — pkg/agent/transport/agenthttp
-//   2. Wave native adapter   — this package
-//   3. MCP adapter           — pkg/agent/transport/agentmcp (v1.1)
+//  1. HTTP/Foundry adapter  — pkg/agent/transport/agenthttp
+//  2. Wave native adapter   — this package
+//  3. MCP adapter           — pkg/agent/transport/agentmcp (v1.1)
 //
 // Same registry, three transports. A tool registered once is available
 // to CroweLM via Foundry, to OpenAI/Anthropic/Gemini via Wave's chat
@@ -23,6 +23,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
+
+	"github.com/wavetermdev/waveterm/pkg/agent/scope"
+	"github.com/wavetermdev/waveterm/pkg/agent/tools/terminal"
 
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/uctypes"
@@ -45,12 +49,13 @@ var waveExcludedTools = map[string]bool{
 	"widget.capture_screenshot": true,
 }
 
-func AppendAgentTools(existing []uctypes.ToolDefinition) []uctypes.ToolDefinition {
+func AppendAgentTools(ctx context.Context, tabID string, existing []uctypes.ToolDefinition) []uctypes.ToolDefinition {
+	ctx = scope.WithTabID(ctx, tabID)
 	for _, t := range registry.Default().List() {
 		if t != nil && waveExcludedTools[t.Name] {
 			continue
 		}
-		def := wrap(t)
+		def := wrap(ctx, t)
 		if def != nil {
 			existing = append(existing, *def)
 		}
@@ -58,7 +63,7 @@ func AppendAgentTools(existing []uctypes.ToolDefinition) []uctypes.ToolDefinitio
 	return existing
 }
 
-func wrap(t *registry.Tool) *uctypes.ToolDefinition {
+func wrap(ctx context.Context, t *registry.Tool) *uctypes.ToolDefinition {
 	if t == nil {
 		return nil
 	}
@@ -74,49 +79,170 @@ func wrap(t *registry.Tool) *uctypes.ToolDefinition {
 		Description:      t.Description + nameHint(t.Name),
 		ShortDescription: shortDesc(t.Name),
 		InputSchema:      schema,
-		ToolAnyCallback:  makeCallback(t),
+		ToolAnyCallback:  makeCallback(ctx, t),
 		ToolCallDesc:     makeCallDesc(t),
 	}
 	if t.Mutating {
 		td.ToolApproval = func(_ any) string { return uctypes.ApprovalNeedsApproval }
 	}
+	if t.Name == "terminal.propose_command" {
+		bindTerminalProposal(ctx, td, terminal.PrepareCommand)
+	}
 	return td
 }
 
-func makeCallback(t *registry.Tool) func(any, *uctypes.UIMessageDataToolUse) (any, error) {
+func marshalInput(input any) (json.RawMessage, error) {
+	switch v := input.(type) {
+	case nil:
+		return json.RawMessage(`{}`), nil
+	case json.RawMessage:
+		return v, nil
+	default:
+		return json.Marshal(input)
+	}
+}
+
+func makeCallback(ctx context.Context, t *registry.Tool) func(any, *uctypes.UIMessageDataToolUse) (any, error) {
 	return func(input any, _ *uctypes.UIMessageDataToolUse) (any, error) {
-		var args json.RawMessage
-		switch v := input.(type) {
-		case nil:
-			args = json.RawMessage(`{}`)
-		case json.RawMessage:
-			args = v
-		default:
-			b, err := json.Marshal(input)
-			if err != nil {
-				return nil, fmt.Errorf("agent tool %s: marshal input: %w", t.Name, err)
-			}
-			args = b
-		}
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		res, err := t.Handler(ctx, args)
-		if err != nil && !res.IsError {
+		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		if res.IsError {
-			return nil, fmt.Errorf("%s", res.ErrorText)
+		args, err := marshalInput(input)
+		if err != nil {
+			return nil, fmt.Errorf("agent tool %s: marshal input: %w", t.Name, err)
 		}
-		if len(res.Content) == 0 {
-			return map[string]any{"ok": true}, nil
-		}
-		var decoded any
-		if uerr := json.Unmarshal(res.Content, &decoded); uerr != nil {
-			// Tool returned non-JSON — return as raw string so the model still sees it.
-			return string(res.Content), nil
-		}
-		return decoded, nil
+		res, err := t.Handler(ctx, args)
+		return decodeResult(res, err)
 	}
+}
+
+func decodeResult(res registry.Result, err error) (any, error) {
+	if err != nil && !res.IsError {
+		return nil, err
+	}
+	if res.IsError {
+		return nil, fmt.Errorf("%s", res.ErrorText)
+	}
+	if len(res.Content) == 0 {
+		return map[string]any{"ok": true}, nil
+	}
+	var decoded any
+	if uerr := json.Unmarshal(res.Content, &decoded); uerr != nil {
+		// Tool returned non-JSON — return as raw string so the model still sees it.
+		return string(res.Content), nil
+	}
+	return decoded, nil
+}
+
+type preparedProposal interface {
+	Command() string
+	BlockID() string
+	TabID() string
+	Connection() string
+	Execute(context.Context) (registry.Result, error)
+}
+
+type proposalBinding struct {
+	id       string
+	proposal preparedProposal
+	preview  uctypes.TerminalProposal
+}
+
+type proposalBindings struct {
+	mu    sync.Mutex
+	calls map[*uctypes.UIMessageDataToolUse]proposalBinding
+}
+
+func (bindings *proposalBindings) add(data *uctypes.UIMessageDataToolUse, binding proposalBinding) error {
+	bindings.mu.Lock()
+	defer bindings.mu.Unlock()
+	for key, existing := range bindings.calls {
+		if key == data || existing.id == binding.id {
+			return fmt.Errorf("terminal proposal already prepared")
+		}
+	}
+	bindings.calls[data] = binding
+	return nil
+}
+
+func (bindings *proposalBindings) complete(data *uctypes.UIMessageDataToolUse, binding proposalBinding) error {
+	bindings.mu.Lock()
+	defer bindings.mu.Unlock()
+	existing, ok := bindings.calls[data]
+	if !ok || existing.id != binding.id || existing.proposal != nil {
+		return fmt.Errorf("terminal proposal preparation canceled")
+	}
+	bindings.calls[data] = binding
+	return nil
+}
+
+func (bindings *proposalBindings) take(data *uctypes.UIMessageDataToolUse) (proposalBinding, bool) {
+	bindings.mu.Lock()
+	defer bindings.mu.Unlock()
+	binding, ok := bindings.calls[data]
+	delete(bindings.calls, data)
+	return binding, ok
+}
+
+func bindTerminalProposal[T preparedProposal](ctx context.Context, td *uctypes.ToolDefinition, prepare func(context.Context, json.RawMessage) (T, error)) {
+	bindings := &proposalBindings{calls: make(map[*uctypes.UIMessageDataToolUse]proposalBinding)}
+	td.ToolVerifyInput = func(input any, data *uctypes.UIMessageDataToolUse) error {
+		if data == nil || data.ToolCallId == "" {
+			return fmt.Errorf("terminal proposal requires a live tool call")
+		}
+		if args, ok := input.(map[string]any); ok {
+			command, ok := args["command"].(string)
+			if !ok {
+				return fmt.Errorf("command must be a string")
+			}
+			if err := terminal.ValidateCommand(command); err != nil {
+				return err
+			}
+		}
+		raw, err := marshalInput(input)
+		if err != nil {
+			return err
+		}
+		if err := bindings.add(data, proposalBinding{id: data.ToolCallId}); err != nil {
+			return err
+		}
+		proposal, err := prepare(ctx, raw)
+		if err != nil {
+			bindings.take(data)
+			return err
+		}
+		preview := uctypes.TerminalProposal{
+			Command: proposal.Command(), BlockId: proposal.BlockID(), TabId: proposal.TabID(), Connection: proposal.Connection(),
+		}
+		if err := bindings.complete(data, proposalBinding{id: data.ToolCallId, proposal: proposal, preview: preview}); err != nil {
+			return err
+		}
+		data.TerminalProposal = &preview
+		data.BlockId = preview.BlockId
+		data.ToolDesc = "Type command without Enter"
+		return nil
+	}
+	td.ToolAnyCallback = func(_ any, data *uctypes.UIMessageDataToolUse) (any, error) {
+		binding, ok := bindings.take(data)
+		if !ok || binding.proposal == nil || data == nil || data.ToolCallId != binding.id || data.Approval != uctypes.ApprovalUserApproved {
+			return nil, fmt.Errorf("terminal proposal has no live approval")
+		}
+		if data.TerminalProposal == nil || *data.TerminalProposal != binding.preview {
+			return nil, fmt.Errorf("terminal proposal preview changed")
+		}
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		res, err := binding.proposal.Execute(ctx)
+		return decodeResult(res, err)
+	}
+	td.ToolCallDesc = func(_ any, output any, _ *uctypes.UIMessageDataToolUse) string {
+		if output != nil {
+			return "Typed command without Enter"
+		}
+		return "Type command without Enter"
+	}
+	td.ToolCallCleanup = func(data *uctypes.UIMessageDataToolUse) { bindings.take(data) }
 }
 
 func makeCallDesc(t *registry.Tool) func(any, any, *uctypes.UIMessageDataToolUse) string {

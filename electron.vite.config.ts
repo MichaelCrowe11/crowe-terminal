@@ -7,31 +7,11 @@ import { defineConfig } from "electron-vite";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import svgr from "vite-plugin-svgr";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { loadVscodeCssAsString, monacoSanitizerPlugin } from "./frontend/app/monaco/sanitizer-build.mjs";
 
 // from our electron build
 const CHROME = "chrome140";
 const NODE = "node22";
-
-// monaco-vscode-api ships CSS files that Vite would otherwise try to inject as
-// <style> tags. The library expects them resolved as inline strings so it can
-// own injection through its theme service.
-function loadVscodeCssAsString() {
-    return {
-        name: "load-vscode-css-as-string",
-        enforce: "pre" as const,
-        async resolveId(source: string, importer: string | undefined, options: any) {
-            const resolved = await (this as any).resolve(source, importer, options);
-            if (
-                resolved?.id?.match(
-                    /node_modules\/(@codingame\/monaco-vscode|vscode|monaco-editor).*\.css$/
-                )
-            ) {
-                return { ...resolved, id: resolved.id + "?inline" };
-            }
-            return undefined;
-        },
-    };
-}
 
 // for debugging
 // target is like -- path.resolve(__dirname, "frontend/app/workspace/workspace-layout-model.ts");
@@ -204,6 +184,7 @@ export default defineConfig({
             },
         },
         plugins: [
+            monacoSanitizerPlugin(),
             loadVscodeCssAsString(),
             tsconfigPaths(),
             { ...ViteImageOptimizer(), apply: "build" },

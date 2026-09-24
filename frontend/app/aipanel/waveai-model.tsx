@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import {
@@ -31,6 +31,14 @@ import {
     validateFileSizeFromInfo,
 } from "./ai-utils";
 import type { AIPanelInputRef } from "./aipanelinput";
+
+export type ToolApprovalDecision = "user-approved" | "user-denied";
+
+export type ToolApprovalRequest = {
+    status: "pending" | "submitted" | "error";
+    decision: ToolApprovalDecision;
+    error?: string;
+};
 
 export interface DroppedFile {
     id: string;
@@ -73,6 +81,7 @@ export class WaveAIModel {
     orefContext: ORef;
     inBuilder: boolean = false;
     isAIStreaming = jotai.atom(false);
+    toolApprovalRequests: jotai.PrimitiveAtom<Record<string, ToolApprovalRequest>> = jotai.atom({});
 
     widgetAccessAtom!: jotai.Atom<boolean>;
     droppedFiles: jotai.PrimitiveAtom<DroppedFile[]> = jotai.atom([]);
@@ -296,6 +305,7 @@ export class WaveAIModel {
         this.useChatStop?.();
         this.clearFiles();
         this.clearError();
+        globalStore.set(this.toolApprovalRequests, {});
         globalStore.set(this.isChatEmptyAtom, true);
         const newChatId = crypto.randomUUID();
         globalStore.set(this.chatId, newChatId);
@@ -632,11 +642,32 @@ export class WaveAIModel {
         return globalStore.get(this.chatId);
     }
 
-    toolUseSendApproval(toolcallid: string, approval: string) {
-        RpcApi.WaveAIToolApproveCommand(TabRpcClient, {
-            toolcallid: toolcallid,
-            approval: approval,
-        });
+    async toolUseSendApproval(toolcallid: string, approval: ToolApprovalDecision): Promise<void> {
+        if (!toolcallid || (approval !== "user-approved" && approval !== "user-denied")) {
+            throw new Error("Invalid approval request");
+        }
+        const previous = globalStore.get(this.toolApprovalRequests)[toolcallid];
+        if (previous?.status === "pending" || previous?.status === "submitted") {
+            return;
+        }
+        const pending: ToolApprovalRequest = { status: "pending", decision: approval };
+        globalStore.set(this.toolApprovalRequests, (requests) => ({ ...requests, [toolcallid]: pending }));
+        const finish = (state: ToolApprovalRequest) => {
+            globalStore.set(this.toolApprovalRequests, (requests) =>
+                requests[toolcallid] === pending ? { ...requests, [toolcallid]: state } : requests
+            );
+        };
+        try {
+            await RpcApi.WaveAIToolApproveCommand(TabRpcClient, { toolcallid, approval }, { timeout: 10000 });
+            finish({ status: "submitted", decision: approval });
+        } catch (error) {
+            finish({
+                status: "error",
+                decision: approval,
+                error: error instanceof Error ? error.message : String(error),
+            });
+            throw error;
+        }
     }
 
     async openDiff(fileName: string, toolcallid: string) {

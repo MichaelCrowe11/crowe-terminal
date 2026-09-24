@@ -54,7 +54,9 @@ const UpgradeMinorWelcomePage = ({ onMaybeLater }: UpgradeMinorWelcomePageProps)
                             <p className="mb-4">
                                 <span className="font-semibold text-foreground">New in 0.15:</span> the CroweLM modes
                                 run on Crowe Logic's model edge. Workspace, Code, Deep Work, Grow Ops, and Cultivation
-                                Research work as installed, with tools. No local server, no keys, no setup.
+                                Research support tools without a local model server. Before sending a request, open
+                                Settings, then Secrets, choose Add New Secret, and save your own model-edge credential
+                                as <span className="font-mono">CROWE_MODELS_KEY</span>.
                             </p>
                             <p className="mb-4">
                                 <span className="font-semibold text-foreground">Since 0.14:</span> durable SSH sessions

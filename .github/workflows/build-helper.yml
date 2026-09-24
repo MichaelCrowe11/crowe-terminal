@@ -18,7 +18,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+    validate-approval:
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-go@v6
+              with:
+                  go-version: ${{env.GO_VERSION}}
+                  cache-dependency-path: go.sum
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: ${{env.NODE_VERSION}}
+                  cache: npm
+            - name: Force git deps to HTTPS
+              run: |
+                  git config --global url.https://github.com/.insteadof ssh://git@github.com/
+                  git config --global url.https://github.com/.insteadof git@github.com:
+            - name: Install frontend test dependencies
+              run: npm ci --no-audit --no-fund
+              env:
+                  WAVETERM_SKIP_APP_DEPS: "1"
+            - name: Test scoped terminal approval
+              run: go test ./pkg/agent/tools/terminal ./pkg/agent/transport/waveadapter ./pkg/aiusechat ./pkg/aiusechat/uctypes ./pkg/blockcontroller -run '^Test(TerminalProposal|TerminalApproval|ScreenshotToolExcludedFromWavePath|AppendAgentToolsPreservesExisting)' -count=1 -timeout=90s
+            - name: Test restricted smoke tool dispatch
+              run: go test ./pkg/aiusechat ./pkg/aiusechat/uctypes -run '^TestTerminalApprovalSmoke' -count=1 -timeout=90s
+              env:
+                  CROWE_TERMINAL_APPROVAL_SMOKE: "1"
+            - name: Typecheck frontend
+              run: npx tsc --noEmit
+            - name: Test frontend
+              run: npm test -- --run
+            - name: Test macOS manifest integrity
+              run: node --test scripts/mac-manifests.check.cjs
+            - name: Verify image optimizer engine
+              run: |
+                  node --input-type=module -e 'import { createRequire } from "node:module"; const require = createRequire(import.meta.url); const optimizerRequire = createRequire(require.resolve("vite-plugin-image-optimizer")); const sharp = optimizerRequire("sharp"); await sharp({ create: { width: 1, height: 1, channels: 4, background: "#fff" } }).png().toBuffer(); console.log("Sharp PNG conversion passed");'
     build-app:
+        needs: validate-approval
         outputs:
             version: ${{ steps.set-version.outputs.WAVETERM_VERSION }}
             productname: ${{ steps.set-version.outputs.PRODUCT_NAME }}
@@ -107,6 +144,9 @@ jobs:
               env:
                   GIT_ASKPASS: "echo"
                   GIT_TERMINAL_PROMPT: "0"
+            - name: Test macOS manifest integrity (Darwin)
+              if: matrix.platform == 'darwin'
+              run: node --test scripts/mac-manifests.check.cjs
             - name: Install Task
               uses: arduino/setup-task@v2
               with:
@@ -120,18 +160,7 @@ jobs:
                   echo "PRODUCT_NAME=$(node -p "require('./package.json').productName")" >> "$GITHUB_OUTPUT"
               shell: bash
 
-            # The Taskfile compiles this key into wavesrv (wavebase.CroweModelsKey). Without it every
-            # shipped CroweLM mode fails with a missing credential, so refuse to build rather than
-            # publish a binary whose operator panel is dead.
-            - name: Require the model edge key
-              run: |
-                  if [ -z "$CROWE_MODELS_KEY" ]; then
-                    echo "::error::CROWE_MODELS_KEY secret is missing; the CroweLM modes would ship without a credential"
-                    exit 1
-                  fi
-              env:
-                  CROWE_MODELS_KEY: ${{ secrets.CROWE_MODELS_KEY }}
-              shell: bash
+            # Model authentication is supplied by each user at runtime, never by the build.
 
             # Windows Code Signing Setup
             - name: Set up certificate (Windows only)
@@ -169,7 +198,6 @@ jobs:
               env:
                   USE_SYSTEM_FPM: true # Ensure that the installed version of FPM is used rather than the bundled one.
                   SNAPCRAFT_BUILD_ENVIRONMENT: host
-                  CROWE_MODELS_KEY: ${{ secrets.CROWE_MODELS_KEY }}
             # electron-builder's own temporary keychain fails on current macos-latest images
             # ("SecKeychainUnlock: The user name or passphrase you entered is not correct" at
             # set-key-partition-list), so the certificate goes into a keychain this job owns and
@@ -215,10 +243,21 @@ jobs:
                   APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_NOTARIZATION_PWD_2 }}
                   APPLE_TEAM_ID: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_NOTARIZATION_TEAM_ID_2 }}
                   STATIC_DOCSITE_PATH: ${{env.STATIC_DOCSITE_PATH}}
-                  CROWE_MODELS_KEY: ${{ secrets.CROWE_MODELS_KEY }}
             - name: Verify macOS signing + notarization
               if: matrix.platform == 'darwin'
               run: bash scripts/verify-mac-release.sh make
+              shell: bash
+            - name: Regenerate and verify final macOS manifests
+              if: matrix.platform == 'darwin'
+              run: |
+                  set -euo pipefail
+                  RELEASE_DATE="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+                  for MANIFEST in latest-mac.yml alpha-mac.yml beta-mac.yml; do
+                      bash scripts/gen-latest-mac-yml.sh make "$VERSION" "$RELEASE_DATE" "$MANIFEST"
+                  done
+                  node scripts/verify-mac-manifests.cjs make "$VERSION" --strict
+              env:
+                  VERSION: ${{ steps.set-version.outputs.WAVETERM_VERSION }}
               shell: bash
             - name: Build (Windows)
               if: matrix.platform == 'windows'
@@ -230,7 +269,6 @@ jobs:
                   CSC_LINK: ${{ vars.ENABLE_WINDOWS_SIGNING == 'true' && steps.variables.outputs.SM_CLIENT_CERT_FILE || '' }}
                   CSC_KEY_PASSWORD: ${{ vars.ENABLE_WINDOWS_SIGNING == 'true' && secrets.SM_CLIENT_CERT_PASSWORD || '' }}
                   STATIC_DOCSITE_PATH: ${{env.STATIC_DOCSITE_PATH}}
-                  CROWE_MODELS_KEY: ${{ secrets.CROWE_MODELS_KEY }}
               shell: powershell # electron-builder's Windows code signing package has some compatibility issues with pwsh, so we need to use Windows Powershell
 
             # Upload artifacts to the S3 staging bucket. Only runs when
@@ -298,21 +336,11 @@ jobs:
               with:
                   version: 3.x
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
-            - name: Require the model edge key
-              run: |
-                  if [ -z "$CROWE_MODELS_KEY" ]; then
-                    echo "::error::CROWE_MODELS_KEY secret is missing; the CroweLM modes would ship without a credential"
-                    exit 1
-                  fi
-              env:
-                  CROWE_MODELS_KEY: ${{ secrets.CROWE_MODELS_KEY }}
-              shell: bash
             - name: Build MSIX
               run: task package:store -- --${{ matrix.arch }}
               env:
                   HYPHEUS_STORE_IDENTITY_NAME: ${{ vars.HYPHEUS_STORE_IDENTITY_NAME }}
                   HYPHEUS_STORE_PUBLISHER: ${{ vars.HYPHEUS_STORE_PUBLISHER }}
-                  CROWE_MODELS_KEY: ${{ secrets.CROWE_MODELS_KEY }}
               shell: powershell
             - name: Windows App Certification Kit
               run: |

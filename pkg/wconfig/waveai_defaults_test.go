@@ -11,10 +11,9 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/wconfig/defaultconfig"
 )
 
-// The shipped CroweLM modes must reach the Crowe Logic model edge with no
-// local server and no credential in source: the release build compiles the
-// credential in (wavebase.CroweModelsKey) behind the CROWE_MODELS_KEY secret
-// name, and users can override it with a secret of that name.
+// The shipped CroweLM modes target the Crowe Logic model edge without a local
+// server or a credential in source. Authentication is supplied by each user
+// through the CROWE_MODELS_KEY secret or the runtime environment fallback.
 func TestShippedCroweLMModesUseTheModelEdge(t *testing.T) {
 	const edge = "https://models.crowelogic.com/v1/chat/completions"
 	edgeModels := map[string]bool{

@@ -48,6 +48,30 @@ export function clampToolWidth(px: number): number {
     return Math.min(TOOL_MAX_WIDTH, Math.max(TOOL_MIN_WIDTH, Math.round(px)));
 }
 
+export function resolveDockWidths(parentWidth: number, columnWidth: number, toolWidth: number, chatOpen: boolean, toolOpen: boolean) {
+    const available = Number.isFinite(parentWidth) && parentWidth > 0
+        ? Math.max(0, Math.floor(parentWidth) - DOCK_RAIL_WIDTH - MIN_BLOCK_PX)
+        : DOCK_MAX_WIDTH + TOOL_MAX_WIDTH + DOCK_SPLIT_PX;
+    const compact = chatOpen && toolOpen && available < DOCK_MIN_WIDTH + TOOL_MIN_WIDTH + DOCK_SPLIT_PX;
+    const showChat = chatOpen && !compact;
+    const showTool = toolOpen;
+    const toolMax = Math.max(0, Math.min(TOOL_MAX_WIDTH, available - (showChat ? DOCK_MIN_WIDTH + DOCK_SPLIT_PX : 0)));
+    const tool = showTool ? Math.min(clampToolWidth(toolWidth), toolMax) : 0;
+    const columnMax = Math.max(0, Math.min(DOCK_MAX_WIDTH, available - (showTool ? tool + DOCK_SPLIT_PX : 0)));
+    const column = showChat ? Math.min(clampColumnWidth(columnWidth), columnMax) : 0;
+    return { compact, showChat, showTool, column, tool, columnMax, toolMax };
+}
+
+export function keyboardResizeWidth(key: string, shift: boolean, current: number, min: number, max: number, initial: number): number | null {
+    const step = shift ? 64 : 16;
+    const requested = key === "ArrowLeft" ? current - step
+        : key === "ArrowRight" ? current + step
+        : key === "Home" ? min
+        : key === "End" ? max
+        : key === "Enter" ? initial : null;
+    return requested == null ? null : Math.min(max, Math.max(min, requested));
+}
+
 // Two earlier shapes exist: v0 stored `width` + `chatWidth` as independent
 // columns, and the stacked layout stored a vertical `chatFraction`. A fraction
 // carries no usable width for a side-by-side tool column, so it is dropped and

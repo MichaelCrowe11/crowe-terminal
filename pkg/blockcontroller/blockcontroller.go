@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package blockcontroller
@@ -319,6 +319,40 @@ func sendConnMonitorInputNotification(controller Controller) {
 			monitor.NotifyInput()
 		}
 	}
+}
+
+// PrepareInputSender pins the controller so approval cannot follow a block ID
+// to a replacement terminal destination. No registry lock spans input delivery.
+func PrepareInputSender(blockId string, connection string) (func(context.Context, *BlockInputUnion) error, error) {
+	controller := getController(blockId)
+	if controller == nil {
+		return nil, fmt.Errorf("no controller found for block %s", blockId)
+	}
+	if controller.GetConnName() != connection {
+		return nil, fmt.Errorf("terminal connection does not match block %s", blockId)
+	}
+	preparer, ok := controller.(interface {
+		prepareInputSender() (func(context.Context, *BlockInputUnion) error, error)
+	})
+	if !ok {
+		return nil, fmt.Errorf("controller does not support pinned terminal input")
+	}
+	send, err := preparer.prepareInputSender()
+	if err != nil {
+		return nil, err
+	}
+	return func(ctx context.Context, input *BlockInputUnion) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if getController(blockId) != controller || controller.GetConnName() != connection {
+			return fmt.Errorf("terminal destination changed for block %s", blockId)
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		return send(ctx, input)
+	}, nil
 }
 
 func SendInput(blockId string, inputUnion *BlockInputUnion) error {

@@ -7,6 +7,7 @@ import path from "path";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { loadVscodeCssAsString, monacoSanitizerPlugin } from "../app/monaco/sanitizer-build.mjs";
 
 export default defineConfig({
     root: __dirname,
@@ -15,6 +16,8 @@ export default defineConfig({
     // static assets (served by Electron in the real app) are available here too.
     publicDir: path.resolve(__dirname, "../../public"),
     plugins: [
+        monacoSanitizerPlugin(),
+        loadVscodeCssAsString(),
         tsconfigPaths(),
         svgr({
             svgrOptions: { exportType: "default", ref: true, svgo: false, titleProp: true },

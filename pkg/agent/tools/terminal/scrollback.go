@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/wavetermdev/waveterm/pkg/agent/registry"
 	"github.com/wavetermdev/waveterm/pkg/agent/scope"
 	"github.com/wavetermdev/waveterm/pkg/waveobj"
@@ -186,58 +187,97 @@ func buildScrollbackResult(blockID string, request wshrpc.CommandTermGetScrollba
 // Resolution is confined to the calling agent's own tab. A global scan would let an
 // agent embedded in one tab read terminal output from another tab or workspace, which
 // is the user's data from a session it was never invited into.
+type terminalStore struct {
+	getBlock func(context.Context, string) (*waveobj.Block, error)
+	getTab   func(context.Context, string) (*waveobj.Tab, error)
+	findTab  func(context.Context, string) (string, error)
+}
+
+var defaultTerminalStore = terminalStore{
+	getBlock: wstore.DBGet[*waveobj.Block],
+	getTab:   wstore.DBMustGet[*waveobj.Tab],
+	findTab:  wstore.DBFindTabForBlockId,
+}
+
 func resolveTerminalBlock(ctx context.Context, idOrPrefix string) (string, error) {
-	idOrPrefix = strings.TrimSpace(idOrPrefix)
-	if idOrPrefix == "" {
-		return "", fmt.Errorf("blockid required")
-	}
-	blockIDs, err := callerTabBlockIDs(ctx)
+	_, block, err := defaultTerminalStore.resolve(ctx, idOrPrefix)
 	if err != nil {
 		return "", err
+	}
+	return block.OID, nil
+}
+
+func (store terminalStore) resolve(ctx context.Context, idOrPrefix string) (string, *waveobj.Block, error) {
+	idOrPrefix = strings.TrimSpace(idOrPrefix)
+	if idOrPrefix == "" {
+		return "", nil, fmt.Errorf("blockid required")
+	}
+	tabID, blockIDs, err := store.callerTab(ctx)
+	if err != nil {
+		return "", nil, err
 	}
 	var match string
 	for _, blockID := range blockIDs {
 		if !strings.HasPrefix(blockID, idOrPrefix) {
 			continue
 		}
-		block, _ := wstore.DBGet[*waveobj.Block](ctx, blockID)
-		if block == nil || block.Meta == nil {
-			continue
-		}
-		if view, _ := block.Meta[waveobj.MetaKey_View].(string); view != "term" {
-			if blockID == idOrPrefix {
-				return "", fmt.Errorf("block %s is view=%q, expected 'term'", blockID, view)
-			}
-			continue
-		}
-		if blockID == idOrPrefix {
-			return blockID, nil
-		}
 		if match != "" {
-			return "", fmt.Errorf("terminal block prefix %q is ambiguous in this tab", idOrPrefix)
+			return "", nil, fmt.Errorf("block prefix %q is ambiguous in this tab", idOrPrefix)
 		}
 		match = blockID
 	}
 	if match == "" {
-		return "", fmt.Errorf("no terminal block matching %q in the calling tab", idOrPrefix)
+		return "", nil, fmt.Errorf("no terminal block matching %q in the calling tab", idOrPrefix)
 	}
-	return match, nil
+	parsedID, err := uuid.Parse(match)
+	if err != nil || parsedID.String() != match {
+		return "", nil, fmt.Errorf("invalid canonical block id %q", match)
+	}
+	block, err := store.getBlock(ctx, match)
+	if err != nil {
+		return "", nil, fmt.Errorf("get block %s: %w", match, err)
+	}
+	if block == nil || block.OID != match {
+		return "", nil, fmt.Errorf("block not found: %s", match)
+	}
+	if view := block.Meta.GetString(waveobj.MetaKey_View, ""); view != "term" {
+		return "", nil, fmt.Errorf("block %s is view=%q, expected 'term'", match, view)
+	}
+	return tabID, block, nil
+}
+
+func (store terminalStore) callerTab(ctx context.Context) (string, []string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", nil, err
+	}
+	tabID, hasTab := scope.TabIDFromContext(ctx)
+	if callerBlockID, ok := scope.BlockIDFromContext(ctx); ok {
+		callerTabID, err := store.findTab(ctx, callerBlockID)
+		if err != nil {
+			return "", nil, fmt.Errorf("resolve tab for calling block %s: %w", callerBlockID, err)
+		}
+		if hasTab && tabID != callerTabID {
+			return "", nil, fmt.Errorf("calling block has moved out of the trusted tab")
+		}
+		tabID = callerTabID
+	}
+	parsedID, err := uuid.Parse(tabID)
+	if err != nil || parsedID.String() != tabID {
+		return "", nil, fmt.Errorf("missing or invalid trusted calling tab")
+	}
+	tab, err := store.getTab(ctx, tabID)
+	if err != nil {
+		return "", nil, fmt.Errorf("get tab %s: %w", tabID, err)
+	}
+	if tab == nil || tab.OID != tabID {
+		return "", nil, fmt.Errorf("calling tab not found: %s", tabID)
+	}
+	return tabID, tab.BlockIds, nil
 }
 
 func callerTabBlockIDs(ctx context.Context) ([]string, error) {
-	callerBlockID, ok := scope.BlockIDFromContext(ctx)
-	if !ok {
-		return nil, fmt.Errorf("no calling block in context; this tool requires an embedded agent")
-	}
-	tabID, err := wstore.DBFindTabForBlockId(ctx, callerBlockID)
-	if err != nil {
-		return nil, fmt.Errorf("resolve tab for calling block %s: %w", callerBlockID, err)
-	}
-	tab, err := wstore.DBMustGet[*waveobj.Tab](ctx, tabID)
-	if err != nil {
-		return nil, fmt.Errorf("get tab %s: %w", tabID, err)
-	}
-	return tab.BlockIds, nil
+	_, blockIDs, err := defaultTerminalStore.callerTab(ctx)
+	return blockIDs, err
 }
 
 func terminalErrResult(err error) registry.Result {

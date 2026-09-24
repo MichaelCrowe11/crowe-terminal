@@ -162,7 +162,10 @@ const CodeBlock = ({ children, onClickExecute, codeBlockMaxWidthAtom }: CodeBloc
             )}
             style={
                 codeBlockMaxWidth
-                    ? { maxWidth: codeBlockMaxWidth, minWidth: Math.min(400, codeBlockMaxWidth) }
+                    ? {
+                          maxWidth: `min(100%, ${codeBlockMaxWidth}px)`,
+                          minWidth: `min(100%, ${Math.min(400, codeBlockMaxWidth)}px)`,
+                      }
                     : undefined
             }
         >
@@ -272,7 +275,9 @@ export const WaveStreamdown = ({
                 />
             ),
             table: (props: React.HTMLAttributes<HTMLTableElement>) => (
-                <table {...props} className="my-3 w-full border-collapse text-[13px]" />
+                <div className="my-3 max-w-full overflow-x-auto [overflow-wrap:normal]">
+                    <table {...props} className="w-full border-collapse text-[13px]" />
+                </div>
             ),
             thead: (props: React.HTMLAttributes<HTMLTableSectionElement>) => (
                 <thead {...props} className="border-b border-[var(--hairline-strong)]" />
