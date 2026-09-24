@@ -20,7 +20,7 @@ func TestShippedCroweLMModesUseTheModelEdge(t *testing.T) {
 		"crowelm-apex": true, "crowelm-titan": true, "crowelm-reason": true, "crowelm-quasar": true,
 		"crowelm-quasar-fast": true, "crowelm-flash": true, "crowelm-swift": true, "crowelm-vector": true,
 		"crowelm-herald": true, "crowelm-eclipse": true, "crowelm-coder": true,
-		"crowelm-grower": true, "crowelm-kernel": true, "crowelm-kb": true, "crowelm-vision": true,
+		"crowelm-kernel": true, "crowelm-kb": true, "crowelm-vision": true,
 	}
 	raw, err := defaultconfig.ConfigFS.ReadFile("waveai.json")
 	if err != nil {
@@ -55,8 +55,8 @@ func TestShippedCroweLMModesUseTheModelEdge(t *testing.T) {
 			t.Errorf("%s: secret name %q, want CROWE_MODELS_KEY", name, m.APITokenSecretName)
 		}
 	}
-	if cloud != 5 {
-		t.Errorf("expected 5 cloud CroweLM modes, found %d", cloud)
+	if cloud != 3 {
+		t.Errorf("expected 3 cloud CroweLM modes, found %d", cloud)
 	}
 	if strings.Contains(string(raw), "hyph_") {
 		t.Error("a credential leaked into waveai.json")

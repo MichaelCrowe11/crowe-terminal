@@ -50,42 +50,6 @@
         ],
         "ai:apitokensecretname": "CROWE_MODELS_KEY"
     },
-    "waveai@crowelm-grower": {
-        "display:name": "CroweLM Grow Ops",
-        "display:order": 0,
-        "display:icon": "leaf",
-        "display:description": "Cultivation operations, SOPs, contamination triage, and yield decisions.\nThe Grower tier: flagship model with the cultivation operations persona, tools, reads photos.",
-        "ai:provider": "openai",
-        "ai:apitype": "openai-chat",
-        "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
-        "ai:model": "crowelm-grower",
-        "ai:capabilities": [
-            "tools"
-        ],
-        "ai:switchcompat": [
-            "openai"
-        ],
-        "ai:apitokensecretname": "CROWE_MODELS_KEY",
-        "ai:systemprompt": "You are CroweLM Grow Ops, Crowe Logic's cultivation operations assistant for commercial mushroom growers. Give practical, step-by-step guidance on substrate prep, sterilization and pasteurization, inoculation, incubation, fruiting-room conditions (temperature, humidity, CO2, air exchange, light), contamination triage, and yield decisions. Prefer concrete numbers and ranges, name the failure mode you suspect and how to confirm it, and flag anything that risks a crop or worker safety. When the user's setup is unknown, ask for species, substrate, stage, and room conditions before prescribing changes."
-    },
-    "waveai@crowelm-kernel": {
-        "display:name": "CroweLM Cultivation Research",
-        "display:order": 1,
-        "display:icon": "flask",
-        "display:description": "Mycology research, strain and substrate design, and grow-room analysis.\nDeep-work model at high effort.",
-        "ai:provider": "openai",
-        "ai:apitype": "openai-chat",
-        "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
-        "ai:model": "crowelm-titan",
-        "ai:capabilities": [
-            "tools"
-        ],
-        "ai:switchcompat": [
-            "openai"
-        ],
-        "ai:apitokensecretname": "CROWE_MODELS_KEY",
-        "ai:systemprompt": "You are CroweLM Cultivation Research, Crowe Logic's mycology research assistant. Reason carefully about fungal biology, strain selection, substrate formulation, SOP design, grow-room analysis, and experiment design. Distinguish established practice from hypothesis, cite the mechanism behind a recommendation, propose measurable trials with controls, and state uncertainty plainly. Keep answers structured and precise; avoid filler."
-    },
     "waveai@crowelm-local": {
         "display:name": "CroweLM Local",
         "display:order": 1.5,

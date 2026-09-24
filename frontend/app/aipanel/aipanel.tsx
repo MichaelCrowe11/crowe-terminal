@@ -98,7 +98,7 @@ const AIWelcomeMessage = memo(() => {
                     </div>
                 </div>
                 <p className="text-[13px] leading-relaxed text-[var(--text-dim)]">
-                    One operator for terminal, code, research, and grow ops. It reads your workspace, uses your
+                    One operator for terminal, code, and research. It reads your workspace, uses your
                     tools, and moves the work forward.
                 </p>
                 <div className="flex items-center gap-2 font-mono text-[11px]">

@@ -42,7 +42,7 @@ func TestEdgeLiveShippedCroweLMModes(t *testing.T) {
 	if err := json.Unmarshal(raw, &modes); err != nil {
 		t.Fatalf("parse waveai.json: %v", err)
 	}
-	for _, name := range []string{"waveai@crowelm-auto", "waveai@crowelm-apex", "waveai@crowelm-supreme", "waveai@crowelm-grower", "waveai@crowelm-kernel"} {
+	for _, name := range []string{"waveai@crowelm-auto", "waveai@crowelm-apex", "waveai@crowelm-supreme"} {
 		mode, ok := modes[name]
 		if !ok {
 			t.Fatalf("%s missing from shipped defaults", name)

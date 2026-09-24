@@ -39,12 +39,6 @@ const CHANNELS: CroweChannel[] = [
         scope: "Docs, source analysis, citations",
         prompt: "Research this project context and summarize the decision points with source references.",
     },
-    {
-        id: "growops",
-        name: "Grow Ops",
-        scope: "Cultivation, SOPs, production data",
-        prompt: "Switch into cultivation operations mode and help me reason from data, SOPs, and current constraints.",
-    },
 ];
 
 export const CroweChannelPanel = memo(() => {
