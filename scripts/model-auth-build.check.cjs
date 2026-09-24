@@ -107,12 +107,15 @@ test("CI keeps signing and strict final manifest verification before upload", ()
         "node --test scripts/mac-manifests.check.cjs");
 });
 
-test("onboarding requires user setup instead of claiming shared authentication", () => {
+test("onboarding requires explicit account connection instead of shared authentication", () => {
     for (const file of ["onboarding-upgrade-v0157.tsx", "onboarding-upgrade-minor.tsx"]) {
-        const source = fs.readFileSync(path.join(Root, "frontend/app/onboarding", file), "utf8");
+        const source = fs.readFileSync(path.join(Root, "frontend/app/onboarding", file), "utf8").replace(/\s+/g, " ");
         assert.doesNotMatch(source, /no keys|work as installed|no setup/i);
-        assert.match(source, /Add New Secret/);
-        assert.match(source, /CROWE_MODELS_KEY/);
-        assert.match(source, /your own model-edge credential/);
+        assert.doesNotMatch(source, /Add New Secret|CROWE_MODELS_KEY/);
+        assert.match(source, /Connect account/);
+        assert.match(source, /Sign in to Crowe ID/);
+        assert.match(source, /browser/);
+        assert.match(source, /displayed code/);
+        assert.match(source, /Connecting does not read files or run commands/);
     }
 });
