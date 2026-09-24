@@ -349,12 +349,67 @@ describe("account surface", () => {
         expect(renderSetup(false)).toBe("");
         expect(renderSetup()).toContain("Connect account");
         model.showSetup();
-        expect(renderSetup(false)).toContain("Use account mode");
+        expect(renderSetup(false)).toContain("Use Crowe account");
         expect(renderSetup(false)).toContain("Your selected engine has not changed");
         model.applyStatus({ state: "connected" });
         expect(renderSetup()).toContain("Disconnect account");
         model.hideSetup();
         expect(renderSetup()).toBe("");
+    });
+
+    it("keeps connection, tab selection and default preference distinct", () => {
+        model.showSetup();
+        const markup = renderToStaticMarkup(
+            <Provider store={globalStore}>
+                <CroweAccountSetup
+                    accountMode={false}
+                    onUseAccount={() => {}}
+                    onUseAccountByDefault={() => {}}
+                    onChooseEngine={() => {}}
+                />
+            </Provider>
+        );
+        expect(markup).toContain("Use Crowe account</button>");
+        expect(markup).toContain("Use Crowe account by default</button>");
+        expect(markup).toContain("Choose another engine</button>");
+        expect(markup).toContain(
+            "Applies to new tabs, including after restart. Existing engine selections stay unchanged."
+        );
+        expect(markup).not.toContain("max-h-[50%]");
+        expect(markup).not.toContain("overflow-y-auto");
+        expect(RpcApi.CroweAuthStartCommand).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ["saving", "Saving default"],
+        ["saved", "Crowe account is the default for new tabs. Existing engine selections stay unchanged."],
+        ["error", "Could not save your default. Try again."],
+    ] as const)("shows truthful default save state: %s", (status, text) => {
+        model.showSetup();
+        const markup = renderToStaticMarkup(
+            <Provider store={globalStore}>
+                <CroweAccountSetup accountMode onUseAccountByDefault={() => {}} defaultSaveStatus={status} />
+            </Provider>
+        );
+        expect(markup).toContain(text);
+        expect(markup.includes('disabled=""')).toBe(status !== "error");
+        expect(markup).toContain(status === "error" ? 'role="alert"' : 'role="status"');
+    });
+
+    it("keeps automatic transcript recovery compact but expands pending and secure-storage guidance", () => {
+        const renderCompact = () =>
+            renderToStaticMarkup(
+                <Provider store={globalStore}>
+                    <CroweAccountSetup accountMode compact onChooseEngine={() => {}} />
+                </Provider>
+            );
+        expect(renderCompact()).toContain("Connect account");
+        expect(renderCompact()).not.toContain("Connecting does not send");
+        model.applyStatus(PendingStatus);
+        expect(renderCompact()).toContain("ABCD-EFGH");
+        expect(renderCompact()).toContain("Cancel</button>");
+        model.applyStatus({ state: "error", message: "Crowe account secure storage is unavailable" });
+        expect(renderCompact()).toContain("Unlock your system keychain");
     });
 
     it.each([

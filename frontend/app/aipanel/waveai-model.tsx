@@ -7,6 +7,7 @@ import {
     WaveUIMessage,
     WaveUIMessagePart,
 } from "@/app/aipanel/aitypes";
+import { DockModel } from "@/app/dock/dock-model";
 import { FocusManager } from "@/app/store/focusManager";
 import { atoms, createBlock, getOrefMetaKeyAtom, getSettingsKeyAtom } from "@/app/store/global";
 import { globalStore } from "@/app/store/jotaiStore";
@@ -39,6 +40,22 @@ import {
     isCroweLegacyKeyError,
     isCroweSignInRequired,
 } from "./croweaccount-model";
+
+export type ComposerState = {
+    hasContent: boolean;
+    loading: boolean;
+    pending: boolean;
+    needsConnection: boolean;
+    localCommand: boolean;
+};
+
+export function getComposerAction(status: string, state: ComposerState): "send" | "connect" | "stop" | "disabled" {
+    if (state.pending || status === "submitted" || status === "streaming") return "stop";
+    if (state.localCommand) return "send";
+    if (state.loading || (status !== "ready" && status !== "error")) return "disabled";
+    if (state.needsConnection) return "connect";
+    return state.hasContent ? "send" : "disabled";
+}
 
 export type ToolApprovalDecision = "user-approved" | "user-denied";
 
@@ -99,6 +116,12 @@ export class WaveAIModel {
     toolApprovalRequests: jotai.PrimitiveAtom<Record<string, ToolApprovalRequest>> = jotai.atom({});
     accountSubmissions = new Map<string, AccountSubmission>();
     unsentAccountDrafts: jotai.PrimitiveAtom<AccountSubmission[]> = jotai.atom([]);
+    submissionPending = jotai.atom(false);
+    submissionVersion = 0;
+    preparingSubmission = false;
+    composerState!: jotai.Atom<ComposerState>;
+    croweDefaultSaveStatus: jotai.PrimitiveAtom<"idle" | "saving" | "saved" | "error"> = jotai.atom("idle");
+    croweDefaultSaveError = jotai.atom("");
 
     widgetAccessAtom!: jotai.Atom<boolean>;
     droppedFiles: jotai.PrimitiveAtom<DroppedFile[]> = jotai.atom([]);
@@ -187,7 +210,10 @@ export class WaveAIModel {
             // If a saved mode points at a phantom waveai@balanced/quick/deep
             // (e.g. left behind from a previous Wave install), force it back
             // to the working default.
-            if (mode === "waveai@balanced" || mode === "waveai@quick" || mode === "waveai@deep") {
+            if (
+                (mode === "waveai@balanced" || mode === "waveai@quick" || mode === "waveai@deep") &&
+                !(aiModeConfigs != null && mode in aiModeConfigs)
+            ) {
                 mode = croweFallback;
             }
             const modeExists = aiModeConfigs != null && mode in aiModeConfigs;
@@ -199,6 +225,22 @@ export class WaveAIModel {
 
         const defaultMode = globalStore.get(this.defaultModeAtom);
         this.currentAIMode = jotai.atom(defaultMode);
+        this.composerState = jotai.atom((get) => {
+            const mode = get(this.currentAIMode);
+            const account = CroweAccountModel.getInstance();
+            const input = get(this.inputAtom).trim();
+            return {
+                hasContent: !!input || get(this.droppedFiles).length > 0,
+                localCommand: input === "/clear" || input === "/new",
+                loading: get(this.isLoadingChatAtom),
+                pending: get(this.submissionPending),
+                needsConnection:
+                    isCroweAccountMode(mode, get(this.aiModeConfigs)?.[mode]) &&
+                    (!get(account.checkedAtom) ||
+                        get(account.statusAtom).state !== "connected" ||
+                        get(account.operationAtom) != null),
+            };
+        });
     }
 
     getPanelVisibleAtom(): jotai.Atom<boolean> {
@@ -323,6 +365,9 @@ export class WaveAIModel {
     }
 
     clearChat() {
+        this.submissionVersion++;
+        this.preparingSubmission = false;
+        globalStore.set(this.submissionPending, false);
         this.useChatStop?.();
         this.clearFiles();
         this.clearError();
@@ -408,6 +453,12 @@ export class WaveAIModel {
     }
 
     async stopResponse() {
+        if (this.preparingSubmission) {
+            this.submissionVersion++;
+            this.preparingSubmission = false;
+            globalStore.set(this.submissionPending, false);
+            return;
+        }
         this.useChatStop?.();
         await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -553,104 +604,148 @@ export class WaveAIModel {
     }
 
     async handleSubmit() {
+        const action = getComposerAction(this.useChatStatus, globalStore.get(this.composerState));
+        if (action === "connect") {
+            this.setError(CroweSignInRequired);
+            this.openCroweAccount();
+            return;
+        }
+        if (action !== "send") return;
+
         const input = globalStore.get(this.inputAtom);
         const droppedFiles = globalStore.get(this.droppedFiles);
-
         if (input.trim() === "/clear" || input.trim() === "/new") {
             this.clearChat();
             globalStore.set(this.inputAtom, "");
             return;
         }
-
-        if (
-            (!input.trim() && droppedFiles.length === 0) ||
-            (this.useChatStatus !== "ready" && this.useChatStatus !== "error") ||
-            globalStore.get(this.isLoadingChatAtom)
-        ) {
-            return;
-        }
+        if (!this.useChatSendMessage) return;
 
         const currentMode = globalStore.get(this.currentAIMode);
         const modeConfig = globalStore.get(this.aiModeConfigs)?.[currentMode];
-        if (isCroweAccountMode(currentMode, modeConfig)) {
-            const account = CroweAccountModel.getInstance();
-            if (
-                !globalStore.get(account.checkedAtom) ||
-                globalStore.get(account.statusAtom).state !== "connected" ||
-                globalStore.get(account.operationAtom) != null
-            ) {
-                this.setError(CroweSignInRequired);
-                this.openCroweAccount();
-                return;
-            }
-        }
-
+        const chatid = globalStore.get(this.chatId);
+        const version = ++this.submissionVersion;
+        this.preparingSubmission = true;
+        globalStore.set(this.submissionPending, true);
+        let draftEdited = false;
+        let responseOwnsPending = false;
+        const finishPending = () => {
+            if (version !== this.submissionVersion) return;
+            this.preparingSubmission = false;
+            globalStore.set(this.submissionPending, false);
+        };
+        const unsubscribe = globalStore.sub(this.inputAtom, () => {
+            draftEdited = true;
+        });
         this.clearError();
 
-        const aiMessageParts: AIMessagePart[] = [];
-        const uiMessageParts: WaveUIMessagePart[] = [];
+        try {
+            const aiMessageParts: AIMessagePart[] = [];
+            const uiMessageParts: WaveUIMessagePart[] = [];
 
-        if (input.trim()) {
-            aiMessageParts.push({ type: "text", text: input.trim() });
-            uiMessageParts.push({ type: "text", text: input.trim() });
-        }
+            if (input.trim()) {
+                aiMessageParts.push({ type: "text", text: input.trim() });
+                uiMessageParts.push({ type: "text", text: input.trim() });
+            }
 
-        for (const droppedFile of droppedFiles) {
-            const normalizedMimeType = normalizeMimeType(droppedFile.file);
-            const dataUrl = await createDataUrl(droppedFile.file);
+            for (const droppedFile of droppedFiles) {
+                const normalizedMimeType = normalizeMimeType(droppedFile.file);
+                const dataUrl = await createDataUrl(droppedFile.file);
+                if (version !== this.submissionVersion) return;
 
-            aiMessageParts.push({
-                type: "file",
-                filename: droppedFile.name,
-                mimetype: normalizedMimeType,
-                url: dataUrl,
-                size: droppedFile.file.size,
-                previewurl: droppedFile.previewUrl,
-            });
-
-            uiMessageParts.push({
-                type: "data-userfile",
-                data: {
+                aiMessageParts.push({
+                    type: "file",
                     filename: droppedFile.name,
                     mimetype: normalizedMimeType,
+                    url: dataUrl,
                     size: droppedFile.file.size,
                     previewurl: droppedFile.previewUrl,
-                },
-            });
-        }
+                });
 
-        const realMessage: AIMessage = {
-            messageid: crypto.randomUUID(),
-            parts: aiMessageParts,
-        };
-        this.realMessage = realMessage;
+                uiMessageParts.push({
+                    type: "data-userfile",
+                    data: {
+                        filename: droppedFile.name,
+                        mimetype: normalizedMimeType,
+                        size: droppedFile.file.size,
+                        previewurl: droppedFile.previewUrl,
+                    },
+                });
+            }
 
-        // console.log("SUBMIT MESSAGE", realMessage);
+            if (
+                version !== this.submissionVersion ||
+                currentMode !== globalStore.get(this.currentAIMode) ||
+                chatid !== globalStore.get(this.chatId) ||
+                droppedFiles.some((file) => !globalStore.get(this.droppedFiles).includes(file))
+            )
+                return;
+            const state = globalStore.get(this.composerState);
+            if (getComposerAction(this.useChatStatus, { ...state, pending: false, localCommand: false }) !== "send") {
+                if (state.needsConnection) {
+                    this.setError(CroweSignInRequired);
+                    this.openCroweAccount();
+                }
+                return;
+            }
 
-        if (isCroweAccountMode(currentMode, modeConfig)) {
-            this.accountSubmissions.set(realMessage.messageid, {
-                chatid: globalStore.get(this.chatId),
-                messageid: realMessage.messageid,
-                input,
-                files: droppedFiles,
-            });
+            const realMessage: AIMessage = {
+                messageid: crypto.randomUUID(),
+                parts: aiMessageParts,
+            };
+            this.realMessage = realMessage;
+
+            // console.log("SUBMIT MESSAGE", realMessage);
+
+            const accountMode = isCroweAccountMode(currentMode, modeConfig);
+            if (accountMode) {
+                this.accountSubmissions.set(realMessage.messageid, {
+                    chatid,
+                    messageid: realMessage.messageid,
+                    input,
+                    files: droppedFiles,
+                });
+            }
+            this.preparingSubmission = false;
             globalStore.set(this.isChatEmptyAtom, false);
-            globalStore.set(this.inputAtom, "");
+            if (!draftEdited) globalStore.set(this.inputAtom, "");
             // The submission owns previews until persistence is known or draft recovery takes ownership.
-            globalStore.set(this.droppedFiles, []);
+            globalStore.set(this.droppedFiles, (files) => files.filter((file) => !droppedFiles.includes(file)));
+            if (!accountMode) {
+                responseOwnsPending = true;
+                // CLI submission acknowledges dispatch, not completion of a potentially long response.
+                void (async () => {
+                    try {
+                        await this.useChatSendMessage({ id: realMessage.messageid, parts: uiMessageParts });
+                    } catch (error) {
+                        if (version === this.submissionVersion) {
+                            this.setError(error instanceof Error ? error.message : String(error));
+                        }
+                    } finally {
+                        try {
+                            droppedFiles.forEach((file) => {
+                                if (file.previewUrl) URL.revokeObjectURL(file.previewUrl);
+                            });
+                        } finally {
+                            finishPending();
+                        }
+                    }
+                })().catch(() => {});
+                return;
+            }
             try {
-                await this.useChatSendMessage?.({ id: realMessage.messageid, parts: uiMessageParts });
+                await this.useChatSendMessage({ id: realMessage.messageid, parts: uiMessageParts });
             } finally {
                 this.finishAccountSubmission(realMessage.messageid);
             }
-            return;
+        } catch (error) {
+            if (version === this.submissionVersion) {
+                this.setError(error instanceof Error ? error.message : String(error));
+            }
+        } finally {
+            unsubscribe();
+            if (!responseOwnsPending) finishPending();
         }
-
-        this.useChatSendMessage?.({ parts: uiMessageParts });
-
-        globalStore.set(this.isChatEmptyAtom, false);
-        globalStore.set(this.inputAtom, "");
-        this.clearFiles();
     }
 
     async fetchChat(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -816,15 +911,39 @@ export class WaveAIModel {
 
     openCroweAccount() {
         if (!this.inBuilder) {
+            DockModel.getInstance().collapse();
             WorkspaceLayoutModel.getInstance().setAIPanelVisible(true);
         }
         CroweAccountModel.getInstance().showSetup();
+    }
+
+    openEngineSelector() {
+        if (this.inBuilder) return;
+        WorkspaceLayoutModel.getInstance().setAIPanelVisible(true);
+        const dock = DockModel.getInstance();
+        if (globalStore.get(dock.activeToolAtom) !== "model" || globalStore.get(dock.collapsedAtom)) {
+            dock.toggle("model");
+        }
     }
 
     useCroweAccount() {
         this.setAIMode(CroweAccountMode);
         this.clearError();
         this.openCroweAccount();
+    }
+
+    async useCroweAccountByDefault() {
+        if (this.inBuilder || globalStore.get(this.croweDefaultSaveStatus) === "saving") return;
+        globalStore.set(this.croweDefaultSaveError, "");
+        globalStore.set(this.croweDefaultSaveStatus, "saving");
+        try {
+            await RpcApi.SetConfigCommand(TabRpcClient, { "waveai:defaultmode": CroweAccountMode });
+        } catch {
+            globalStore.set(this.croweDefaultSaveError, "Could not confirm your default engine was saved. Try again.");
+            globalStore.set(this.croweDefaultSaveStatus, "error");
+            return;
+        }
+        globalStore.set(this.croweDefaultSaveStatus, "saved");
     }
 
     openRestoreBackupModal(toolcallid: string) {

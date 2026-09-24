@@ -74,46 +74,39 @@ const AIDragOverlay = memo(() => {
 
 AIDragOverlay.displayName = "AIDragOverlay";
 
-const AIWelcomeMessage = memo(() => {
-    const modKey = isMacOS() ? "⌘" : "Alt";
-    const focusKeys = isWindows() ? "Alt 0" : "Ctrl Shift 0";
-    const model = WaveAIModel.getInstance();
-    const widgetAccess = jotai.useAtomValue(model.widgetAccessAtom);
+const AIWelcomeMessage = memo(
+    ({ children, accountSetupVisible }: { children?: React.ReactNode; accountSetupVisible: boolean }) => {
+        const modKey = isMacOS() ? "⌘" : "Alt";
+        const focusKeys = isWindows() ? "Alt 0" : "Ctrl Shift 0";
+        const model = WaveAIModel.getInstance();
+        const widgetAccess = jotai.useAtomValue(model.widgetAccessAtom);
+        const accountStatus = jotai.useAtomValue(CroweAccountModel.getInstance().statusAtom);
 
-    return (
-        <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-8">
-            <div className="flex flex-col items-center gap-3 text-center">
-                <img
-                    src={croweMark}
-                    alt=""
-                    className="h-12 w-12 rounded-[var(--radius-md)] border border-[var(--crowe-gold-30)] object-contain shadow-[0_0_24px_-6px_var(--glow-gold)]"
-                />
-                <div>
-                    <div
-                        className="text-[22px] leading-none text-[var(--text)]"
-                        style={{ fontFamily: "var(--font-serif)" }}
-                    >
-                        Hypheus
-                    </div>
-                    <div className="mt-2 text-[12px] text-[var(--crowe-gold-65)]">by Crowe Logic</div>
-                </div>
+        return (
+            <div className="crowe-operator-welcome">
+                <h1>Work in context.</h1>
                 <p className="text-[13px] leading-relaxed text-[var(--text-dim)]">
-                    {widgetAccess
-                        ? "Ask about your terminal, code, or files. Hypheus can read what you're working on and suggest commands and edits. It asks before changing files or typing in the terminal."
-                        : "Tools are off, so Hypheus can only chat. Turn on Tools at the top to let it read your terminal and files."}
+                    {accountSetupVisible && accountStatus.state !== "connected"
+                        ? "Connect an account or choose an engine. Your draft stays here until you send it."
+                        : widgetAccess
+                          ? "Ask about your terminal, code, or files. Changes require your approval."
+                          : "Start a conversation. Enable tools in the authority control when you need terminal or file access."}
                 </p>
+                {children}
+                {!accountSetupVisible && (
+                    <div className="crowe-operator-starters">
+                        <CroweChannelPanel />
+                    </div>
+                )}
+                <div className="crowe-operator-shortcuts flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[var(--text-dim)]">
+                    <span>{modKey}K new chat</span>
+                    <span>{modKey}⇧A show or hide</span>
+                    <span>{focusKeys} jump here</span>
+                </div>
             </div>
-
-            <CroweChannelPanel />
-
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[var(--text-dim)]">
-                <span>{modKey}K new chat</span>
-                <span>{modKey}⇧A show or hide</span>
-                <span>{focusKeys} jump here</span>
-            </div>
-        </div>
-    );
-});
+        );
+    }
+);
 
 AIWelcomeMessage.displayName = "AIWelcomeMessage";
 
@@ -143,42 +136,49 @@ const AIBuilderWelcomeMessage = memo(() => {
 
 AIBuilderWelcomeMessage.displayName = "AIBuilderWelcomeMessage";
 
-const AIErrorMessage = memo(() => {
+export const AIErrorMessage = memo(({ accountSetupVisible = false }: { accountSetupVisible?: boolean }) => {
     const model = WaveAIModel.getInstance();
     const errorMessage = jotai.useAtomValue(model.errorMessage);
     const accountError = jotai.useAtomValue(model.accountErrorAtom);
 
-    if (!errorMessage) {
+    if (!errorMessage || (accountError && accountSetupVisible)) {
         return null;
     }
 
     return (
-        <div className="px-4 py-2 text-[var(--crowe-error)] bg-[var(--crowe-error-15)] border-l-4 border-[var(--crowe-error)] mx-2 mb-2 relative">
+        <section role="alert" className="crowe-operator-error">
             <button
                 onClick={() => model.clearError()}
-                className="absolute top-2 right-2 text-[var(--crowe-error)] hover:brightness-110 cursor-pointer z-10"
+                className="absolute top-2 right-2 text-[var(--text-dim)] hover:text-[var(--text)] cursor-pointer z-10"
                 aria-label="Close error"
             >
                 <i className="fa fa-times text-sm"></i>
             </button>
-            <div className="text-sm pr-6 max-h-[100px] overflow-y-auto">
-                {errorMessage}
-                <button
-                    onClick={() => {
-                        if (accountError === "legacykey") {
-                            model.useCroweAccount();
-                        } else if (accountError === "signin") {
-                            model.openCroweAccount();
-                        } else {
-                            model.clearChat();
+            <p className="pr-6">{errorMessage}</p>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                {accountError && (
+                    <button
+                        type="button"
+                        onClick={() =>
+                            accountError === "legacykey" ? model.useCroweAccount() : model.openCroweAccount()
                         }
-                    }}
-                    className="ml-2 text-[12px] text-[var(--crowe-error)] hover:brightness-110 cursor-pointer underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                    {accountError === "legacykey" ? "Use Crowe account" : accountError ? "Connect account" : "New Chat"}
-                </button>
+                        className="cursor-pointer underline"
+                    >
+                        {accountError === "legacykey" ? "Use Crowe account" : "Connect account"}
+                    </button>
+                )}
+                {!accountError && <span>Review your draft before sending again.</span>}
+                {!model.inBuilder && (
+                    <button
+                        type="button"
+                        onClick={() => model.openEngineSelector()}
+                        className="cursor-pointer underline"
+                    >
+                        Choose another engine
+                    </button>
+                )}
             </div>
-        </div>
+        </section>
     );
 });
 
@@ -199,9 +199,10 @@ ConfigChangeModeFixer.displayName = "ConfigChangeModeFixer";
 
 type AIPanelComponentInnerProps = {
     roundTopLeft: boolean;
+    onClose?: () => void;
 };
 
-const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps) => {
+const AIPanelComponentInner = memo(({ roundTopLeft, onClose }: AIPanelComponentInnerProps) => {
     const [isDragOver, setIsDragOver] = useState(false);
     const [isReactDndDragOver, setIsReactDndDragOver] = useState(false);
     const [initialLoadDone, setInitialLoadDone] = useState(false);
@@ -218,9 +219,13 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
     const allowAccess = true;
     const accountModel = CroweAccountModel.getInstance();
     const accountStatus = jotai.useAtomValue(accountModel.statusAtom);
+    const setupRequested = jotai.useAtomValue(accountModel.setupVisibleAtom);
+    const defaultSaveStatus = jotai.useAtomValue(model.croweDefaultSaveStatus);
+    const defaultSaveError = jotai.useAtomValue(model.croweDefaultSaveError);
     const currentMode = jotai.useAtomValue(model.currentAIMode);
     const modeConfigs = jotai.useAtomValue(model.aiModeConfigs);
     const accountMode = isCroweAccountMode(currentMode, modeConfigs?.[currentMode]);
+    const accountSetupVisible = setupRequested || (accountMode && accountStatus.state !== "connected");
 
     useEffect(() => accountModel.mount(), [accountModel]);
     useEffect(() => {
@@ -542,13 +547,31 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
 
     const showBlockMask = isLayoutMode && showOverlayBlockNums;
     const borderColor = isFocused ? (tabActiveBorderColor ?? null) : (tabBorderColor ?? null);
+    const emptyChat = messages.length === 0 && initialLoadDone;
+    const accountSetup = (
+        <CroweAccountSetup
+            accountMode={accountMode}
+            compact={!emptyChat}
+            onUseAccount={model.inBuilder ? null : () => model.useCroweAccount()}
+            onUseAccountByDefault={model.inBuilder ? null : () => void model.useCroweAccountByDefault()}
+            onChooseEngine={model.inBuilder ? null : () => model.openEngineSelector()}
+            defaultSaveStatus={defaultSaveStatus}
+            defaultSaveError={defaultSaveError}
+        />
+    );
+    const recovery = (
+        <div className="crowe-operator-recovery">
+            <AIErrorMessage accountSetupVisible={accountSetupVisible} />
+            <CroweAccountDraftRecovery model={model} />
+        </div>
+    );
 
     return (
         <div
             ref={containerRef}
             data-waveai-panel="true"
             className={cn(
-                "@container bg-[var(--surface)] flex flex-col relative",
+                "crowe-operator-panel @container bg-[var(--surface)] flex flex-col relative min-h-0 min-w-0",
                 model.inBuilder ? "mt-0 h-full" : "mt-1 h-[calc(100%-4px)]",
                 (isDragOver || isReactDndDragOver) && "bg-[var(--surface-raised-hover)] border-[var(--accent)]",
                 isFocused && !borderColor ? "border-2 border-accent" : "border-2 border-transparent"
@@ -573,32 +596,44 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
             <ConfigChangeModeFixer />
             {(isDragOver || isReactDndDragOver) && allowAccess && <AIDragOverlay />}
             {showBlockMask && <AIBlockMask />}
-            <AIPanelHeader />
+            <AIPanelHeader onClose={onClose} />
             <AIRateLimitStrip />
 
             <div key="main-content" className="flex-1 flex flex-col min-h-0">
-                <CroweAccountSetup
-                    accountMode={accountMode}
-                    onUseAccount={model.inBuilder ? null : () => model.useCroweAccount()}
-                />
-                {messages.length === 0 && initialLoadDone ? (
+                {emptyChat ? (
                     <div
-                        className="crowe-scroll-thin relative flex-1 overflow-y-auto p-2"
+                        className="crowe-operator-main crowe-scroll-thin relative flex-1 min-h-0 overflow-y-auto"
                         onContextMenu={(e) => handleWaveAIContextMenu(e, true)}
                     >
-                        {model.inBuilder ? <AIBuilderWelcomeMessage /> : <AIWelcomeMessage />}
+                        {recovery}
+                        {model.inBuilder ? (
+                            <>
+                                <AIBuilderWelcomeMessage />
+                                {accountSetup}
+                            </>
+                        ) : (
+                            <AIWelcomeMessage accountSetupVisible={accountSetupVisible}>
+                                {accountSetup}
+                            </AIWelcomeMessage>
+                        )}
                     </div>
                 ) : (
                     <AIPanelMessages
                         messages={messages}
                         status={status}
                         onContextMenu={(e) => handleWaveAIContextMenu(e, true)}
+                        footer={
+                            <>
+                                {accountSetup}
+                                {recovery}
+                            </>
+                        }
                     />
                 )}
-                <AIErrorMessage />
-                <CroweAccountDraftRecovery model={model} />
-                <AIDroppedFiles model={model} />
-                <AIPanelInput onSubmit={handleSubmit} status={status} model={model} />
+                <div className="crowe-operator-composer">
+                    <AIDroppedFiles model={model} />
+                    <AIPanelInput onSubmit={handleSubmit} status={status} model={model} />
+                </div>
             </div>
         </div>
     );
@@ -608,12 +643,13 @@ AIPanelComponentInner.displayName = "AIPanelInner";
 
 type AIPanelComponentProps = {
     roundTopLeft: boolean;
+    onClose?: () => void;
 };
 
-const AIPanelComponent = ({ roundTopLeft }: AIPanelComponentProps) => {
+const AIPanelComponent = ({ roundTopLeft, onClose }: AIPanelComponentProps) => {
     return (
         <ErrorBoundary>
-            <AIPanelComponentInner roundTopLeft={roundTopLeft} />
+            <AIPanelComponentInner roundTopLeft={roundTopLeft} onClose={onClose} />
         </ErrorBoundary>
     );
 };

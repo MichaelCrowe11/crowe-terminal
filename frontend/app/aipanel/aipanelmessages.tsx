@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { useAtomValue } from "jotai";
@@ -11,9 +11,10 @@ interface AIPanelMessagesProps {
     messages: WaveUIMessage[];
     status: string;
     onContextMenu?: (e: React.MouseEvent) => void;
+    footer?: React.ReactNode;
 }
 
-export const AIPanelMessages = memo(({ messages, status, onContextMenu }: AIPanelMessagesProps) => {
+export const AIPanelMessages = memo(({ messages, status, onContextMenu, footer }: AIPanelMessagesProps) => {
     const model = WaveAIModel.getInstance();
     const isPanelOpen = useAtomValue(model.getPanelVisibleAtom());
     const widgetAccess = useAtomValue(model.widgetAccessAtom);
@@ -85,7 +86,7 @@ export const AIPanelMessages = memo(({ messages, status, onContextMenu }: AIPane
     return (
         <div
             ref={messagesContainerRef}
-            className="crowe-scroll-thin flex-1 space-y-4 overflow-y-auto p-2"
+            className="crowe-operator-main crowe-scroll-thin flex-1 min-h-0 space-y-4 overflow-y-auto p-2"
             onContextMenu={onContextMenu}
         >
             <div className="mb-1 border-b border-[var(--hairline-faint)] px-1 pb-2 text-center text-[11px] text-[var(--text-dim)]">
@@ -108,6 +109,7 @@ export const AIPanelMessages = memo(({ messages, status, onContextMenu }: AIPane
                     />
                 )}
 
+            {footer}
             <div ref={messagesEndRef} />
         </div>
     );

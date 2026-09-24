@@ -30,7 +30,7 @@ export function CroweAccountButton({ onClick }: { onClick: () => void }) {
             onClick={onClick}
             title={`Crowe account: ${label}`}
             aria-label={`Crowe account: ${label}. Open account setup`}
-            className="flex items-center gap-1.5 rounded border border-[var(--hairline)] px-2 py-1 text-[12px] text-[var(--text)] hover:bg-[var(--surface-raised-hover)] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="crowe-account-button flex items-center gap-1.5 rounded border border-[var(--hairline)] px-2 py-1 text-[12px] text-[var(--text)] hover:bg-[var(--surface-raised-hover)] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
             <i className="fa fa-regular fa-circle-user text-[12px]" aria-hidden="true" />
             <span>{label}</span>
@@ -83,7 +83,25 @@ export function CroweAccountDraftRecovery({ model }: { model: WaveAIModel }) {
     );
 }
 
-export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: boolean; onUseAccount?: () => void }) {
+type CroweAccountSetupProps = {
+    accountMode: boolean;
+    onUseAccount?: () => void;
+    onUseAccountByDefault?: () => void;
+    onChooseEngine?: () => void;
+    defaultSaveStatus?: "idle" | "saving" | "saved" | "error";
+    defaultSaveError?: string;
+    compact?: boolean;
+};
+
+export function CroweAccountSetup({
+    accountMode,
+    onUseAccount,
+    onUseAccountByDefault,
+    onChooseEngine,
+    defaultSaveStatus = "idle",
+    defaultSaveError,
+    compact = false,
+}: CroweAccountSetupProps) {
     const model = CroweAccountModel.getInstance();
     const status = useAtomValue(model.statusAtom);
     const checked = useAtomValue(model.checkedAtom);
@@ -97,6 +115,7 @@ export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: 
     const connected = status.state === "connected";
     const canCancel = waiting || starting;
     const retry = status.state === "expired" || status.state === "error";
+    const expanded = !compact || requested || waiting || starting || retry || status.problem != null;
 
     useEffect(() => {
         if (requested) headingRef.current?.focus();
@@ -107,7 +126,10 @@ export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: 
     return (
         <section
             aria-label="Crowe account setup"
-            className="mx-2 my-2 max-h-[50%] shrink-0 overflow-y-auto rounded border border-[var(--hairline)] border-t-[var(--hairline-strong)] bg-[var(--surface-raised)] p-3 text-[13px] text-[var(--text)]"
+            className={cn(
+                "crowe-account-setup text-[13px] text-[var(--text)]",
+                compact && "crowe-account-setup-compact"
+            )}
         >
             <div className="flex items-start justify-between gap-3">
                 <h2
@@ -132,7 +154,7 @@ export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: 
                         ? "Checking account connection"
                         : StateLabels[status.state]}
             </p>
-            {!connected && !waiting && (
+            {expanded && !connected && !waiting && (
                 <p className="mt-2 leading-relaxed">
                     {status.problem === "storage"
                         ? "Hypheus could not access secure credential storage. Unlock your system keychain or credential service, allow Hypheus access, then retry."
@@ -142,7 +164,7 @@ export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: 
                             ? "Your sign-in or account session has expired. Connect again to continue. Your chat and draft stay in place."
                             : status.state === "error"
                               ? "Could not confirm your connection. Check your network and try again."
-                              : "Connect your Crowe account to use cloud models in Hypheus. No API key is needed for account mode."}
+                              : "Connect your Crowe account to use hosted engines in Hypheus. No API key is needed for account mode."}
                 </p>
             )}
             {waiting && (
@@ -164,9 +186,12 @@ export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: 
                 </div>
             )}
             {connected && <p className="mt-2">Your account is connected. Your current chat and draft stay in place.</p>}
-            <p className="mt-2 text-[12px] leading-relaxed text-[var(--text-dim)]">
-                Connecting does not send a prompt, read files, or run commands. Tool access and approvals stay separate.
-            </p>
+            {expanded && (
+                <p className="mt-2 text-[12px] leading-relaxed text-[var(--text-dim)]">
+                    Connecting does not send a prompt, read files, or run commands. Tool access and approvals stay
+                    separate.
+                </p>
+            )}
             {browserError && (
                 <p role="alert" className="mt-2 text-[12px] text-[var(--crowe-error)]">
                     Could not open the browser. Open the address above in your system browser and enter the code.
@@ -181,7 +206,7 @@ export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: 
             <div className="mt-3 flex flex-wrap gap-2">
                 {!accountMode && onUseAccount && (
                     <button type="button" onClick={onUseAccount} className={ButtonClass}>
-                        Use account mode
+                        Use Crowe account
                     </button>
                 )}
                 {!connected && !canCancel && (
@@ -189,7 +214,7 @@ export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: 
                         type="button"
                         disabled={operation != null}
                         onClick={() => void model.start()}
-                        className={cn(ButtonClass, "bg-accent/80 text-primary hover:bg-accent transition-colors")}
+                        className={cn(ButtonClass, "crowe-account-primary")}
                     >
                         {retry ? "Retry connection" : "Connect account"}
                     </button>
@@ -220,7 +245,34 @@ export function CroweAccountSetup({ accountMode, onUseAccount }: { accountMode: 
                     </button>
                 )}
             </div>
-            {!connected && (
+            {expanded && onUseAccountByDefault && (
+                <div className="crowe-account-default">
+                    <button
+                        type="button"
+                        disabled={defaultSaveStatus === "saving" || defaultSaveStatus === "saved"}
+                        onClick={onUseAccountByDefault}
+                        className={ButtonClass}
+                    >
+                        {defaultSaveStatus === "saving" ? "Saving default" : "Use Crowe account by default"}
+                    </button>
+                    <p
+                        className="mt-2 text-[12px] text-[var(--text-dim)]"
+                        role={defaultSaveStatus === "error" ? "alert" : "status"}
+                    >
+                        {defaultSaveStatus === "error"
+                            ? defaultSaveError || "Could not save your default. Try again."
+                            : defaultSaveStatus === "saved"
+                              ? "Crowe account is the default for new tabs. Existing engine selections stay unchanged."
+                              : "Applies to new tabs, including after restart. Existing engine selections stay unchanged."}
+                    </p>
+                </div>
+            )}
+            {onChooseEngine && (
+                <button type="button" onClick={onChooseEngine} className="crowe-account-alternative cursor-pointer">
+                    Choose another engine
+                </button>
+            )}
+            {expanded && !connected && (
                 <p className="mt-2 text-[12px] leading-relaxed text-[var(--text-dim)]">
                     Local and custom engines still work without connecting. API-key modes remain available in the engine
                     menu as advanced setup.

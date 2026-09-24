@@ -2,21 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { handleWaveAIContextMenu } from "@/app/aipanel/aipanel-contextmenu";
-import croweMark from "@/app/asset/hypheus-mark.png";
-import croweWordmarkUrl from "@/app/asset/hypheus-wordmark.svg?url";
 import { CroweCodeWorkspaceModel } from "@/app/view/crowecode/crowecode-workspace-model";
-import { useWaveEnv } from "@/app/waveenv/waveenv";
 import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo, useMemo } from "react";
 import { CroweAccountButton } from "./croweaccount";
 import { WaveAIModel } from "./waveai-model";
 
-export const AIPanelHeader = memo(() => {
+export const AIPanelHeader = memo(({ onClose }: { onClose?: () => void }) => {
     const model = WaveAIModel.getInstance();
-    const waveEnv = useWaveEnv();
     const widgetAccess = useAtomValue(model.widgetAccessAtom);
     const isStreaming = useAtomValue(model.isAIStreaming);
+    const currentMode = useAtomValue(model.currentAIMode);
+    const configs = useAtomValue(model.aiModeConfigs);
+    const engineLabel = configs?.[currentMode]?.["display:name"] ?? currentMode ?? "Choose engine";
     const inBuilder = model.inBuilder;
     const activeEditor = useAtomValue(CroweCodeWorkspaceModel.getInstance().activeEditorAtom);
     const activeLabel = useMemo(() => {
@@ -38,83 +37,90 @@ export const AIPanelHeader = memo(() => {
         setTimeout(() => model.focusInput(), 0);
     };
 
-    const openCroweCode = () => {
-        // Temporary fallback while crowecode.com DNS/TLS is being finalized.
-        waveEnv.electron.openExternal("https://www.crowelogic.com");
-    };
+    // Temporary fallback while crowecode.com DNS/TLS is being finalized.
 
     return (
-        <div
-            className="flex h-11 min-w-0 items-center justify-between gap-2 border-b border-[var(--hairline)] bg-[var(--glass-tint-chrome)] pl-3 pr-1.5 backdrop-blur-2xl [box-shadow:inset_0_1px_0_var(--hair-top)]"
-            onContextMenu={handleContextMenu}
-        >
-            <button
-                type="button"
-                onClick={openCroweCode}
-                className="group flex min-w-0 items-center gap-2 cursor-pointer"
-                title="Open crowelogic.com"
-            >
-                <div className="relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-[var(--radius-xs)] border border-[var(--hairline-strong)] bg-[var(--surface-sunken)]">
-                    <img src={croweMark} alt="" className="h-full w-full object-cover" />
-                </div>
-                <img src={croweWordmarkUrl} alt="Hypheus" className="h-[13px] w-auto flex-shrink-0 opacity-90" />
-                <span
-                    className={cn(
-                        "h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--crowe-gold-45)] transition-all",
-                        isStreaming && "animate-pulse bg-[var(--accent)] shadow-[0_0_8px_var(--glow-gold)]"
-                    )}
-                />
-                {activeLabel && (
-                    <span
-                        className="ml-1 min-w-0 truncate font-mono text-[11px] text-[var(--crowe-gold-65)] group-hover:text-[var(--accent)]"
-                        title={activeEditor?.filePath ?? undefined}
-                    >
-                        {activeLabel}
-                    </span>
-                )}
-            </button>
-
-            <div className="flex flex-shrink-0 items-center gap-0.5 whitespace-nowrap">
-                {!inBuilder && (
+        <>
+            <header className="crowe-operator-header" aria-label="Operator controls" onContextMenu={handleContextMenu}>
+                {inBuilder ? (
+                    <span className="crowe-operator-engine">App builder</span>
+                ) : (
                     <button
                         type="button"
-                        onClick={toggleContext}
-                        title={
-                            widgetAccess
-                                ? "Tools are on. The operator can read your terminal, files, and use editor tools. Click to sandbox."
-                                : "Tools are off (sandboxed). The operator is text-only and cannot reach files or the terminal. Click to enable."
-                        }
-                        aria-pressed={widgetAccess}
-                        className={cn(
-                            "flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2 py-1 text-[12px] transition-colors cursor-pointer",
-                            widgetAccess
-                                ? "border-[var(--crowe-gold-40)] bg-[var(--wash-accent)] text-[var(--accent)] hover:bg-[var(--wash-accent-mid)]"
-                                : "border-[var(--hairline)] bg-transparent text-[var(--text-dim)] hover:border-[var(--hairline-strong)] hover:text-[var(--text)]"
-                        )}
+                        onClick={() => model.openEngineSelector()}
+                        className="crowe-operator-engine cursor-pointer"
+                        title={`Choose engine. Current engine: ${engineLabel}`}
+                        aria-label={`Choose engine. Current engine: ${engineLabel}`}
                     >
-                        <span
-                            className={cn(
-                                "inline-block h-1.5 w-1.5 rounded-full",
-                                widgetAccess
-                                    ? "bg-[var(--accent)] shadow-[0_0_6px_var(--glow-gold)]"
-                                    : "bg-[var(--text-dim)]"
-                            )}
-                        />
-                        {widgetAccess ? "Tools on" : "Chat only"}
+                        <span className="min-w-0 truncate">{engineLabel}</span>
+                        <i className="fa fa-angle-down shrink-0" aria-hidden="true" />
                     </button>
                 )}
-                {!inBuilder && <CroweAccountButton onClick={() => model.openCroweAccount()} />}
-                <button
-                    type="button"
-                    onClick={handleKebabClick}
-                    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-dim)] transition-colors hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer focus:outline-none"
-                    title="More options"
-                    aria-label="More options"
-                >
-                    <i className="fa fa-ellipsis-vertical text-[13px]"></i>
-                </button>
+                <div className="crowe-operator-session-controls">
+                    {!inBuilder && <CroweAccountButton onClick={() => model.openCroweAccount()} />}
+                    <button
+                        type="button"
+                        onClick={() => model.clearChat()}
+                        className="crowe-operator-icon cursor-pointer"
+                        title="New chat"
+                        aria-label="New chat"
+                    >
+                        <i className="fa fa-plus" aria-hidden="true" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleKebabClick}
+                        className="crowe-operator-icon cursor-pointer"
+                        title="Session options"
+                        aria-label="Session options"
+                    >
+                        <i className="fa fa-ellipsis-vertical" aria-hidden="true" />
+                    </button>
+                    {onClose && (
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="crowe-operator-icon cursor-pointer"
+                            title="Close operator"
+                            aria-label="Close operator"
+                        >
+                            <i className="fa fa-xmark" aria-hidden="true" />
+                        </button>
+                    )}
+                </div>
+            </header>
+            <div className="crowe-operator-authority" role="group" aria-label="Tool authority">
+                {!inBuilder && (
+                    <>
+                        <span>Authority</span>
+                        <button
+                            type="button"
+                            onClick={toggleContext}
+                            title={
+                                widgetAccess
+                                    ? "Tools can read your terminal and files. Changes require approval. Turn tools off."
+                                    : "Chat only. No terminal or file access. Enable tools."
+                            }
+                            aria-pressed={widgetAccess}
+                            className={cn(
+                                "crowe-authority-control cursor-pointer",
+                                widgetAccess && "crowe-authority-enabled"
+                            )}
+                        >
+                            {widgetAccess ? "Tools on" : "Chat only"}
+                        </button>
+                    </>
+                )}
+                <span className="crowe-operator-context" title={activeEditor?.filePath ?? undefined}>
+                    {activeLabel ?? (widgetAccess ? "Changes require approval" : "No file or terminal access")}
+                </span>
+                {isStreaming && (
+                    <span role="status" className="crowe-operator-run-state">
+                        Running
+                    </span>
+                )}
             </div>
-        </div>
+        </>
     );
 });
 

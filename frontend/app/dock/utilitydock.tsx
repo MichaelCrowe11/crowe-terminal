@@ -3,9 +3,8 @@
 
 import { AIPanel } from "@/app/aipanel/aipanel";
 import hypheusMark from "@/app/asset/hypheus-mark.png";
-import { WaveAIModel } from "@/app/aipanel/waveai-model";
-import { WorkspaceLayoutModel } from "@/app/workspace/workspace-layout-model";
 import { applyAppTheme, AppTheme, getAppTheme } from "@/app/theme/app-theme";
+import { WorkspaceLayoutModel } from "@/app/workspace/workspace-layout-model";
 import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -28,12 +27,12 @@ import {
     DOCK_MIN_WIDTH,
     DOCK_RAIL_WIDTH,
     DOCK_SPLIT_PX,
-    TOOL_DEFAULT_WIDTH,
-    TOOL_MIN_WIDTH,
-    resolveDockWidths,
-    keyboardResizeWidth,
     DockModel,
     DockToolId,
+    keyboardResizeWidth,
+    resolveDockWidths,
+    TOOL_DEFAULT_WIDTH,
+    TOOL_MIN_WIDTH,
 } from "./dock-model";
 import "./dock.scss";
 import { DesignPanel, ModelPanel, MyceliumPanel, TelemetryPanel, ThinkingPanel, VcsPanel } from "./dockpanels";
@@ -84,10 +83,6 @@ const UtilityDockElem = memo(() => {
     const rootRef = useRef<HTMLDivElement>(null);
     const [dragging, setDragging] = useState(false);
     const chatOpen = useAtomValue(layout.panelVisibleAtom);
-    const waveAI = WaveAIModel.getInstance();
-    const aiMode = useAtomValue(waveAI.currentAIMode);
-    const aiConfigs = useAtomValue(waveAI.aiModeConfigs);
-    const modelLabel = aiConfigs?.[aiMode]?.["display:name"] ?? "Model";
     const dragMode = useRef<"column" | "split" | null>(null);
     const [theme, setTheme] = useState<AppTheme>(() => getAppTheme());
 
@@ -150,19 +145,27 @@ const UtilityDockElem = memo(() => {
     // be relied on to keep block area usable. This measures the actual
     // available space (the workspace row), and subtracts whatever the tool
     // column is holding so the clamp bounds the chat pane rather than the pair.
-    const resizePane = useCallback((tool: boolean, px: number, commit = false) => {
-        if (tool) {
-            model.setToolWidth(Math.min(px, sizes.toolMax));
-        } else {
-            model.setColumnWidth(Math.min(px, sizes.columnMax));
-        }
-        if (commit) model.commitPersist();
-    }, [model, sizes.toolMax, sizes.columnMax]);
+    const resizePane = useCallback(
+        (tool: boolean, px: number, commit = false) => {
+            if (tool) {
+                model.setToolWidth(Math.min(px, sizes.toolMax));
+            } else {
+                model.setColumnWidth(Math.min(px, sizes.columnMax));
+            }
+            if (commit) model.commitPersist();
+        },
+        [model, sizes.toolMax, sizes.columnMax]
+    );
     const onResizeKey = (e: React.KeyboardEvent, tool: boolean) => {
         const max = tool ? sizes.toolMax : sizes.columnMax;
-        const value = keyboardResizeWidth(e.key, e.shiftKey, tool ? sizes.tool : sizes.column,
-            Math.min(tool ? TOOL_MIN_WIDTH : DOCK_MIN_WIDTH, max), max,
-            tool ? TOOL_DEFAULT_WIDTH : DOCK_DEFAULT_WIDTH);
+        const value = keyboardResizeWidth(
+            e.key,
+            e.shiftKey,
+            tool ? sizes.tool : sizes.column,
+            Math.min(tool ? TOOL_MIN_WIDTH : DOCK_MIN_WIDTH, max),
+            max,
+            tool ? TOOL_DEFAULT_WIDTH : DOCK_DEFAULT_WIDTH
+        );
         if (value == null) return;
         e.preventDefault();
         e.stopPropagation();
@@ -174,7 +177,8 @@ const UtilityDockElem = memo(() => {
             if (dragMode.current === "column") {
                 // The grip sits on the outer edge, so the pointer measures the
                 // whole dock; the tool column's share is not the chat's to take.
-                const chatPx = e.clientX - (rootRef.current?.getBoundingClientRect().left ?? 0) - DOCK_RAIL_WIDTH - toolAllowance;
+                const chatPx =
+                    e.clientX - (rootRef.current?.getBoundingClientRect().left ?? 0) - DOCK_RAIL_WIDTH - toolAllowance;
                 resizePane(!sizes.showChat, chatPx);
                 return;
             }
@@ -204,12 +208,15 @@ const UtilityDockElem = memo(() => {
         };
     }, [model, resizePane, sizes.showChat, toolAllowance]);
 
-    useEffect(() => () => {
-        if (dragStyles.current == null) return;
-        document.body.style.cursor = dragStyles.current.cursor;
-        document.body.style.userSelect = dragStyles.current.userSelect;
-        model.commitPersist();
-    }, [model]);
+    useEffect(
+        () => () => {
+            if (dragStyles.current == null) return;
+            document.body.style.cursor = dragStyles.current.cursor;
+            document.body.style.userSelect = dragStyles.current.userSelect;
+            model.commitPersist();
+        },
+        [model]
+    );
 
     // Shrinking the window does not fire mousemove, so an already-wide column
     // needs its own re-clamp on resize to keep blocks above MIN_BLOCK_PX.
@@ -292,7 +299,11 @@ const UtilityDockElem = memo(() => {
                     aria-label={theme === "dark" ? "Use light theme" : "Use dark theme"}
                     aria-pressed={theme === "light"}
                 >
-                    {theme === "dark" ? <SunIcon className="crowe-dock-glyph" /> : <MoonIcon className="crowe-dock-glyph" />}
+                    {theme === "dark" ? (
+                        <SunIcon className="crowe-dock-glyph" />
+                    ) : (
+                        <MoonIcon className="crowe-dock-glyph" />
+                    )}
                 </button>
             </nav>
             <div
@@ -305,7 +316,11 @@ const UtilityDockElem = memo(() => {
                 style={{ width: dockWidth }}
             >
                 {toolOpen && (
-                    <section id="crowe-tool-pane" className="crowe-dock-pane crowe-dock-pane-tool" style={toolPaneStyle}>
+                    <section
+                        id="crowe-tool-pane"
+                        className="crowe-dock-pane crowe-dock-pane-tool"
+                        style={toolPaneStyle}
+                    >
                         <div className="crowe-dock-head">
                             <span className="crowe-dock-title">{activeDef.label}</span>
                             <button
@@ -319,7 +334,11 @@ const UtilityDockElem = memo(() => {
                             </button>
                         </div>
                         <div className="crowe-dock-body">
-                            {sizes.compact && <div className="crowe-panel-hint">Compact view. Close this tool to return to the operator. An active run continues.</div>}
+                            {sizes.compact && (
+                                <div className="crowe-panel-hint">
+                                    Compact view. Close this tool to return to the operator. An active run continues.
+                                </div>
+                            )}
                             <ActivePanel />
                         </div>
                     </section>
@@ -350,29 +369,8 @@ const UtilityDockElem = memo(() => {
                     style={{ ...chatPaneStyle, display: sizes.showChat ? "flex" : "none" }}
                     aria-hidden={!sizes.showChat}
                 >
-                    <div className="crowe-dock-head crowe-chat-head">
-                        <button
-                            type="button"
-                            className="crowe-chat-model cursor-pointer"
-                            onClick={() => toggleTool("model")}
-                            title="Switch model"
-                        >
-                            <span className="crowe-chat-model-dot" />
-                            <span className="crowe-chat-model-name">{modelLabel}</span>
-                            <i className="fa fa-angle-down crowe-chat-model-caret" />
-                        </button>
-                        <button
-                            type="button"
-                            className="crowe-dock-close cursor-pointer"
-                            onClick={() => layout.setAIPanelVisible(false)}
-                            title="Close operator"
-                            aria-label="Close operator"
-                        >
-                            <CloseIcon />
-                        </button>
-                    </div>
                     <div className="crowe-chat-body">
-                        <AIPanel roundTopLeft={false} />
+                        <AIPanel roundTopLeft={false} onClose={() => layout.setAIPanelVisible(false)} />
                     </div>
                 </section>
                 <div
@@ -382,7 +380,11 @@ const UtilityDockElem = memo(() => {
                     aria-hidden={!columnOpen}
                     aria-label={sizes.showChat ? "Operator panel width" : "Tool panel width"}
                     aria-controls={sizes.showChat ? "crowe-operator-pane" : "crowe-tool-pane"}
-                    aria-valuemin={sizes.showChat ? Math.min(DOCK_MIN_WIDTH, sizes.columnMax) : Math.min(TOOL_MIN_WIDTH, sizes.toolMax)}
+                    aria-valuemin={
+                        sizes.showChat
+                            ? Math.min(DOCK_MIN_WIDTH, sizes.columnMax)
+                            : Math.min(TOOL_MIN_WIDTH, sizes.toolMax)
+                    }
                     aria-valuemax={sizes.showChat ? sizes.columnMax : sizes.toolMax}
                     aria-valuenow={sizes.showChat ? sizes.column : sizes.tool}
                     aria-valuetext={`${sizes.showChat ? sizes.column : sizes.tool} pixels`}
@@ -390,7 +392,9 @@ const UtilityDockElem = memo(() => {
                     title="Drag or use arrow keys to resize. Enter or double-click to reset."
                     onKeyDown={(e) => onResizeKey(e, !sizes.showChat)}
                     onMouseDown={onColumnResizeDown}
-                    onDoubleClick={() => resizePane(!sizes.showChat, sizes.showChat ? DOCK_DEFAULT_WIDTH : TOOL_DEFAULT_WIDTH, true)}
+                    onDoubleClick={() =>
+                        resizePane(!sizes.showChat, sizes.showChat ? DOCK_DEFAULT_WIDTH : TOOL_DEFAULT_WIDTH, true)
+                    }
                 />
             </div>
         </div>

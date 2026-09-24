@@ -3,7 +3,7 @@
 
 import { formatFileSizeError, isAcceptableFile, validateFileSize } from "@/app/aipanel/ai-utils";
 import { waveAIHasFocusWithin } from "@/app/aipanel/waveai-focus-utils";
-import { type WaveAIModel } from "@/app/aipanel/waveai-model";
+import { getComposerAction, type WaveAIModel } from "@/app/aipanel/waveai-model";
 import { Tooltip } from "@/element/tooltip";
 import { cn } from "@/util/util";
 import { useAtom, useAtomValue } from "jotai";
@@ -30,6 +30,14 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isPanelOpen = useAtomValue(model.getPanelVisibleAtom());
+    const composerState = useAtomValue(model.composerState);
+    const action = getComposerAction(status, composerState);
+    const canSend = action === "send";
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (canSend) onSubmit(e);
+    };
 
     let placeholder: string;
     if (!isChatEmpty) {
@@ -78,7 +86,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
         const isComposing = e.nativeEvent?.isComposing || e.keyCode == 229;
         if (e.key === "Enter" && !e.shiftKey && !isComposing) {
             e.preventDefault();
-            onSubmit(e as any);
+            handleSubmit(e);
         }
     };
 
@@ -140,10 +148,8 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
         }
     };
 
-    const canSend = status === "ready" && !!input.trim();
-
     return (
-        <div className="border-t border-[var(--hairline-faint)] bg-[var(--glass-tint-chrome)] px-2.5 pb-2.5 pt-2 backdrop-blur-2xl [box-shadow:inset_0_1px_0_var(--hair-top)]">
+        <div className="border-t border-[var(--border)] bg-[var(--surface)] px-2.5 pb-2.5 pt-2">
             <input
                 ref={fileInputRef}
                 type="file"
@@ -152,7 +158,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                 onChange={handleFileChange}
                 className="hidden"
             />
-            <form onSubmit={onSubmit}>
+            <form onSubmit={handleSubmit}>
                 <div
                     className={cn(
                         "rounded-[var(--radius-md)] border bg-[var(--surface-sunken)] transition-all duration-150",
@@ -170,7 +176,8 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                             onFocus={handleFocus}
                             onBlur={handleBlur}
                             placeholder={placeholder}
-                            className="w-full resize-none overflow-auto bg-transparent py-2 px-3 text-[var(--text)] placeholder-[var(--crowe-parchment-40)] focus:outline-none"
+                            aria-label="Message Hypheus"
+                            className="w-full resize-none overflow-auto bg-transparent py-2 px-3 text-[var(--text)] placeholder-[var(--text-dim)] focus:outline-none"
                             style={{ fontSize: "13px" }}
                             rows={2}
                         />
@@ -186,11 +193,29 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                                 <i className="fa fa-paperclip text-[12px]"></i>
                             </button>
                         </Tooltip>
-                        <div className="flex items-center gap-2">
-                            <span className="hidden select-none text-[11px] text-[var(--text-dim)] @[300px]:inline">
-                                {status === "streaming" ? "Responding..." : "Enter to send, Shift+Enter for a new line"}
+                        <div className="flex min-w-0 items-center gap-2">
+                            <span
+                                role="status"
+                                className="hidden min-w-0 truncate select-none text-[11px] text-[var(--text-dim)] @[300px]:inline"
+                            >
+                                {action === "stop"
+                                    ? status === "streaming"
+                                        ? "Responding..."
+                                        : "Preparing response..."
+                                    : action === "connect"
+                                      ? "Connect to send. Your draft stays here."
+                                      : "Enter to send, Shift+Enter for a new line"}
                             </span>
-                            {status === "streaming" ? (
+                            {action === "connect" ? (
+                                <button
+                                    type="button"
+                                    onClick={() => model.openCroweAccount()}
+                                    aria-label="Connect Crowe account"
+                                    className="shrink-0 rounded px-2 py-1 text-xs bg-accent/80 text-primary hover:bg-accent transition-colors cursor-pointer"
+                                >
+                                    Connect
+                                </button>
+                            ) : action === "stop" ? (
                                 <Tooltip content="Stop response" placement="top">
                                     <button
                                         type="button"
@@ -211,7 +236,7 @@ export const AIPanelInput = memo(({ onSubmit, status, model }: AIPanelInputProps
                                             "flex h-7 w-7 items-center justify-center rounded-full transition-all duration-150",
                                             canSend
                                                 ? "bg-[var(--accent)] text-[var(--accent-ink)] shadow-[0_0_10px_-2px_var(--glow-gold)] hover:brightness-110 cursor-pointer"
-                                                : "bg-[var(--wash-accent-faint)] text-[var(--crowe-parchment-40)] cursor-default"
+                                                : "bg-[var(--wash-accent-faint)] text-[var(--text-dim)] cursor-default"
                                         )}
                                     >
                                         <i className="fa fa-arrow-up text-[11px]"></i>

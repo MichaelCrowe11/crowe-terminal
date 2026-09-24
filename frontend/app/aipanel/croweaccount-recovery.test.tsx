@@ -1,6 +1,7 @@
 // Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { atoms, initGlobalAtoms } from "@/app/store/global-atoms";
 import { globalStore } from "@/app/store/jotaiStore";
 import { Chat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
@@ -21,9 +22,14 @@ let revoke: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
     vi.restoreAllMocks();
+    if (!atoms) {
+        const log = vi.spyOn(console, "log").mockImplementation(() => {});
+        initGlobalAtoms({ tabId: "test", windowId: "test" } as GlobalInitOptions);
+        log.mockRestore();
+    }
     CroweAccountModel.resetInstance();
     CroweAccountModel.getInstance().applyStatus({ state: "connected" });
-    model = Object.create(WaveAIModel.prototype);
+    model = Reflect.construct(WaveAIModel, ["tab:test", false]);
     model.accountSubmissions = new Map();
     model.unsentAccountDrafts = atom([]);
     model.currentAIMode = atom(CroweAccountMode);

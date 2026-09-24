@@ -89,10 +89,12 @@ const InitPage = ({
             <header
                 className={`flex flex-col gap-2 border-b-0 p-0 ${isCompact ? "mt-1 mb-4" : "mb-9"} w-full unselectable flex-shrink-0`}
             >
-                <div className={`${isCompact ? "" : "mb-2.5"} flex justify-center`}>
+                <div className={`${isCompact ? "" : "mb-2.5"} flex justify-center [&_svg]:h-12 [&_svg]:w-12`}>
                     <Logo />
                 </div>
-                <h1 className="crowe-welcome-title text-center text-2xl font-normal text-foreground">Welcome to Hypheus</h1>
+                <h1 className="crowe-welcome-title text-center text-2xl font-normal text-foreground">
+                    Welcome to Hypheus
+                </h1>
             </header>
             <OverlayScrollbarsComponent
                 className="flex-1 overflow-y-auto min-h-0"
@@ -114,8 +116,8 @@ const InitPage = ({
                         <div className="flex flex-col items-start gap-1 flex-1">
                             <div className="text-foreground text-base leading-[18px]">Source and releases</div>
                             <div className="text-secondary leading-5">
-                                Hypheus is built in the open. Read the source, track releases, and see what is
-                                changing at{" "}
+                                Hypheus is built in the open. Read the source, track releases, and see what is changing
+                                at{" "}
                                 <a
                                     target="_blank"
                                     href="https://github.com/MichaelCrowe11/crowe-terminal?ref=install"
@@ -161,7 +163,8 @@ const InitPage = ({
                         </div>
                         <div className="flex flex-col items-start gap-1 flex-1">
                             <div className="text-secondary leading-5">
-                                Optional usage analytics help us improve features you use. Your choice does not change access to the operator panel.
+                                Optional usage analytics help us improve features you use. Your choice does not change
+                                access to the operator panel.
                                 <br />
                                 <a
                                     className="text-secondary! hover:underline!"
@@ -225,7 +228,7 @@ const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
     return (
         <div className="flex flex-col h-full">
             <header className={`flex flex-col gap-2 border-b-0 p-0 mt-1 mb-4 w-full unselectable flex-shrink-0`}>
-                <div className={`flex justify-center`}>
+                <div className="flex justify-center [&_svg]:h-12 [&_svg]:w-12">
                     <Logo />
                 </div>
                 <div className="text-center text-[25px] font-normal text-foreground">Telemetry Disabled</div>
@@ -238,8 +241,8 @@ const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
                     <div className="text-center text-secondary leading-relaxed max-w-md">
                         <p className="mb-4">No problem, we respect your privacy.</p>
                         <p className="mb-4">
-                            You can turn this back on at any time under Settings. If something is broken or
-                            missing, an issue on GitHub reaches us directly.
+                            You can turn this back on at any time under Settings. If something is broken or missing, an
+                            issue on GitHub reaches us directly.
                         </p>
                     </div>
                 </div>
@@ -316,7 +319,12 @@ const NewInstallOnboardingModal = () => {
     let pageComp: React.JSX.Element = null;
     switch (pageName) {
         case "init":
-            pageComp = <InitPage isCompact={isCompact} telemetryUpdateFn={(value) => services.ClientService.TelemetryUpdate(value)} />;
+            pageComp = (
+                <InitPage
+                    isCompact={isCompact}
+                    telemetryUpdateFn={(value) => services.ClientService.TelemetryUpdate(value)}
+                />
+            );
             break;
         case "notelemetrystar":
             pageComp = <NoTelemetryStarPage isCompact={isCompact} />;
@@ -329,11 +337,14 @@ const NewInstallOnboardingModal = () => {
         return null;
     }
 
-    const paddingClass = isCompact ? "!py-3 !px-8" : "!p-8";
-    const widthClass = pageName === "features" ? "w-[800px]" : "w-[560px]";
+    const paddingClass = isCompact ? "!py-3 !px-4" : "!p-6";
+    const widthClass = "w-[560px] max-w-[calc(100vw-32px)]";
 
     return (
-        <FlexiModal className={`crowe-onboarding ${widthClass} rounded-[8px] ${paddingClass} relative overflow-hidden`} ref={modalRef}>
+        <FlexiModal
+            className={`crowe-onboarding ${widthClass} rounded-[8px] ${paddingClass} relative overflow-hidden`}
+            ref={modalRef}
+        >
             <div className="flex flex-col w-full h-full relative z-10">{pageComp}</div>
         </FlexiModal>
     );

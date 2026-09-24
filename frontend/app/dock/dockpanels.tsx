@@ -1,6 +1,7 @@
 // Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { isCroweAccountMode } from "@/app/aipanel/croweaccount-model";
 import { WaveAIModel } from "@/app/aipanel/waveai-model";
 import { atoms } from "@/app/store/global";
 import * as WOS from "@/app/store/wos";
@@ -8,6 +9,7 @@ import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { DesignAnnotation, DesignReviewModel, DesignSeverity } from "./designreview-model";
+import { DockModel } from "./dock-model";
 import { TelemetryModel } from "./telemetry-model";
 import { VcsModel } from "./vcs-model";
 
@@ -113,7 +115,9 @@ export const TelemetryPanel = () => {
                     <span className="crowe-metric-lbl">elapsed at last event</span>
                 </div>
             </div>
-            <div className="crowe-panel-hint">Token counts and throughput are estimated from output characters, not provider usage.</div>
+            <div className="crowe-panel-hint">
+                Token counts and throughput are estimated from output characters, not provider usage.
+            </div>
             <Sparkline data={history} />
             {!hasRun && (
                 <div className="crowe-empty">Send a message in the operator panel to see live inference telemetry.</div>
@@ -134,16 +138,26 @@ export const ModelPanel = () => {
     );
 
     if (entries.length === 0) {
-        return <div className="crowe-empty">No CroweLM modes configured.</div>;
+        return <div className="crowe-empty">No engines configured.</div>;
     }
 
     return (
         <div className="crowe-panel">
-            <div className="crowe-panel-hint">Configured engines and endpoint origins. A loopback endpoint may relay to a remote engine. Changes apply to the next message.</div>
+            <div className="crowe-panel-hint">
+                Choose an engine for this tab. Your chat and draft stay in place. Nothing sends until you submit.
+            </div>
+            <button
+                type="button"
+                onClick={() => model.openCroweAccount()}
+                className="crowe-account-alternative cursor-pointer"
+            >
+                Open Crowe account
+            </button>
             <div className="crowe-model-list">
                 {entries.map(([key, cfg]) => {
                     const active = key === current;
                     const cloud = cfg["waveai:cloud"];
+                    const accountMode = isCroweAccountMode(key, cfg);
                     const endpoint = endpointDisplay(cfg["ai:endpoint"]);
                     const proxy = cfg["ai:proxyurl"] ? endpointDisplay(cfg["ai:proxyurl"]) : null;
                     return (
@@ -151,7 +165,11 @@ export const ModelPanel = () => {
                             key={key}
                             type="button"
                             className={cn("crowe-model-item cursor-pointer", active && "crowe-model-item-active")}
-                            onClick={() => model.setAIMode(key)}
+                            onClick={() => {
+                                model.setAIMode(key);
+                                DockModel.getInstance().collapse();
+                                setTimeout(() => model.focusInput(), 0);
+                            }}
                             aria-pressed={active}
                         >
                             <div className="crowe-model-row">
@@ -162,10 +180,14 @@ export const ModelPanel = () => {
                                 <div className="crowe-model-desc">{cfg["display:description"]}</div>
                             )}
                             <div className="crowe-model-meta">
-                                <span>{cloud ? "Managed route" : "Configured route"}</span>
+                                <span>
+                                    {accountMode ? "Crowe account sign-in" : cloud ? "Managed route" : "Advanced setup"}
+                                </span>
                                 <span>Engine: {cfg["ai:model"] || "Not specified"}</span>
                                 {cfg["ai:provider"] && <span>Provider: {cfg["ai:provider"]}</span>}
-                                <span>{endpoint.location}: {endpoint.origin}</span>
+                                <span>
+                                    {endpoint.location}: {endpoint.origin}
+                                </span>
                                 {proxy && <span>Proxy origin: {proxy.origin}</span>}
                             </div>
                         </button>
@@ -193,7 +215,9 @@ export const ThinkingPanel = () => {
                 <span>{activityLabel(status, phase, currentTool)}</span>
             </div>
             {hasRun && <div className="crowe-think-timer">Elapsed at last event: {fmtMs(elapsed)}</div>}
-            <div className="crowe-panel-hint">Activity reflects received output and tool events, not internal cognition.</div>
+            <div className="crowe-panel-hint">
+                Activity reflects received output and tool events, not internal cognition.
+            </div>
         </div>
     );
 };
@@ -466,7 +490,9 @@ export const VcsPanel = () => {
                 <div className="crowe-vcs-now-head">
                     <span className="crowe-vcs-now-label">Now</span>
                     <span className="crowe-vcs-now-summary">
-                        {status.clean ? "no uncommitted changes" : `${fileCount} file${fileCount === 1 ? "" : "s"} changed`}
+                        {status.clean
+                            ? "no uncommitted changes"
+                            : `${fileCount} file${fileCount === 1 ? "" : "s"} changed`}
                     </span>
                     {!status.clean && (
                         <button
@@ -489,7 +515,9 @@ export const VcsPanel = () => {
             ) : (
                 history.map((op) => <VcsOpRow key={op.opid} op={op} />)
             )}
-            <div className="crowe-panel-hint">Every restore is itself an operation, so a restore can always be restored.</div>
+            <div className="crowe-panel-hint">
+                Every restore is itself an operation, so a restore can always be restored.
+            </div>
         </div>
     );
 };

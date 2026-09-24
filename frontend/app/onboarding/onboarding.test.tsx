@@ -3,13 +3,25 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const Harness = vi.hoisted(() => ({ state: [] as any[], index: 0, enabled: false, page: vi.fn(), agree: vi.fn() }));
+const Harness = vi.hoisted(() => ({
+    state: [] as any[],
+    index: 0,
+    enabled: false,
+    tosagreed: true,
+    page: vi.fn(),
+    agree: vi.fn(),
+}));
 vi.mock("react", async (load) => ({
-    ...await load<typeof import("react")>(),
+    ...(await load<typeof import("react")>()),
     useState: (initial: any) => {
         const index = Harness.index++;
         if (!(index in Harness.state)) Harness.state[index] = typeof initial === "function" ? initial() : initial;
-        return [Harness.state[index], (value: any) => { Harness.state[index] = value; }];
+        return [
+            Harness.state[index],
+            (value: any) => {
+                Harness.state[index] = value;
+            },
+        ];
     },
     useRef: (initial: any) => {
         const index = Harness.index++;
@@ -17,7 +29,11 @@ vi.mock("react", async (load) => ({
         return Harness.state[index];
     },
 }));
-vi.mock("jotai", () => ({ atom: (value: any) => value, useAtomValue: () => ({ tosagreed: true }), useSetAtom: () => Harness.page }));
+vi.mock("jotai", () => ({
+    atom: (value: any) => value,
+    useAtomValue: () => ({ tosagreed: Harness.tosagreed }),
+    useSetAtom: () => Harness.page,
+}));
 vi.mock("@/app/asset/logo.svg", () => ({ default: "svg" }));
 vi.mock("@/app/element/button", () => ({ Button: "button" }));
 vi.mock("@/app/modals/modal", () => ({ FlexiModal: "div" }));
@@ -43,22 +59,46 @@ function render(update: (value: boolean) => Promise<void>) {
     Harness.index = 0;
     return nodes(InitPage({ isCompact: false, telemetryUpdateFn: update }));
 }
-function continueButton(tree: any[]) { return tree.find((node) => node.type === "button" && node.props.children === "Continue"); }
+function continueButton(tree: any[]) {
+    return tree.find((node) => node.type === "button" && node.props.children === "Continue");
+}
 
 describe("Usage analytics consent", () => {
-    beforeEach(() => { Harness.state = []; Harness.enabled = false; vi.clearAllMocks(); });
+    beforeEach(() => {
+        Harness.state = [];
+        Harness.enabled = false;
+        Harness.tosagreed = true;
+        vi.clearAllMocks();
+    });
 
-    it.each([true, false])("continues to the same page for consent=%s without touching operator visibility", (enabled) => {
-        Harness.enabled = enabled;
+    it("retains first-install terms completion independently of optional analytics", () => {
+        Harness.tosagreed = false;
         const update = vi.fn();
         continueButton(render(update)).props.onClick();
-        expect(Harness.page).toHaveBeenCalledExactlyOnceWith("features");
+        expect(Harness.agree).toHaveBeenCalledOnce();
+        expect(Harness.page).toHaveBeenCalledWith("features");
         expect(update).not.toHaveBeenCalled();
     });
 
+    it.each([true, false])(
+        "continues to the same page for consent=%s without touching operator visibility",
+        (enabled) => {
+            Harness.enabled = enabled;
+            const update = vi.fn();
+            continueButton(render(update)).props.onClick();
+            expect(Harness.page).toHaveBeenCalledExactlyOnceWith("features");
+            expect(update).not.toHaveBeenCalled();
+        }
+    );
+
     it("serializes writes and blocks Continue while pending", async () => {
         let complete: () => void;
-        const update = vi.fn(() => new Promise<void>((resolve) => { complete = resolve; }));
+        const update = vi.fn(
+            () =>
+                new Promise<void>((resolve) => {
+                    complete = resolve;
+                })
+        );
         const initial = render(update);
         const input = initial.find((node) => node.type === "input");
         input.props.onChange({ target: { checked: true } });
@@ -76,13 +116,25 @@ describe("Usage analytics consent", () => {
 
     it("retains confirmed consent and exposes a retryable failure", async () => {
         const update = vi.fn().mockRejectedValue(new Error("synthetic failure"));
-        render(update).find((node) => node.type === "input").props.onChange({ target: { checked: true } });
+        render(update)
+            .find((node) => node.type === "input")
+            .props.onChange({ target: { checked: true } });
         await Promise.resolve();
         const failed = render(update);
         expect(failed.find((node) => node.type === "input").props.checked).toBe(false);
-        expect(failed.find((node) => node.props.id === "crowe-consent-status").props.children).toContain("Could not save");
+        expect(failed.find((node) => node.props.id === "crowe-consent-status").props.children).toContain(
+            "Could not save"
+        );
         expect(continueButton(failed).props.disabled).toBe(true);
         continueButton(failed).props.onClick();
         expect(Harness.page).not.toHaveBeenCalled();
+        update.mockResolvedValueOnce(undefined);
+        failed.find((node) => node.type === "input").props.onChange({ target: { checked: true } });
+        await Promise.resolve();
+        const recovered = render(update);
+        expect(recovered.find((node) => node.type === "input").props.checked).toBe(true);
+        expect(continueButton(recovered).props.disabled).toBe(false);
+        continueButton(recovered).props.onClick();
+        expect(Harness.page).toHaveBeenCalledWith("features");
     });
 });

@@ -335,10 +335,15 @@ export class WebViewModel implements ViewModel {
         this.webviewRef.current?.goForward();
     }
 
-    handleRefresh(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    handleRefresh(e: React.SyntheticEvent, retryUrl?: string) {
         e.preventDefault();
         e.stopPropagation();
         try {
+            if (retryUrl) {
+                // A failed navigation may not be the current entry, and reload can retry the previous page.
+                this.webviewRef.current?.loadURL(retryUrl).catch(() => {});
+                return;
+            }
             if (this.webviewRef.current) {
                 if (globalStore.get(this.isLoading)) {
                     this.webviewRef.current.stop();
@@ -346,8 +351,8 @@ export class WebViewModel implements ViewModel {
                     this.webviewRef.current.reload();
                 }
             }
-        } catch (e) {
-            console.warn("handleRefresh catch", e);
+        } catch {
+            console.warn("Webview refresh failed");
         }
     }
 
@@ -568,10 +573,14 @@ export class WebViewModel implements ViewModel {
         }
     }
 
+    focusAddress() {
+        this.urlInputRef.current?.focus();
+        this.urlInputRef.current?.select();
+    }
+
     keyDownHandler(e: WaveKeyboardEvent): boolean {
         if (checkKeyPressed(e, "Cmd:l")) {
-            this.urlInputRef?.current?.focus();
-            this.urlInputRef?.current?.select();
+            this.focusAddress();
             return true;
         }
         if (checkKeyPressed(e, "Cmd:r")) {
@@ -829,7 +838,92 @@ interface WebViewProps {
 }
 
 function getWebPreviewDisplayUrl(url?: string | null): string {
-    return url?.trim() || "about:blank";
+    if (!url?.trim()) {
+        return "about:blank";
+    }
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+            return parsed.protocol;
+        }
+        parsed.username = "";
+        parsed.password = "";
+        parsed.search = "";
+        parsed.hash = "";
+        return parsed.toString();
+    } catch {
+        return "Invalid address";
+    }
+}
+
+type WebViewLoadFailure = {
+    errorCode: number;
+    errorDescription: string;
+    validatedURL: string;
+    isMainFrame?: boolean;
+};
+
+export function getWebViewLoadError(event: WebViewLoadFailure) {
+    if (event.isMainFrame === false || event.errorCode === -3) {
+        return null;
+    }
+    return {
+        url: event.validatedURL,
+        code: event.errorCode,
+        description: event.errorDescription,
+        isDnsError: event.errorCode === -105 || event.errorDescription === "ERR_NAME_NOT_RESOLVED",
+    };
+}
+
+export function WebViewLoadError({
+    error,
+    model,
+    hideNavigation,
+}: {
+    error: ReturnType<typeof getWebViewLoadError>;
+    model: WebViewModel;
+    hideNavigation: boolean;
+}) {
+    return (
+        <div className="webview-error bg-background text-foreground">
+            <div className="flex w-full max-w-lg flex-col gap-4 p-6">
+                <div role="alert" className="flex flex-col gap-3">
+                    <h2 className="text-lg font-semibold">
+                        {error.isDnsError ? "Site address not found" : "This page couldn’t load"}
+                    </h2>
+                    <p className="break-all font-mono text-sm text-muted">{getWebPreviewDisplayUrl(error.url)}</p>
+                    <p className="text-sm">
+                        {error.isDnsError
+                            ? "The browser couldn’t find this site’s address (DNS). Check the spelling, check your internet connection, or try again."
+                            : `Failed to load this page: ${error.description || `Error ${error.code}`}`}
+                    </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                    <button
+                        type="button"
+                        className="bg-accent/80 text-primary rounded hover:bg-accent transition-colors cursor-pointer px-3 py-2 text-sm"
+                        onClick={(event) => model.handleRefresh(event, error.url)}
+                    >
+                        Retry
+                    </button>
+                    {!hideNavigation && (
+                        <button
+                            type="button"
+                            className="rounded border border-border px-3 py-2 cursor-pointer text-sm hover:bg-panel transition-colors"
+                            onClick={() => model.focusAddress()}
+                        >
+                            Edit address
+                        </button>
+                    )}
+                </div>
+                {hideNavigation && (
+                    <p className="text-sm text-muted">
+                        To edit the address, choose “Un-Hide Navigation” in this block’s settings menu.
+                    </p>
+                )}
+            </div>
+        </div>
+    );
 }
 
 function WebViewPreviewFallback({ url }: { url?: string | null }) {
@@ -932,7 +1026,8 @@ const WebView = memo(({ model, onFailLoad, blockRef, initialSrc }: WebViewProps)
     const [webContentsId, setWebContentsId] = useState(null);
     const domReady = useAtomValue(model.domReady);
 
-    const [errorText, setErrorText] = useState("");
+    const [loadError, setLoadError] = useState<ReturnType<typeof getWebViewLoadError>>(null);
+    const hideNavigation = useAtomValue(model.hideNav);
 
     function setBgColor() {
         const webview = model.webviewRef.current;
@@ -1028,7 +1123,10 @@ const WebView = memo(({ model, onFailLoad, blockRef, initialSrc }: WebViewProps)
             return;
         }
         const navigateListener = (e: any) => {
-            setErrorText("");
+            if (e.isMainFrame === false) {
+                return;
+            }
+            setLoadError(null);
             if (e.isMainFrame) {
                 model.handleNavigate(e.url);
             }
@@ -1048,17 +1146,16 @@ const WebView = memo(({ model, onFailLoad, blockRef, initialSrc }: WebViewProps)
             model.setIsLoading(false);
             setBgColor();
         };
-        const failLoadHandler = (e: any) => {
-            if (e.errorCode === -3) {
-                console.warn("Suppressed ERR_ABORTED error", e);
-            } else {
-                const errorMessage = `Failed to load ${e.validatedURL}: ${e.errorDescription}`;
-                console.error(errorMessage);
-                setErrorText(errorMessage);
-                if (onFailLoad) {
-                    const curUrl = model.webviewRef.current.getURL();
-                    onFailLoad(curUrl);
-                }
+        const failLoadHandler = (e: Event) => {
+            const error = getWebViewLoadError(e as Event & WebViewLoadFailure);
+            if (!error) {
+                return;
+            }
+            console.error("Webview failed to load", error.code);
+            setLoadError(error);
+            if (onFailLoad) {
+                const curUrl = model.webviewRef.current.getURL();
+                onFailLoad(curUrl);
             }
         };
         const webviewFocus = () => {
@@ -1128,11 +1225,7 @@ const WebView = memo(({ model, onFailLoad, blockRef, initialSrc }: WebViewProps)
                     useragent={userAgent}
                 />
             </MockBoundary>
-            {errorText && (
-                <div className="webview-error">
-                    <div>{errorText}</div>
-                </div>
-            )}
+            {loadError && <WebViewLoadError error={loadError} model={model} hideNavigation={hideNavigation} />}
             <Search {...searchProps} />
             <BookmarkTypeahead model={model} blockRef={blockRef} />
         </Fragment>

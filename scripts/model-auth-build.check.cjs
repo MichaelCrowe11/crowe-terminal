@@ -18,8 +18,11 @@ function parse(source) {
 }
 
 function assertNoBuildCredential(source) {
-    assert.doesNotMatch(source, /CroweModelsKey|CROWE_MODELS_KEY|HYPHEUS_MODELS_KEY|HYPHEUS_ALLOW_KEYLESS|check:models-key/i,
-        "model credentials must not enter build configuration");
+    assert.doesNotMatch(
+        source,
+        /CroweModelsKey|CROWE_MODELS_KEY|HYPHEUS_MODELS_KEY|HYPHEUS_ALLOW_KEYLESS|check:models-key/i,
+        "model credentials must not enter build configuration"
+    );
 }
 
 function taskNames(task) {
@@ -60,7 +63,11 @@ test("backend metadata and architecture handling remain intact", () => {
     assert.match(server.cmd.cmd, /CGO_ENABLED=1 GOARCH=\{\{\.GOARCH\}\}/);
     assert.match(server.cmd.cmd, /dist\/bin\/wavesrv\./);
     assert.deepEqual(server.cmd.for, { var: "ARCHS", split: ",", as: "GOARCH" });
-    assert.deepEqual(taskNames(tasks["build:server"]), ["build:server:linux", "build:server:macos", "build:server:windows"]);
+    assert.deepEqual(taskNames(tasks["build:server"]), [
+        "build:server:linux",
+        "build:server:macos",
+        "build:server:windows",
+    ]);
     assert.match(tasks["build:wsh:internal"].cmd, /-X main\.WaveVersion=/);
 });
 
@@ -81,7 +88,10 @@ test("CI preserves platform package paths and release gates", () => {
     assert.equal(jobs["build-app"].needs, "validate-approval");
     const steps = jobs["build-app"].steps;
     assert.equal(stepNamed(steps, "Build (Linux)").run, "task package");
-    assert.match(stepNamed(steps, "Build (Darwin)").with.command, /task package && bash scripts\/notarize-dmg\.sh make/);
+    assert.match(
+        stepNamed(steps, "Build (Darwin)").with.command,
+        /task package && bash scripts\/notarize-dmg\.sh make/
+    );
     assert.equal(stepNamed(steps, "Build (Windows)").run, "task package");
     assert.match(stepNamed(jobs["build-store"].steps, "Build MSIX").run, /task package:store/);
     assert.match(stepNamed(jobs["build-store"].steps, "Windows App Certification Kit").run, /overall -ne "PASS"/);
@@ -103,12 +113,14 @@ test("CI keeps signing and strict final manifest verification before upload", ()
     assert.ok(steps.indexOf(signing) < steps.indexOf(manifests));
     assert.ok(steps.indexOf(manifests) < steps.indexOf(stepNamed(steps, "Upload to S3 staging")));
     assert.ok(steps.indexOf(manifests) < steps.indexOf(upload));
-    assert.equal(stepNamed(jobs["validate-approval"].steps, "Test macOS manifest integrity").run,
-        "node --test scripts/mac-manifests.check.cjs");
+    assert.equal(
+        stepNamed(jobs["validate-approval"].steps, "Test macOS manifest integrity").run,
+        "node --test scripts/mac-manifests.check.cjs"
+    );
 });
 
 test("onboarding requires explicit account connection instead of shared authentication", () => {
-    for (const file of ["onboarding-upgrade-v0157.tsx", "onboarding-upgrade-minor.tsx"]) {
+    for (const file of ["onboarding-upgrade-patch.tsx", "onboarding-features.tsx"]) {
         const source = fs.readFileSync(path.join(Root, "frontend/app/onboarding", file), "utf8").replace(/\s+/g, " ");
         assert.doesNotMatch(source, /no keys|work as installed|no setup/i);
         assert.doesNotMatch(source, /Add New Secret|CROWE_MODELS_KEY/);

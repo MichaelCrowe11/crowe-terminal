@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 const UpgradeOnboardingModal_v0_13_0_Content = () => {
@@ -6,8 +6,8 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Hypheus v0.13 brings the managed CroweLM workspace, a redesigned account flow, and improved
-                    terminal functionality.
+                    Hypheus v0.13 brings the managed CroweLM workspace, a redesigned account flow, and improved terminal
+                    functionality.
                 </p>
             </div>
 
@@ -28,7 +28,7 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
                                 <strong>Workspace Tools</strong> - Terminal, files, browser blocks, and editor tools
                             </li>
                             <li>
-                                <strong>CroweLM Channels</strong> - Code, research, workspace, and grow operations
+                                <strong>CroweLM Channels</strong> - Code, research, and workspace tools
                             </li>
                             <li>
                                 <strong>No Provider Setup</strong> - Hypheus handles routing and model access
@@ -54,7 +54,8 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
                                 and error handling
                             </li>
                             <li>
-                                <strong>Integrated Secrets</strong> - Manage connection credentials from the config widget
+                                <strong>Integrated Secrets</strong> - Manage connection credentials from the config
+                                widget
                             </li>
                         </ul>
                     </div>

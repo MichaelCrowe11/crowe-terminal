@@ -19,6 +19,9 @@ import { makeMockWaveEnv, PreviewClientId, PreviewTabId, PreviewWindowId } from 
 import { installPreviewElectronApi } from "./mock/preview-electron-api";
 import { PreviewContextMenu } from "./preview-contextmenu";
 
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
 import "overlayscrollbars/overlayscrollbars.css";
 // app.tsx is the real entry point and the preview never loads it, so the Crowe
 // primitives and glass optics it pulls in were absent here: every var() they
@@ -27,7 +30,9 @@ import "overlayscrollbars/overlayscrollbars.css";
 // their own labels. The preview then misreports working design as broken.
 // Order matches app.tsx — tokens define the primitives glass and app.scss consume.
 import "../app/crowe-tokens.css";
+
 import "../app/crowe-glass.css";
+
 import "../app/app.scss";
 
 // preview.css should come *after* app.scss (don't remove the newline above otherwise prettier will reorder these imports)

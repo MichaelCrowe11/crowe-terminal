@@ -4,7 +4,7 @@
 import Logo from "@/app/asset/logo.svg";
 import { Button } from "@/app/element/button";
 import { FlexiModal } from "@/app/modals/modal";
-import { CurrentOnboardingVersion, OnboardingGradientBg } from "@/app/onboarding/onboarding-common";
+import { CurrentOnboardingVersion } from "@/app/onboarding/onboarding-common";
 import { ClientModel } from "@/app/store/client-model";
 import { globalStore } from "@/app/store/global";
 import { disableGlobalKeybindings, enableGlobalKeybindings, globalRefocus } from "@/app/store/keymodel";
@@ -22,11 +22,29 @@ import { UpgradeOnboardingModal_v0_13_0_Content } from "./onboarding-upgrade-v01
 import { UpgradeOnboardingModal_v0_13_1_Content } from "./onboarding-upgrade-v0131";
 import { UpgradeOnboardingModal_v0_14_0_Content } from "./onboarding-upgrade-v0140";
 import { UpgradeOnboardingModal_v0_14_1_Content } from "./onboarding-upgrade-v0141";
+import { UpgradeOnboardingModal_v0_14_11_Content } from "./onboarding-upgrade-v01411";
 import { UpgradeOnboardingModal_v0_14_2_Content } from "./onboarding-upgrade-v0142";
 import { UpgradeOnboardingModal_v0_14_4_Content } from "./onboarding-upgrade-v0144";
 import { UpgradeOnboardingModal_v0_14_5_Content } from "./onboarding-upgrade-v0145";
-import { UpgradeOnboardingModal_v0_14_11_Content } from "./onboarding-upgrade-v01411";
 import { UpgradeOnboardingModal_v0_15_7_Content } from "./onboarding-upgrade-v0157";
+
+const UpgradeOnboardingModal_v0_15_8_Content = () => (
+    <div className="flex flex-col gap-4 text-sm text-secondary leading-relaxed">
+        <p>Connect Crowe ID from your workspace. Account mode does not require an API key.</p>
+        <ul className="list-disc space-y-3 pl-5">
+            <li>
+                Choose Connect account in the operator panel. Sign in to Crowe ID in your browser and enter the
+                displayed code.
+            </li>
+            <li>Connecting does not read files or run commands.</li>
+            <li>Use the compact launcher to open files, the editor, and terminal tools.</li>
+            <li>
+                Open your workspace without a feature tour. Account connection and tool authority remain separate
+                choices.
+            </li>
+        </ul>
+    </div>
+);
 
 interface VersionConfig {
     version: string;
@@ -66,7 +84,7 @@ export function UpgradeOnboardingFooter({
                         <div className="text-sm text-secondary">
                             <button
                                 onClick={onPrev}
-                                className="cursor-pointer hover:text-foreground transition-colors"
+                                className="cursor-pointer hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                             >
                                 &lt; {prevText}
                             </button>
@@ -83,7 +101,7 @@ export function UpgradeOnboardingFooter({
                         <div className="text-sm text-secondary">
                             <button
                                 onClick={onNext}
-                                className="cursor-pointer hover:text-foreground transition-colors"
+                                className="cursor-pointer hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                             >
                                 {nextText} &gt;
                             </button>
@@ -165,6 +183,12 @@ export const UpgradeOnboardingVersions: VersionConfig[] = [
         version: "v0.15.7",
         content: () => <UpgradeOnboardingModal_v0_15_7_Content />,
         prevText: "Prev (v0.14.11)",
+        nextText: "Next (v0.15.8)",
+    },
+    {
+        version: "v0.15.8",
+        content: () => <UpgradeOnboardingModal_v0_15_8_Content />,
+        prevText: "Prev (v0.15.7)",
     },
 ];
 
@@ -231,7 +255,7 @@ const UpgradeOnboardingPatch = ({ isReleaseNotes = false }: UpgradeOnboardingPat
         doClose();
     };
 
-    const paddingClass = isCompact ? "!py-3 !px-[30px]" : "!p-[30px]";
+    const paddingClass = isCompact ? "!py-3 !px-4" : "!p-6";
 
     const handlePrev = () => {
         if (hasPrev) {
@@ -246,12 +270,14 @@ const UpgradeOnboardingPatch = ({ isReleaseNotes = false }: UpgradeOnboardingPat
     };
 
     return (
-        <FlexiModal className={`w-[650px] rounded-[10px] ${paddingClass} relative overflow-hidden`} ref={modalRef}>
-            <OnboardingGradientBg />
+        <FlexiModal
+            className={`crowe-onboarding w-[560px] max-w-[calc(100vw-32px)] rounded-[8px] ${paddingClass} relative overflow-hidden`}
+            ref={modalRef}
+        >
             <div className="flex flex-col w-full h-full relative z-10">
                 <div className="flex flex-col h-full">
                     <header className="flex flex-col gap-2 border-b-0 p-0 mt-1 mb-6 w-full unselectable flex-shrink-0">
-                        <div className="flex justify-center">
+                        <div className="flex justify-center [&_svg]:h-12 [&_svg]:w-12">
                             <Logo />
                         </div>
                         <div className="text-center text-[25px] font-normal text-foreground">
