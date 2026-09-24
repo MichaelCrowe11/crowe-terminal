@@ -13,7 +13,6 @@ const (
 	PrefixTerminal = "terminal."
 	PrefixWeb      = "web."
 	PrefixSystem   = "system."
-	PrefixFarm     = "farm."
 	PrefixWidget   = "widget."
 
 	ToolEditorRead               = "editor.read_file"

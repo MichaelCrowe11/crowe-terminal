@@ -54,7 +54,6 @@ const ToolLabels: Record<string, string> = {
 };
 
 const ToolFamilies: Record<string, string> = {
-    farm: "Farm",
     vcs: "Repository",
     editor: "Editor",
     browser: "Browser",

@@ -74,13 +74,13 @@ To build the app itself, `task package` (the `package` task in `Taskfile.yml`) b
 Each item names where it lives.
 
 - The Wave Terminal base: split panes, terminal blocks, an in-window browser block, SSH, a file viewer, themes. Upstream code under `pkg/`, `frontend/`, `emain/`, `cmd/wsh`. Not our work; see Credit.
-- A side panel with CroweLM modes defined in `pkg/wconfig/defaultconfig/waveai.json`: Deep Work, Grow Ops (model `crowelm-grower`), Cultivation Research, and a `crowelm-flash` entry, shown by `frontend/app/aipanel/crowechannelpanel.tsx`. Their endpoint is `https://models.crowelogic.com/v1/chat/completions`, checked by `pkg/wconfig/waveai_defaults_test.go`.
+- A side panel with CroweLM modes defined in `pkg/wconfig/defaultconfig/waveai.json`: Deep Work, Code, Workspace, and a local foundry entry, shown by `frontend/app/aipanel/crowechannelpanel.tsx`. Their endpoint is `https://models.crowelogic.com/v1/chat/completions`, checked by `pkg/wconfig/waveai_defaults_test.go`.
 - A local mode that talks to `http://127.0.0.1:8011/v1/chat/completions` (`pkg/aiusechat/usechat-mode.go`). `emain/emain-foundry-bridge.ts` looks for a `crowe-logic-foundry` checkout at `CROWE_FOUNDRY_PATH`, `~/Projects/crowe-logic-foundry`, or `~/crowe-logic-foundry` and starts `cli/openai_bridge.py` from it; it passes `CROWE_PORTFOLIO_URL` and `CROWE_PORTFOLIO_TOKEN` through if set. That repo is private and separate.
 - Tools the model can call, all present as string names in `pkg/` and `cmd/`: `system.metrics`, `system.run_applescript`, `system.tell_app`; `terminal.exec_safe`, `terminal.propose_command`, `terminal.list_blocks`, `terminal.read_scrollback`; `widget.capture_screenshot`, `widget.focus`, `widget.open_in_crowecode`; `vcs.checkpoint`, `vcs.undo`, `vcs.init`, `vcs.status`, `vcs.diff`, `vcs.history` (backed by Jujutsu through `pkg/jj`, needs `jj` on the machine); twelve `browser.in_window.*` tools (`navigate`, `read`, `click`, `type`, `screenshot`, `eval`, `wait_for`, `scroll`, `hover`, `get_attr`, `select_option`, `list_links`); `allowlist.check`, `allowlist.list`, `allowlist.add`.
 - Opt-in MCP tool families switched on by `CROWE_AGENT_PLAYWRIGHT`, `CROWE_AGENT_FS` with `CROWE_AGENT_FS_ROOTS`, `CROWE_AGENT_FETCH`, and `CROWE_AGENT_GITHUB`. On 2026-09-20, Playwright MCP startup and tool registration passed with an explicit isolated command; the other families were not exercised.
 - `cmd/crowe-mcp`, a standalone MCP server over the same tool registry. It built and started in the historical 2026-09-10 check (output above); it was not retested on 2026-09-20.
 - A dock panel that reads `http://127.0.0.1:8011/crowe/telemetry/stream` (`frontend/app/dock/telemetry-model.ts`).
-- Also under `cmd/`: `crowe-farm` and `crowe-farm-sensorpush`, with `install:*` tasks in `Taskfile.yml`. Not built or run today.
+- Cultivation tooling (the `farm.*` tools, `crowe-farm`, the SensorPush poller, and the Grow Ops and Cultivation Research modes) moved to the Crowe Logic mycology software and is no longer part of Hypheus.
 - The guide for the panel and its tools: `docs/agent/USER_GUIDE.md`.
 
 ## Roadmap

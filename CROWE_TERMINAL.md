@@ -2,7 +2,8 @@
 
 A fork of [Wave Terminal](https://www.waveterm.dev/) (Apache 2.0)
 rebranded as the third surface in the Crowe Logic platform alongside
-Crowe Code (IDE fork) and the Crowe Logic AI cultivation OS.
+Crowe Code (IDE fork). Cultivation features live in the separate
+Crowe Logic mycology software.
 
 ## Why Wave, not iTerm2 or Warp
 
@@ -47,8 +48,7 @@ Phase 2 (next iteration, ~1 day of focused work):
 ### Defaults
 - [ ] Default terminal profile invokes the Foundry CLI (`cl-agent` or
       `crowe-logic`). Currently zsh.
-- [ ] Default browser pane bookmarks include `crowecode.com` and
-      `ai.southwestmushrooms.com`.
+- [ ] Default browser pane bookmarks include `crowecode.com`.
 - [ ] AI provider config: route Wave's chat pane to the Crowe Logic
       LM gateway instead of Wave's default provider.
 
@@ -112,7 +112,6 @@ Crowe Terminal modifications copyright (c) 2026 Crowe Logic, Inc.
 +-------------------- Surfaces ---------------------+
 |  Crowe Code (IDE)        Crowe Terminal           |
 |  Crowe Research (CLI)    Crowe Studio (content)   |
-|  Crowe Logic AI (cultivation OS)                  |
 +---------------------------------------------------+
                      |
 +--------------- Shared spine ----------------------+

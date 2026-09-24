@@ -69,7 +69,7 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
         id: "crowelm",
         eyebrow: "Operator",
         name: "CroweLM panel",
-        tagline: "Work through code, research, files, terminal context, and grow ops channels.",
+        tagline: "Work through code, research, files, and terminal context.",
         status: "managed",
         blockdef: { meta: { view: "waveai" } },
     },
@@ -307,7 +307,7 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                     <img src={croweWordmarkUrl} className="h-auto w-full max-w-[260px]" alt="Hypheus" />
                     <img src={croweMarkUrl} className="h-auto w-full max-w-[54px]" alt="" />
                     <div className="crowe-launcher-greeting">{getGreeting()}, operator</div>
-                    <div className="crowe-launcher-subhead">Terminal, code, research, and grow ops on one managed workspace.</div>
+                    <div className="crowe-launcher-subhead">Terminal, code, and research on one managed workspace.</div>
                 </div>
             )}
 
