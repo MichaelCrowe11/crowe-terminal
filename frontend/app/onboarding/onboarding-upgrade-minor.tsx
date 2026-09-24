@@ -52,19 +52,18 @@ const UpgradeMinorWelcomePage = ({ onMaybeLater }: UpgradeMinorWelcomePageProps)
                                 analyzes widgets, reads and writes files, and helps you solve problems&nbsp;faster.
                             </p>
                             <p className="mb-4">
-                                <span className="font-semibold text-foreground">New in 0.15:</span> the CroweLM modes
-                                run on Crowe Logic's model edge. Workspace, Code, and Deep Work support tools without a local model server. Before sending a request, open
-                                Settings, then Secrets, choose Add New Secret, and save your own model-edge credential
-                                as <span className="font-mono">CROWE_MODELS_KEY</span>.
+                                <span className="font-semibold text-foreground">Connect your Crowe account:</span> open
+                                the account control in the Hypheus panel and choose Connect account. Sign in to Crowe ID
+                                in your browser, enter the displayed code, then return to Hypheus. Account mode needs no
+                                API key or local model server. Connecting does not read files or run commands.
                             </p>
                             <p className="mb-4">
                                 <span className="font-semibold text-foreground">Since 0.14:</span> durable SSH sessions
-                                survive network drops, laptop sleep, and restarts, with no tmux or screen. Your own
-                                keys and local models still work through the engine presets.
+                                survive network drops, laptop sleep, and restarts, with no tmux or screen. Your own keys
+                                and local models still work through the engine presets.
                             </p>
                         </div>
                     </div>
-
                 </div>
             </OverlayScrollbarsComponent>
             <footer className="unselectable flex-shrink-0 mt-4">
@@ -146,9 +145,7 @@ const UpgradeOnboardingMinor = () => {
 
     let pageComp: React.JSX.Element = null;
     if (pageName === "welcome") {
-        pageComp = (
-            <UpgradeMinorWelcomePage onMaybeLater={handleMaybeLater} />
-        );
+        pageComp = <UpgradeMinorWelcomePage onMaybeLater={handleMaybeLater} />;
     } else if (pageName === "features") {
         pageComp = <OnboardingFeatures onComplete={handleFeaturesComplete} />;
     }

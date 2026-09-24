@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package wshutil
@@ -60,6 +60,7 @@ const LinkKind_Router = "router"
 type linkMeta struct {
 	linkId        baseds.LinkId
 	trusted       bool
+	localFrontend bool
 	linkKind      string
 	sourceRouteId string
 	client        AbstractRpcClient
@@ -502,14 +503,20 @@ func (router *WshRouter) processBacklog() {
 }
 
 func (router *WshRouter) RegisterUntrustedLink(client AbstractRpcClient) baseds.LinkId {
+	return router.registerLink(client, false, "", false)
+}
+
+func (router *WshRouter) registerLink(client AbstractRpcClient, trusted bool, linkKind string, localFrontend bool) baseds.LinkId {
 	router.lock.Lock()
 	defer router.lock.Unlock()
 	router.nextLinkId++
 	linkId := router.nextLinkId
 	lm := &linkMeta{
-		linkId:  linkId,
-		trusted: false,
-		client:  client,
+		linkId:        linkId,
+		trusted:       trusted,
+		localFrontend: localFrontend,
+		linkKind:      linkKind,
+		client:        client,
 	}
 	log.Printf("wshrouter register link %s", lm.Name())
 	router.linkMap[linkId] = lm
@@ -645,9 +652,39 @@ func (router *WshRouter) RegisterTrustedLeaf(rpc AbstractRpcClient, routeId stri
 
 // only for routers
 func (router *WshRouter) RegisterTrustedRouter(rpc AbstractRpcClient) baseds.LinkId {
-	linkId := router.RegisterUntrustedLink(rpc)
-	router.trustLink(linkId, LinkKind_Router)
-	return linkId
+	return router.registerLink(rpc, true, LinkKind_Router, false)
+}
+
+// Only the local WebSocket handler may grant this provenance, after authenticating the connection.
+func (router *WshRouter) RegisterLocalFrontendRouter(rpc AbstractRpcClient) baseds.LinkId {
+	return router.registerLink(rpc, true, LinkKind_Router, true)
+}
+
+func (router *WshRouter) RequireLocalFrontend(ctx context.Context) error {
+	denied := errors.New("this command requires a local frontend connection")
+	if router == nil || ctx == nil {
+		return denied
+	}
+	handler := GetRpcResponseHandlerFromContext(ctx)
+	if handler == nil {
+		return denied
+	}
+	source := handler.GetSource()
+	isTab := strings.HasPrefix(source, RoutePrefix_Tab) && len(source) > len(RoutePrefix_Tab)
+	isBuilder := strings.HasPrefix(source, RoutePrefix_Builder) && len(source) > len(RoutePrefix_Builder)
+	if !isTab && !isBuilder {
+		return denied
+	}
+	// Link IDs are router-local; the receiving RPC must belong to this router too.
+	serverLink := router.getLinkForRoute(DefaultRoute)
+	if serverLink == nil || serverLink.client != GetWshRpcFromContext(ctx) {
+		return denied
+	}
+	lm := router.getLinkMeta(handler.GetIngressLinkId())
+	if lm == nil || !lm.trusted || lm.linkKind != LinkKind_Router || !lm.localFrontend {
+		return denied
+	}
+	return nil
 }
 
 func (router *WshRouter) RegisterUpstream(rpc AbstractRpcClient) baseds.LinkId {

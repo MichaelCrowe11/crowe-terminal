@@ -1,9 +1,25 @@
 {
+    "waveai@crowe-account": {
+        "display:name": "Crowe account",
+        "display:order": -10,
+        "display:icon": "crowe-mark",
+        "display:description": "Connect your Crowe account. Uses the default model included in your plan, with tools. No API key required. Each model request, including tool follow-ups, counts toward your plan limit.",
+        "ai:provider": "openai",
+        "ai:apitype": "crowe-gateway",
+        "ai:endpoint": "https://api.crowelogic.com/api/gateway/chat",
+        "ai:model": "crowelm-account-default",
+        "ai:capabilities": [
+            "tools"
+        ],
+        "ai:switchcompat": [
+            "openai"
+        ]
+    },
     "waveai@crowelm-supreme": {
         "display:name": "CroweLM Deep Work",
         "display:order": -3,
         "display:icon": "crowe-mark",
-        "display:description": "Long-context research, source analysis, and hard reasoning.\nCrowe Logic's deep-work model at high effort, with tools.",
+        "display:description": "Advanced API-key setup for long-context research and reasoning, with tools. Requires a separate model API key; account sign-in does not configure this mode.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
@@ -20,7 +36,7 @@
         "display:name": "CroweLM Code",
         "display:order": -2,
         "display:icon": "bolt",
-        "display:description": "Implementation, refactors, tests, reviews, and terminal-side decisions.\nCode-tuned model with tools.",
+        "display:description": "Advanced API-key setup for implementation, refactors, tests, and reviews, with tools. Requires a separate model API key; account sign-in does not configure this mode.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",
@@ -37,7 +53,7 @@
         "display:name": "CroweLM Workspace",
         "display:order": -1,
         "display:icon": "lightbulb",
-        "display:description": "Default channel. Crowe Logic's flagship general model with tools, 1M context, reads images.",
+        "display:description": "Advanced API-key setup for general workspace tasks, with tools. Requires a separate model API key; choose Crowe account for account-based access.",
         "ai:provider": "openai",
         "ai:apitype": "openai-chat",
         "ai:endpoint": "https://models.crowelogic.com/v1/chat/completions",

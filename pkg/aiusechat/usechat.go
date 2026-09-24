@@ -7,6 +7,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,6 +22,8 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/aiutil"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/chatstore"
 	"github.com/wavetermdev/waveterm/pkg/aiusechat/uctypes"
+	"github.com/wavetermdev/waveterm/pkg/authkey"
+	"github.com/wavetermdev/waveterm/pkg/croweauth"
 	"github.com/wavetermdev/waveterm/pkg/secretstore"
 	"github.com/wavetermdev/waveterm/pkg/telemetry"
 	"github.com/wavetermdev/waveterm/pkg/telemetry/telemetrydata"
@@ -86,7 +89,12 @@ func getWaveAISettings(premium bool, builderMode bool, rtInfo waveobj.ObjRTInfo,
 	if config.WaveAICloud && !telemetry.IsTelemetryEnabled() {
 		return nil, fmt.Errorf("Crowe Logic cloud modes require telemetry to be enabled")
 	}
-	apiToken, err := resolveAPIToken(config.APIToken, config.APITokenSecretName, wavebase.CroweModelsSecretName, secretstore.GetSecret, wavebase.CroweModelsKeyFor)
+	var apiToken string
+	if config.APIType == uctypes.APIType_CroweGateway {
+		err = validateAccountConfig(*config)
+	} else {
+		apiToken, err = resolveAPIToken(config.APIToken, config.APITokenSecretName, wavebase.CroweModelsSecretName, secretstore.GetSecret, wavebase.CroweModelsKeyFor)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -746,6 +754,25 @@ func WaveAIPostMessageHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Crowe Logic configuration error: %v", err), http.StatusInternalServerError)
 		return
+	}
+
+	if aiOpts.APIType == uctypes.APIType_CroweGateway {
+		if !authkey.IsLocalFrontendRequest(r) {
+			http.Error(w, "Crowe account requests require the local Hypheus interface", http.StatusForbidden)
+			return
+		}
+		ctx, cancel := croweauth.Default().SessionContext(r.Context())
+		defer cancel()
+		r = r.WithContext(ctx)
+		aiOpts.APIToken, err = croweauth.Default().Token(ctx)
+		if err != nil {
+			status := http.StatusServiceUnavailable
+			if errors.Is(err, croweauth.ErrSignInRequired) {
+				status = http.StatusUnauthorized
+			}
+			http.Error(w, err.Error(), status)
+			return
+		}
 	}
 
 	// Call the core WaveAIPostMessage function

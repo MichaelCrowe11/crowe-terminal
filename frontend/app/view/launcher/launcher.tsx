@@ -1,6 +1,7 @@
 // Copyright 2026, Crowe Logic Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { WaveAIModel } from "@/app/aipanel/waveai-model";
 import croweMarkUrl from "@/app/asset/hypheus-mark.png?url";
 import croweWordmarkUrl from "@/app/asset/hypheus-wordmark.svg?url";
 import type { BlockNodeModel } from "@/app/block/blocktypes";
@@ -35,11 +36,12 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
     {
         id: "account",
         eyebrow: "Account",
-        name: "Sign in",
-        tagline: "Use the managed Crowe Logic workspace. No API keys or model setup.",
+        name: "Connect account",
+        tagline: "Connect Crowe ID in your browser. Account mode needs no API key.",
         status: "secure",
         // Crowe ID account console (Keycloak realm "crowe"); crowelogic.com/account does not exist.
-        blockdef: { meta: { view: "web", url: "https://id.crowelogic.com/realms/crowe/account" } },
+        // Use panel setup because the account console alone cannot authenticate model requests.
+        blockdef: { meta: { view: "waveai" } },
     },
     {
         id: "code",
@@ -78,10 +80,10 @@ const WORKSPACE_ACTIONS: WorkspaceAction[] = [
 type Stat = { value: string; label: string };
 
 const STATS: Stat[] = [
-    { value: "signed", label: "Account workspace" },
+    { value: "Crowe ID", label: "Account connection" },
     { value: "managed", label: "CroweLM routing" },
     { value: "local", label: "Terminal tools" },
-    { value: "no keys", label: "Provider setup" },
+    { value: "no API key", label: "Account mode setup" },
 ];
 
 function getGreeting(): string {
@@ -330,8 +332,14 @@ function LauncherView({ blockId, model }: ViewComponentProps<LauncherViewModel>)
                     <button
                         key={p.id}
                         type="button"
-                        onClick={() => model.handleProductSelect(p.blockdef)}
-                        className="crowe-launcher-card glass-raised group cursor-pointer text-left"
+                        onClick={() => {
+                            if (p.id === "account") {
+                                WaveAIModel.getInstance().openCroweAccount();
+                                return;
+                            }
+                            void model.handleProductSelect(p.blockdef);
+                        }}
+                        className="crowe-launcher-card glass-raised group cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >
                         <div className="flex w-full items-center justify-between">
                             <span className="crowe-launcher-card-eyebrow">{p.eyebrow}</span>

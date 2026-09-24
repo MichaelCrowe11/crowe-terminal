@@ -9,6 +9,7 @@ import { useWaveEnv } from "@/app/waveenv/waveenv";
 import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo, useMemo } from "react";
+import { CroweAccountButton } from "./croweaccount";
 import { WaveAIModel } from "./waveai-model";
 
 export const AIPanelHeader = memo(() => {
@@ -102,17 +103,7 @@ export const AIPanelHeader = memo(() => {
                         {widgetAccess ? "Tools on" : "Chat only"}
                     </button>
                 )}
-                {!inBuilder && (
-                    <button
-                        type="button"
-                        onClick={() => model.openCroweAccount()}
-                        title="Sign in to your Crowe Logic account"
-                        aria-label="Sign in"
-                        className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-dim)] transition-colors hover:bg-[var(--wash-accent-faint)] hover:text-[var(--accent)] cursor-pointer"
-                    >
-                        <i className="fa fa-regular fa-circle-user text-[13px]"></i>
-                    </button>
-                )}
+                {!inBuilder && <CroweAccountButton onClick={() => model.openCroweAccount()} />}
                 <button
                     type="button"
                     onClick={handleKebabClick}

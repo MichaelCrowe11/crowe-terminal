@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { ClientService } from "@/app/store/services";
@@ -6,7 +6,9 @@ import { RpcApi } from "@/app/store/wshclientapi";
 import { randomUUID } from "crypto";
 import { BrowserWindow, webContents } from "electron";
 import { globalEvents } from "emain/emain-events";
+import { pathToFileURL } from "node:url";
 import path from "path";
+import { registerTrustedRenderer } from "./authkey";
 import { getElectronAppBasePath, isDevVite, unamePlatform } from "./emain-platform";
 import { calculateWindowBounds, MinWindowHeight, MinWindowWidth } from "./emain-window";
 import { ElectronWshClient } from "./emain-wsh";
@@ -70,6 +72,12 @@ export async function createBuilderWindow(appId: string): Promise<BuilderWindowT
         },
     });
 
+    registerTrustedRenderer(
+        builderWindow.webContents,
+        isDevVite
+            ? `${process.env.ELECTRON_RENDERER_URL}/index.html`
+            : pathToFileURL(path.join(getElectronAppBasePath(), "frontend", "index.html")).href
+    );
     if (isDevVite) {
         await builderWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}/index.html`);
     } else {

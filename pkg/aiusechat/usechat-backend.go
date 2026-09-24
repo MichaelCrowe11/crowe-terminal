@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package aiusechat
@@ -68,6 +68,8 @@ func GetBackendByAPIType(apiType string) (UseChatBackend, error) {
 		return &openaiResponsesBackend{}, nil
 	case uctypes.APIType_OpenAIChat:
 		return &openaiCompletionsBackend{}, nil
+	case uctypes.APIType_CroweGateway:
+		return &croweAccountBackend{}, nil
 	case uctypes.APIType_AnthropicMessages:
 		return &anthropicBackend{}, nil
 	case uctypes.APIType_GoogleGemini:

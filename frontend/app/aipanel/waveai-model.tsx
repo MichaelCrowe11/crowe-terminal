@@ -31,6 +31,14 @@ import {
     validateFileSizeFromInfo,
 } from "./ai-utils";
 import type { AIPanelInputRef } from "./aipanelinput";
+import {
+    CroweAccountMode,
+    CroweAccountModel,
+    CroweSignInRequired,
+    isCroweAccountMode,
+    isCroweLegacyKeyError,
+    isCroweSignInRequired,
+} from "./croweaccount-model";
 
 export type ToolApprovalDecision = "user-approved" | "user-denied";
 
@@ -48,6 +56,13 @@ export interface DroppedFile {
     size: number;
     previewUrl?: string;
 }
+
+type AccountSubmission = {
+    chatid: string;
+    messageid: string;
+    input: string;
+    files: DroppedFile[];
+};
 
 const BuilderAIModeConfigs: Record<string, AIModeConfigType> = {
     "waveaibuilder@default": {
@@ -82,6 +97,8 @@ export class WaveAIModel {
     inBuilder: boolean = false;
     isAIStreaming = jotai.atom(false);
     toolApprovalRequests: jotai.PrimitiveAtom<Record<string, ToolApprovalRequest>> = jotai.atom({});
+    accountSubmissions = new Map<string, AccountSubmission>();
+    unsentAccountDrafts: jotai.PrimitiveAtom<AccountSubmission[]> = jotai.atom([]);
 
     widgetAccessAtom!: jotai.Atom<boolean>;
     droppedFiles: jotai.PrimitiveAtom<DroppedFile[]> = jotai.atom([]);
@@ -91,6 +108,9 @@ export class WaveAIModel {
     hasPremiumAtom!: jotai.Atom<boolean>;
     defaultModeAtom!: jotai.Atom<string>;
     errorMessage: jotai.PrimitiveAtom<string> = jotai.atom(null) as jotai.PrimitiveAtom<string>;
+    accountErrorAtom: jotai.PrimitiveAtom<"signin" | "legacykey"> = jotai.atom(null) as jotai.PrimitiveAtom<
+        "signin" | "legacykey"
+    >;
     containerWidth: jotai.PrimitiveAtom<number> = jotai.atom(0);
     codeBlockMaxWidth!: jotai.Atom<number>;
     inputAtom: jotai.PrimitiveAtom<string> = jotai.atom("");
@@ -161,7 +181,8 @@ export class WaveAIModel {
             // waveai@balanced / waveai@quick names referenced wavecloud
             // configs that never shipped in this fork — would resolve to
             // "unknown mode" and 400 the chat call.
-            const croweFallback = "waveai@crowelm-auto";
+            // Account-based access now replaces the API-key fallback; disconnecting never changes modes.
+            const croweFallback = CroweAccountMode;
             let mode = get(getSettingsKeyAtom("waveai:defaultmode")) ?? croweFallback;
             // If a saved mode points at a phantom waveai@balanced/quick/deep
             // (e.g. left behind from a previous Wave install), force it back
@@ -319,11 +340,25 @@ export class WaveAIModel {
     }
 
     setError(message: string) {
-        globalStore.set(this.errorMessage, message);
+        const accountError = isCroweSignInRequired(message)
+            ? "signin"
+            : isCroweLegacyKeyError(message)
+              ? "legacykey"
+              : null;
+        globalStore.set(this.accountErrorAtom, accountError);
+        globalStore.set(
+            this.errorMessage,
+            accountError === "signin"
+                ? CroweSignInRequired
+                : accountError === "legacykey"
+                  ? "This advanced engine needs an API key. You can use your Crowe account instead."
+                  : message
+        );
     }
 
     clearError() {
         globalStore.set(this.errorMessage, null);
+        globalStore.set(this.accountErrorAtom, null);
     }
 
     registerInputRef(ref: React.RefObject<AIPanelInputRef>) {
@@ -535,6 +570,21 @@ export class WaveAIModel {
             return;
         }
 
+        const currentMode = globalStore.get(this.currentAIMode);
+        const modeConfig = globalStore.get(this.aiModeConfigs)?.[currentMode];
+        if (isCroweAccountMode(currentMode, modeConfig)) {
+            const account = CroweAccountModel.getInstance();
+            if (
+                !globalStore.get(account.checkedAtom) ||
+                globalStore.get(account.statusAtom).state !== "connected" ||
+                globalStore.get(account.operationAtom) != null
+            ) {
+                this.setError(CroweSignInRequired);
+                this.openCroweAccount();
+                return;
+            }
+        }
+
         this.clearError();
 
         const aiMessageParts: AIMessagePart[] = [];
@@ -577,11 +627,86 @@ export class WaveAIModel {
 
         // console.log("SUBMIT MESSAGE", realMessage);
 
+        if (isCroweAccountMode(currentMode, modeConfig)) {
+            this.accountSubmissions.set(realMessage.messageid, {
+                chatid: globalStore.get(this.chatId),
+                messageid: realMessage.messageid,
+                input,
+                files: droppedFiles,
+            });
+            globalStore.set(this.isChatEmptyAtom, false);
+            globalStore.set(this.inputAtom, "");
+            // The submission owns previews until persistence is known or draft recovery takes ownership.
+            globalStore.set(this.droppedFiles, []);
+            try {
+                await this.useChatSendMessage?.({ id: realMessage.messageid, parts: uiMessageParts });
+            } finally {
+                this.finishAccountSubmission(realMessage.messageid);
+            }
+            return;
+        }
+
         this.useChatSendMessage?.({ parts: uiMessageParts });
 
         globalStore.set(this.isChatEmptyAtom, false);
         globalStore.set(this.inputAtom, "");
         this.clearFiles();
+    }
+
+    async fetchChat(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+        let submission: AccountSubmission;
+        try {
+            const body = typeof init?.body === "string" ? JSON.parse(init.body) : null;
+            submission = this.accountSubmissions.get(body?.msg?.messageid);
+        } catch {}
+        const response = await fetch(input, init);
+        if (
+            submission &&
+            response.status === 401 &&
+            (await response.clone().text()).trim() === CroweSignInRequired &&
+            this.accountSubmissions.get(submission.messageid) === submission
+        ) {
+            this.accountSubmissions.delete(submission.messageid);
+            globalStore.set(this.unsentAccountDrafts, (drafts) => [...drafts, submission]);
+            if (globalStore.get(this.chatId) === submission.chatid) {
+                this.useChatSetMessages?.((messages) =>
+                    messages.filter((message) => message.role !== "user" || message.id !== submission.messageid)
+                );
+            }
+        }
+        return response;
+    }
+
+    finishAccountSubmission(messageid: string) {
+        const submission = this.accountSubmissions.get(messageid);
+        if (!submission) return;
+        this.accountSubmissions.delete(messageid);
+        submission.files.forEach((file) => {
+            if (file.previewUrl) URL.revokeObjectURL(file.previewUrl);
+        });
+    }
+
+    restoreAccountDraft(messageid: string): boolean {
+        const draft = globalStore.get(this.unsentAccountDrafts).find((item) => item.messageid === messageid);
+        if (!draft || globalStore.get(this.inputAtom) || globalStore.get(this.droppedFiles).length > 0) return false;
+        if (globalStore.get(this.chatId) === draft.chatid) {
+            this.useChatSetMessages?.((messages) =>
+                messages.filter((message) => message.role !== "user" || message.id !== messageid)
+            );
+        }
+        globalStore.set(this.inputAtom, draft.input);
+        globalStore.set(this.droppedFiles, draft.files);
+        globalStore.set(this.unsentAccountDrafts, (drafts) => drafts.filter((item) => item.messageid !== messageid));
+        return true;
+    }
+
+    discardAccountDraft(messageid: string) {
+        const draft = globalStore.get(this.unsentAccountDrafts).find((item) => item.messageid === messageid);
+        if (!draft) return;
+        draft.files.forEach((file) => {
+            if (file.previewUrl) URL.revokeObjectURL(file.previewUrl);
+        });
+        globalStore.set(this.unsentAccountDrafts, (drafts) => drafts.filter((item) => item.messageid !== messageid));
     }
 
     async uiLoadInitialChat() {
@@ -689,14 +814,17 @@ export class WaveAIModel {
         await createBlock(blockDef, false, true);
     }
 
-    async openCroweAccount() {
-        const blockDef: BlockDef = {
-            meta: {
-                view: "web",
-                url: "https://id.crowelogic.com/realms/crowe/account",
-            },
-        };
-        await createBlock(blockDef, false, true);
+    openCroweAccount() {
+        if (!this.inBuilder) {
+            WorkspaceLayoutModel.getInstance().setAIPanelVisible(true);
+        }
+        CroweAccountModel.getInstance().showSetup();
+    }
+
+    useCroweAccount() {
+        this.setAIMode(CroweAccountMode);
+        this.clearError();
+        this.openCroweAccount();
     }
 
     openRestoreBackupModal(toolcallid: string) {

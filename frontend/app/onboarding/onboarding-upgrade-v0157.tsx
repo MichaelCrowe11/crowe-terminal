@@ -17,13 +17,13 @@ const UpgradeOnboardingModal_v0_15_7_Content = () => {
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
                     <div className="text-foreground text-base font-semibold leading-[18px]">
-                        Connect CroweLM with your own credential
+                        Connect your Crowe account
                     </div>
                     <div className="text-secondary leading-5">
-                        Workspace, Code, and Deep Work run on Crowe Logic's model edge
-                        with tools. No local model server or Python is required for these modes. In Settings, open
-                        Secrets, choose Add New Secret, and save your own model-edge credential as{" "}
-                        <span className="font-mono">CROWE_MODELS_KEY</span> before sending a request.
+                        Open the account control in the Hypheus panel and choose Connect account. Sign in to Crowe ID in
+                        your browser and enter the displayed code. Return to Hypheus to use account mode, with no API
+                        key or local model server. Connecting does not read files or run commands. Local engines and
+                        advanced API-key modes remain available.
                     </div>
                 </div>
             </div>

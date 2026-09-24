@@ -31,6 +31,7 @@ require (
 	github.com/ubuntu/gowsl v0.0.0-20240906163211-049fd49bd93b
 	github.com/wavetermdev/htmltoken v0.2.0
 	github.com/wavetermdev/waveterm/tsunami v0.12.3
+	github.com/zalando/go-keyring v0.2.8
 	golang.org/x/crypto v0.55.0
 	golang.org/x/mod v0.38.0
 	golang.org/x/sync v0.22.0
@@ -49,10 +50,12 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.14 // indirect
 	github.com/googleapis/gax-go/v2 v2.21.0 // indirect

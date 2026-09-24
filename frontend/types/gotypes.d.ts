@@ -1026,6 +1026,15 @@ declare global {
         count: number;
     };
 
+    // wshrpc.CroweAuthStatus
+    type CroweAuthStatus = {
+        state: string;
+        usercode?: string;
+        verificationurl?: string;
+        expiresat?: number;
+        message?: string;
+    };
+
     // wps.CroweCodeFileChangeData
     type CroweCodeFileChangeData = {
         path: string;

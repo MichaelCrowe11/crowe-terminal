@@ -28,6 +28,8 @@ import { AIPanelInput } from "./aipanelinput";
 import { AIPanelMessages } from "./aipanelmessages";
 import { AIRateLimitStrip } from "./airatelimitstrip";
 import { WaveUIMessage } from "./aitypes";
+import { CroweAccountDraftRecovery, CroweAccountSetup } from "./croweaccount";
+import { CroweAccountModel, isCroweAccountMode } from "./croweaccount-model";
 import { CroweChannelPanel } from "./crowechannelpanel";
 import { WaveAIModel } from "./waveai-model";
 
@@ -144,6 +146,7 @@ AIBuilderWelcomeMessage.displayName = "AIBuilderWelcomeMessage";
 const AIErrorMessage = memo(() => {
     const model = WaveAIModel.getInstance();
     const errorMessage = jotai.useAtomValue(model.errorMessage);
+    const accountError = jotai.useAtomValue(model.accountErrorAtom);
 
     if (!errorMessage) {
         return null;
@@ -161,10 +164,18 @@ const AIErrorMessage = memo(() => {
             <div className="text-sm pr-6 max-h-[100px] overflow-y-auto">
                 {errorMessage}
                 <button
-                    onClick={() => model.clearChat()}
-                    className="ml-2 text-xs text-[var(--crowe-error)] hover:brightness-110 cursor-pointer underline"
+                    onClick={() => {
+                        if (accountError === "legacykey") {
+                            model.useCroweAccount();
+                        } else if (accountError === "signin") {
+                            model.openCroweAccount();
+                        } else {
+                            model.clearChat();
+                        }
+                    }}
+                    className="ml-2 text-[12px] text-[var(--crowe-error)] hover:brightness-110 cursor-pointer underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
-                    New Chat
+                    {accountError === "legacykey" ? "Use Crowe account" : accountError ? "Connect account" : "New Chat"}
                 </button>
             </div>
         </div>
@@ -205,10 +216,23 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
     const tabModel = useTabModelMaybe();
     const [tabBorderColor, tabActiveBorderColor] = useTabBackground(waveEnv, tabModel?.tabId);
     const allowAccess = true;
+    const accountModel = CroweAccountModel.getInstance();
+    const accountStatus = jotai.useAtomValue(accountModel.statusAtom);
+    const currentMode = jotai.useAtomValue(model.currentAIMode);
+    const modeConfigs = jotai.useAtomValue(model.aiModeConfigs);
+    const accountMode = isCroweAccountMode(currentMode, modeConfigs?.[currentMode]);
+
+    useEffect(() => accountModel.mount(), [accountModel]);
+    useEffect(() => {
+        if (accountStatus.state === "connected" && globalStore.get(model.accountErrorAtom) === "signin") {
+            model.clearError();
+        }
+    }, [accountStatus.state, model]);
 
     const { messages, sendMessage, status, setMessages, error, stop } = useChat<WaveUIMessage>({
         transport: new DefaultChatTransport({
             api: model.getUseChatEndpointUrl(),
+            fetch: (input, init) => model.fetchChat(input, init),
             prepareSendMessagesRequest: (_opts) => {
                 const msg = model.getAndClearMessage();
                 const body: any = {
@@ -227,7 +251,6 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
             },
         }),
         onError: (error) => {
-            console.error("AI Chat error:", error);
             model.setError(error.message || "An error occurred");
         },
     });
@@ -554,6 +577,10 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
             <AIRateLimitStrip />
 
             <div key="main-content" className="flex-1 flex flex-col min-h-0">
+                <CroweAccountSetup
+                    accountMode={accountMode}
+                    onUseAccount={model.inBuilder ? null : () => model.useCroweAccount()}
+                />
                 {messages.length === 0 && initialLoadDone ? (
                     <div
                         className="crowe-scroll-thin relative flex-1 overflow-y-auto p-2"
@@ -569,6 +596,7 @@ const AIPanelComponentInner = memo(({ roundTopLeft }: AIPanelComponentInnerProps
                     />
                 )}
                 <AIErrorMessage />
+                <CroweAccountDraftRecovery model={model} />
                 <AIDroppedFiles model={model} />
                 <AIPanelInput onSubmit={handleSubmit} status={status} model={model} />
             </div>

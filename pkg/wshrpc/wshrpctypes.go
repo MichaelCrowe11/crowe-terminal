@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 // types and methods for wsh rpc calls
@@ -28,6 +28,14 @@ type MultiArg struct {
 	Args []any `json:"args"`
 }
 
+type CroweAuthStatus struct {
+	State           string `json:"state"`
+	UserCode        string `json:"usercode,omitempty"`
+	VerificationURL string `json:"verificationurl,omitempty"`
+	ExpiresAt       int64  `json:"expiresat,omitempty"`
+	Message         string `json:"message,omitempty"`
+}
+
 // Instructions for adding a new RPC call
 // * methods must end with Command
 // * methods must take context as their first parameter
@@ -46,6 +54,11 @@ type WshRpcInterface interface {
 	ControlGetRouteIdCommand(ctx context.Context) (string, error) // (special) gets the route for the link that we're on
 	SetPeerInfoCommand(ctx context.Context, peerInfo string) error
 	GetJwtPublicKeyCommand(ctx context.Context) (string, error) // (special) gets the public JWT signing key
+
+	CroweAuthStatusCommand(ctx context.Context) (*CroweAuthStatus, error)
+	CroweAuthStartCommand(ctx context.Context) (*CroweAuthStatus, error)
+	CroweAuthCancelCommand(ctx context.Context) (*CroweAuthStatus, error)
+	CroweAuthDisconnectCommand(ctx context.Context) (*CroweAuthStatus, error)
 
 	MessageCommand(ctx context.Context, data CommandMessageData) error
 	GetMetaCommand(ctx context.Context, data CommandGetMetaData) (waveobj.MetaMapType, error)
