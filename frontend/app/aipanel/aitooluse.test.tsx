@@ -299,7 +299,7 @@ describe("step summaries", () => {
 
     it("falls back to the generic label when there is no phrase or no target", () => {
         expect(summarizeStep("read_text_file", "", "completed")).toBe("Read a file");
-        expect(summarizeStep("farm.read_sensors", "", "completed")).toBe("Farm: Read sensors");
+        expect(summarizeStep("browser.open_tab", "", "completed")).toBe("Browser: Open tab");
         expect(summarizeStep("vcs_diff", "", "error")).toBe("Read the diff (failed)");
     });
 
