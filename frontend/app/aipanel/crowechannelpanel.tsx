@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { createBlock } from "@/app/store/global";
-import { cn, fireAndForget } from "@/util/util";
+import { fireAndForget } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo } from "react";
 import { WaveAIModel } from "./waveai-model";
@@ -22,21 +22,21 @@ type CroweChannel = {
 const CHANNELS: CroweChannel[] = [
     {
         id: "workspace",
-        name: "Workspace",
-        scope: "Terminal, files, browser, diffs",
+        name: "Look around this workspace",
+        scope: "Reads your terminal and files, then tells you what matters",
         prompt: "Inspect this workspace and tell me what matters right now.",
     },
     {
         id: "code",
-        name: "Code",
-        scope: "Implement, refactor, test, review",
+        name: "Plan a code change",
+        scope: "Opens the code editor and proposes the next useful change",
         prompt: "Review the current project, identify the next useful code change, and make a concrete plan.",
         blockdef: { meta: { view: "crowecode" } },
     },
     {
         id: "research",
-        name: "Research",
-        scope: "Docs, source analysis, citations",
+        name: "Research this project",
+        scope: "Summarizes decisions with links to the sources",
         prompt: "Research this project context and summarize the decision points with source references.",
     },
 ];
@@ -55,17 +55,8 @@ export const CroweChannelPanel = memo(() => {
 
     return (
         <section className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em]">
-                <span className="text-[var(--crowe-parchment-45)]">Start a lane</span>
-                <span className="flex items-center gap-1.5 text-[var(--crowe-parchment-40)]">
-                    <span
-                        className={cn(
-                            "h-1 w-1 rounded-full",
-                            widgetAccess ? "bg-[var(--accent)]" : "bg-[var(--text-dim)]"
-                        )}
-                    />
-                    {widgetAccess ? "tools live" : "text only"}
-                </span>
+            <div className="text-[12px] text-[var(--text-dim)]">
+                {widgetAccess ? "Try one of these" : "Try one of these (turn tools on so Hypheus can see your work)"}
             </div>
 
             <div className="grid grid-cols-1 gap-1.5">
@@ -77,10 +68,10 @@ export const CroweChannelPanel = memo(() => {
                         className="group flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--hairline-faint)] bg-[var(--surface-sunken)] px-3 py-2.5 text-left transition-all duration-200 [box-shadow:inset_0_1px_0_var(--hair-top)] hover:-translate-y-px hover:border-[var(--crowe-gold-40)] hover:bg-[var(--wash-accent-faint)] hover:shadow-[var(--glass-fruiting-glow)] cursor-pointer"
                     >
                         <div className="min-w-0">
-                            <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--accent)]">
+                            <div className="text-[13px] text-[var(--text)] group-hover:text-[var(--accent)]">
                                 {channel.name}
                             </div>
-                            <div className="mt-1 truncate text-[12px] leading-relaxed text-[var(--text-dim)]">
+                            <div className="mt-0.5 text-[12px] leading-snug text-[var(--text-dim)]">
                                 {channel.scope}
                             </div>
                         </div>

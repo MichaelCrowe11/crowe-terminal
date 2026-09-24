@@ -3,7 +3,9 @@
 
 import { handleWaveAIContextMenu } from "@/app/aipanel/aipanel-contextmenu";
 import { waveAIHasSelection } from "@/app/aipanel/waveai-focus-utils";
+import croweMark from "@/app/asset/hypheus-mark.png";
 import { useTabBackground } from "@/app/block/blockutil";
+import { TelemetryModel } from "@/app/dock/telemetry-model";
 import { ErrorBoundary } from "@/app/element/errorboundary";
 import { atoms, getSettingsKeyAtom } from "@/app/store/global";
 import { globalStore } from "@/app/store/jotaiStore";
@@ -13,7 +15,6 @@ import { useWaveEnv } from "@/app/waveenv/waveenv";
 import { checkKeyPressed, keydownWrapper } from "@/util/keyutil";
 import { isMacOS, isWindows } from "@/util/platformutil";
 import { cn } from "@/util/util";
-import { TelemetryModel } from "@/app/dock/telemetry-model";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import * as jotai from "jotai";
@@ -21,6 +22,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import { formatFileSizeError, isAcceptableFile, validateFileSize } from "./ai-utils";
 import { AIDroppedFiles } from "./aidroppedfiles";
+import "./aipanel.scss";
 import { AIPanelHeader } from "./aipanelheader";
 import { AIPanelInput } from "./aipanelinput";
 import { AIPanelMessages } from "./aipanelmessages";
@@ -28,8 +30,6 @@ import { AIRateLimitStrip } from "./airatelimitstrip";
 import { WaveUIMessage } from "./aitypes";
 import { CroweChannelPanel } from "./crowechannelpanel";
 import { WaveAIModel } from "./waveai-model";
-import croweMark from "@/app/asset/hypheus-mark.png";
-import "./aipanel.scss";
 
 const AIBlockMask = memo(() => {
     return (
@@ -93,35 +93,21 @@ const AIWelcomeMessage = memo(() => {
                     >
                         Hypheus
                     </div>
-                    <div className="mt-2 font-mono text-[10px] uppercase tracking-[0.24em] text-[var(--crowe-gold-65)]">
-                        Crowe Logic operator
-                    </div>
+                    <div className="mt-2 text-[12px] text-[var(--crowe-gold-65)]">by Crowe Logic</div>
                 </div>
                 <p className="text-[13px] leading-relaxed text-[var(--text-dim)]">
-                    One operator for terminal, code, and research. It reads your workspace, uses your
-                    tools, and moves the work forward.
+                    {widgetAccess
+                        ? "Ask about your terminal, code, or files. Hypheus can read what you're working on and suggest commands and edits. It asks before changing files or typing in the terminal."
+                        : "Tools are off, so Hypheus can only chat. Turn on Tools at the top to let it read your terminal and files."}
                 </p>
-                <div className="flex items-center gap-2 font-mono text-[11px]">
-                    <span
-                        className={cn(
-                            "h-1.5 w-1.5 rounded-full",
-                            widgetAccess
-                                ? "bg-[var(--accent)] shadow-[0_0_6px_var(--glow-gold)]"
-                                : "bg-[var(--text-dim)]"
-                        )}
-                    />
-                    <span className={widgetAccess ? "text-[var(--text)]" : "text-[var(--text-dim)]"}>
-                        ready · {widgetAccess ? "tools on" : "sandboxed"}
-                    </span>
-                </div>
             </div>
 
             <CroweChannelPanel />
 
-            <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--crowe-parchment-40)]">
-                <span>{modKey} K new</span>
-                <span>{modKey} ⇧ A toggle</span>
-                <span>{focusKeys} focus</span>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[var(--text-dim)]">
+                <span>{modKey}K new chat</span>
+                <span>{modKey}⇧A show or hide</span>
+                <span>{focusKeys} jump here</span>
             </div>
         </div>
     );
@@ -146,7 +132,8 @@ const AIBuilderWelcomeMessage = memo(() => {
                 </div>
             </div>
             <p className="text-[13px] leading-relaxed text-[var(--text-dim)]">
-                Build custom widgets that integrate directly into Hypheus. Describe the widget you want and Hypheus will scaffold it.
+                Build custom widgets that integrate directly into Hypheus. Describe the widget you want and Hypheus will
+                scaffold it.
             </p>
         </div>
     );

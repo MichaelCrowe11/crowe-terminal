@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { handleWaveAIContextMenu } from "@/app/aipanel/aipanel-contextmenu";
-import { cn } from "@/util/util";
+import croweMark from "@/app/asset/hypheus-mark.png";
+import croweWordmarkUrl from "@/app/asset/hypheus-wordmark.svg?url";
 import { CroweCodeWorkspaceModel } from "@/app/view/crowecode/crowecode-workspace-model";
 import { useWaveEnv } from "@/app/waveenv/waveenv";
+import { cn } from "@/util/util";
 import { useAtomValue } from "jotai";
 import { memo, useMemo } from "react";
 import { WaveAIModel } from "./waveai-model";
-import croweMark from "@/app/asset/hypheus-mark.png";
-import croweWordmarkUrl from "@/app/asset/hypheus-wordmark.svg?url";
 
 export const AIPanelHeader = memo(() => {
     const model = WaveAIModel.getInstance();
@@ -65,7 +65,7 @@ export const AIPanelHeader = memo(() => {
                 />
                 {activeLabel && (
                     <span
-                        className="ml-1 min-w-0 truncate font-mono text-[10px] text-[var(--crowe-gold-65)] group-hover:text-[var(--accent)]"
+                        className="ml-1 min-w-0 truncate font-mono text-[11px] text-[var(--crowe-gold-65)] group-hover:text-[var(--accent)]"
                         title={activeEditor?.filePath ?? undefined}
                     >
                         {activeLabel}
@@ -85,7 +85,7 @@ export const AIPanelHeader = memo(() => {
                         }
                         aria-pressed={widgetAccess}
                         className={cn(
-                            "flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors cursor-pointer",
+                            "flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2 py-1 text-[12px] transition-colors cursor-pointer",
                             widgetAccess
                                 ? "border-[var(--crowe-gold-40)] bg-[var(--wash-accent)] text-[var(--accent)] hover:bg-[var(--wash-accent-mid)]"
                                 : "border-[var(--hairline)] bg-transparent text-[var(--text-dim)] hover:border-[var(--hairline-strong)] hover:text-[var(--text)]"
@@ -94,10 +94,12 @@ export const AIPanelHeader = memo(() => {
                         <span
                             className={cn(
                                 "inline-block h-1.5 w-1.5 rounded-full",
-                                widgetAccess ? "bg-[var(--accent)] shadow-[0_0_6px_var(--glow-gold)]" : "bg-[var(--text-dim)]"
+                                widgetAccess
+                                    ? "bg-[var(--accent)] shadow-[0_0_6px_var(--glow-gold)]"
+                                    : "bg-[var(--text-dim)]"
                             )}
                         />
-                        tools
+                        {widgetAccess ? "Tools on" : "Chat only"}
                     </button>
                 )}
                 {!inBuilder && (
