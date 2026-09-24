@@ -12,6 +12,8 @@ import {
     DOCK_PERSIST_DEBOUNCE_MS,
     DockModel,
     migratePersisted,
+    resolveDockWidths,
+    keyboardResizeWidth,
     TOOL_DEFAULT_WIDTH,
     TOOL_MAX_WIDTH,
     TOOL_MIN_WIDTH,
@@ -76,6 +78,41 @@ describe("migratePersisted", () => {
         expect(migratePersisted({}).toolWidth).toBe(TOOL_DEFAULT_WIDTH);
         expect(migratePersisted({ columnWidth: "wide" }).columnWidth).toBe(DOCK_DEFAULT_WIDTH);
         expect(migratePersisted(undefined).collapsed).toBe(true);
+    });
+});
+
+describe("Workspace width resolution", () => {
+    it("reserves blocks at 800px even with oversized saved panes", () => {
+        const sizes = resolveDockWidths(800, 760, 480, true, true);
+        expect(sizes.tool).toBe(232);
+        expect(sizes.column).toBe(280);
+        expect(sizes.tool + sizes.column + 4 + 44 + 240).toBe(800);
+    });
+
+    it("clamps chat-only and tool-only restored widths", () => {
+        expect(resolveDockWidths(800, 760, 480, true, false).column).toBe(516);
+        expect(resolveDockWidths(600, 760, 480, false, true).tool).toBe(316);
+    });
+
+    it("uses a compact tool view without altering the requested open state", () => {
+        const sizes = resolveDockWidths(700, 460, 280, true, true);
+        expect(sizes.compact).toBe(true);
+        expect(sizes.showChat).toBe(false);
+        expect(sizes.showTool).toBe(true);
+        expect(resolveDockWidths(1200, 460, 280, true, true).showChat).toBe(true);
+    });
+
+    it("bounds even a pane whose minimum cannot fit", () => {
+        expect(resolveDockWidths(400, 460, 280, true, false).column).toBe(116);
+    });
+
+    it("handles keyboard steps, bounds and reset with the same effective maximum", () => {
+        expect(keyboardResizeWidth("ArrowRight", false, 300, 280, 400, 460)).toBe(316);
+        expect(keyboardResizeWidth("ArrowLeft", true, 300, 280, 400, 460)).toBe(280);
+        expect(keyboardResizeWidth("Home", false, 350, 280, 400, 460)).toBe(280);
+        expect(keyboardResizeWidth("End", false, 350, 280, 400, 460)).toBe(400);
+        expect(keyboardResizeWidth("Enter", false, 350, 280, 400, 460)).toBe(400);
+        expect(keyboardResizeWidth("Tab", false, 350, 280, 400, 460)).toBeNull();
     });
 });
 

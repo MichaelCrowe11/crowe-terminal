@@ -86,22 +86,9 @@ func getWaveAISettings(premium bool, builderMode bool, rtInfo waveobj.ObjRTInfo,
 	if config.WaveAICloud && !telemetry.IsTelemetryEnabled() {
 		return nil, fmt.Errorf("Crowe Logic cloud modes require telemetry to be enabled")
 	}
-	apiToken := config.APIToken
-	if apiToken == "" && config.APITokenSecretName != "" {
-		secret, exists, err := secretstore.GetSecret(config.APITokenSecretName)
-		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve secret %s: %w", config.APITokenSecretName, err)
-		}
-		secret = strings.TrimSpace(secret)
-		if exists && secret != "" {
-			apiToken = secret
-		} else if builtin := wavebase.CroweModelsKeyFor(config.APITokenSecretName); builtin != "" {
-			apiToken = builtin
-		} else if config.APITokenSecretName == wavebase.CroweModelsSecretName {
-			return nil, fmt.Errorf("this build has no Crowe Logic model key. Add a %s secret in Settings > AI, or get a key at https://api.crowelogic.com/", config.APITokenSecretName)
-		} else {
-			return nil, fmt.Errorf("secret %s not found or empty", config.APITokenSecretName)
-		}
+	apiToken, err := resolveAPIToken(config.APIToken, config.APITokenSecretName, wavebase.CroweModelsSecretName, secretstore.GetSecret, wavebase.CroweModelsKeyFor)
+	if err != nil {
+		return nil, err
 	}
 
 	var baseUrl string

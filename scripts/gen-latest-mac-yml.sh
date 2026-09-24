@@ -13,15 +13,36 @@
 # x64 zip and both dmgs three times each.
 #
 # Usage: scripts/gen-latest-mac-yml.sh <dir> <version> [release-date-iso]
+# Optional fourth argument: latest-mac.yml, alpha-mac.yml, or beta-mac.yml.
 
 set -euo pipefail
 
-DIR="${1:?usage: gen-latest-mac-yml.sh <dir> <version> [release-date-iso]}"
-VERSION="${2:?version required}"
-RELEASE_DATE="${3:-$(date -u +%Y-%m-%dT%H:%M:%S.000Z)}"
+fail() { printf '[gen-yml] %s\n' "$*" >&2; exit 1; }
+
+[[ $# -ge 2 && $# -le 4 ]] || fail 'usage: gen-latest-mac-yml.sh <dir> <version> [release-date-iso] [manifest-basename]'
+DIR="$1"
+VERSION="$2"
+BASENAME="${4-latest-mac.yml}"
+VERSION_PATTERN='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+DATE_PATTERN='^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$'
+[[ "$VERSION" =~ $VERSION_PATTERN ]] || fail 'invalid version'
+case "$BASENAME" in
+    latest-mac.yml|alpha-mac.yml|beta-mac.yml) ;;
+    *) fail 'unsupported manifest basename' ;;
+esac
+if [[ $# -ge 3 ]]; then
+    RELEASE_DATE="$3"
+else
+    RELEASE_DATE="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" || fail 'cannot determine release date'
+fi
+[[ "$RELEASE_DATE" =~ $DATE_PATTERN ]] || fail 'invalid release date; expected UTC ISO timestamp'
+while [[ "$DIR" != / && "$DIR" == */ ]]; do DIR="${DIR%/}"; done
+[[ -d "$DIR" && ! -L "$DIR" ]] || fail 'artifact directory must be a nonsymlink directory'
+if [[ "$DIR" != /* ]]; then DIR="$PWD/$DIR"; fi
+DIR="$(cd -- "$DIR" && pwd -P)" || fail 'cannot resolve artifact directory'
 
 sha512b64() { openssl dgst -sha512 -binary "$1" | openssl base64 -A; }
-sizeof() { stat -f%z "$1"; }
+sizeof() { wc -c < "$1"; }
 
 # The zip is the auto-update artifact; electron-updater downloads it, not the
 # dmg. arm64 leads because it is the overwhelming majority of installs.
@@ -31,7 +52,11 @@ for name in \
     "Hypheus-darwin-x64-${VERSION}.zip" \
     "Hypheus-darwin-arm64-${VERSION}.dmg" \
     "Hypheus-darwin-x64-${VERSION}.dmg"; do
-    [[ -f "$DIR/$name" ]] && ordered+=("$name")
+    [[ ! -L "$DIR/$name" ]] || fail "symlink artifact: $name"
+    if [[ -e "$DIR/$name" ]]; then
+        [[ -f "$DIR/$name" ]] || fail "nonregular artifact: $name"
+        ordered+=("$name")
+    fi
 done
 
 if [[ ${#ordered[@]} -eq 0 ]]; then
@@ -45,19 +70,43 @@ if [[ ! -f "$DIR/$PRIMARY" ]]; then
     exit 1
 fi
 
-OUT="$DIR/latest-mac.yml"
-{
-    printf 'version: %s\n' "$VERSION"
-    printf 'files:\n'
+OUT="$DIR/$BASENAME"
+[[ ! -L "$OUT" ]] || fail 'manifest output must not be a symlink'
+[[ ! -e "$OUT" || -f "$OUT" ]] || fail 'manifest output must be a regular file'
+TMP=""
+cleanup() { if [[ -n "$TMP" ]]; then rm -f -- "$TMP"; fi; }
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+TMP="$(mktemp "$DIR/.${BASENAME}.XXXXXX")" || fail 'cannot create manifest temporary file'
+
+write_manifest() {
+    local name hash size primary_hash=""
+    printf "version: '%s'\n" "$VERSION" || return 1
+    printf 'files:\n' || return 1
     for name in "${ordered[@]}"; do
-        printf '  - url: %s\n' "$name"
-        printf '    sha512: %s\n' "$(sha512b64 "$DIR/$name")"
-        printf '    size: %s\n' "$(sizeof "$DIR/$name")"
+        hash="$(sha512b64 "$DIR/$name")" || return 1
+        [[ "$hash" =~ ^[A-Za-z0-9+/]{86}==$ ]] || return 1
+        size="$(sizeof "$DIR/$name")" || return 1
+        size="${size//[[:space:]]/}"
+        [[ "$size" =~ ^[0-9]+$ && "$size" != 0 ]] || return 1
+        if [[ "$name" == "$PRIMARY" ]]; then primary_hash="$hash"; fi
+        printf "  - url: '%s'\n" "$name" || return 1
+        printf '    sha512: %s\n' "$hash" || return 1
+        printf '    size: %s\n' "$size" || return 1
     done
-    printf 'path: %s\n' "$PRIMARY"
-    printf 'sha512: %s\n' "$(sha512b64 "$DIR/$PRIMARY")"
-    printf "releaseDate: '%s'\n" "$RELEASE_DATE"
-} >"$OUT"
+    printf "path: '%s'\n" "$PRIMARY" || return 1
+    printf 'sha512: %s\n' "$primary_hash" || return 1
+    printf "releaseDate: '%s'\n" "$RELEASE_DATE" || return 1
+}
+
+# A failure inside a function used as a condition bypasses Bash's errexit.
+# Keep every hash, size, and write checked before replacing the previous feed.
+write_manifest > "$TMP" || fail 'manifest generation failed; previous output preserved'
+chmod 644 "$TMP" || fail 'cannot set manifest permissions'
+mv -f -- "$TMP" "$OUT" || fail 'cannot replace manifest'
+TMP=""
 
 echo "[gen-yml] wrote $OUT"
 cat "$OUT"

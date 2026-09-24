@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { globalStore } from "@/app/store/jotaiStore";
+import { getEnv } from "@/util/getenv";
 import * as jotai from "jotai";
 
 export type TelemetryStatus = "idle" | "running" | "done" | "error";
@@ -49,6 +50,9 @@ export class TelemetryModel {
     }
 
     connect() {
+        if (getEnv("CROWE_FOUNDRY_DISABLED") === "1") {
+            return;
+        }
         if (this.source != null || typeof EventSource === "undefined") {
             return;
         }
@@ -99,7 +103,7 @@ export class TelemetryModel {
         this.reasoningChars = 0;
         this.sawLiveToken = false;
         globalStore.set(this.statusAtom, "running");
-        globalStore.set(this.phaseAtom, "reasoning");
+        globalStore.set(this.phaseAtom, "idle");
         globalStore.set(this.ttftMsAtom, 0);
         globalStore.set(this.tokensPerSecAtom, 0);
         globalStore.set(this.tokensAtom, 0);
@@ -124,6 +128,7 @@ export class TelemetryModel {
             return;
         }
         this.reasoningChars += chars;
+        globalStore.set(this.currentToolAtom, "");
         globalStore.set(this.phaseAtom, "reasoning");
         globalStore.set(this.reasoningTokensAtom, Math.round(this.reasoningChars / CharsPerToken));
         globalStore.set(this.elapsedMsAtom, Math.round(performance.now() - this.startTs));
@@ -137,6 +142,7 @@ export class TelemetryModel {
         const now = performance.now();
         this.markFirstToken(now);
         this.answerChars += chars;
+        globalStore.set(this.currentToolAtom, "");
         globalStore.set(this.phaseAtom, "responding");
         this.commitRate(now, this.answerChars);
     }
@@ -158,6 +164,7 @@ export class TelemetryModel {
         }
         const now = performance.now();
         if (totalChars > 0) {
+            globalStore.set(this.currentToolAtom, "");
             this.markFirstToken(now);
             globalStore.set(this.phaseAtom, "responding");
         }

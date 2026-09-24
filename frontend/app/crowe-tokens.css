@@ -371,3 +371,158 @@
   --glow-gold: var(--crowe-gold-40);
   --canvas-dot: rgb(from var(--crowe-gold-dim) r g b / 0.22);
 }
+
+/* Scoped instrument chrome leaves terminal ANSI, syntax and user themes intact. */
+.crowe-dock-root,
+.crowe-onboarding {
+  --surface: #121212;
+  --surface-raised: #191919;
+  --text: #f4f0e7;
+  --text-dim: #b6b0a5;
+  --accent: #b99a5b;
+  --accent-bright: #d0b471;
+  --accent-text: #d0b471;
+  --accent-ink: #121212;
+  --hairline: #2b2a28;
+  --hairline-faint: var(--hairline);
+  --hairline-strong: var(--hairline);
+  --wash-accent-faint: rgb(185 154 91 / 0.04);
+  --wash-accent: rgb(185 154 91 / 0.08);
+  --wash-accent-mid: rgb(185 154 91 / 0.12);
+  --wash-accent-strong: rgb(185 154 91 / 0.18);
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 8px;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+[data-theme="light"] .crowe-dock-root,
+[data-theme="light"] .crowe-onboarding {
+  --surface: #f4f0e7;
+  --surface-raised: #fbf9f4;
+  --text: #121212;
+  --text-dim: #615c53;
+  --accent-text: #121212;
+  --hairline: #ded8cd;
+}
+
+.crowe-dock-root .crowe-instrument-surface,
+.crowe-onboarding {
+  background: var(--surface);
+  backdrop-filter: none;
+  box-shadow: none;
+  border-color: var(--hairline);
+}
+
+.crowe-dock-root .crowe-dock-column {
+  max-width: none;
+  transition: none;
+}
+
+.crowe-dock-root .crowe-dock-head {
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.crowe-dock-root .crowe-model-item {
+  border-radius: 4px;
+  color: var(--text);
+  background: var(--surface-raised);
+  box-shadow: none;
+}
+
+.crowe-dock-root .crowe-model-item-active {
+  border-color: var(--accent);
+}
+
+.crowe-dock-root .crowe-dock-rail .crowe-dock-btn-active {
+  color: var(--accent-text);
+  background: var(--surface-raised);
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+.crowe-dock-root .crowe-dock-rail .crowe-dock-btn-active .crowe-dock-glyph,
+.crowe-dock-root .crowe-dock-brand img {
+  animation: none;
+  filter: none;
+}
+
+.crowe-dock-root .crowe-dock-pane .crowe-chat-model {
+  border-radius: 4px;
+  background: var(--surface-raised);
+}
+
+.crowe-dock-root .crowe-chat-model-dot {
+  box-shadow: none;
+}
+
+.crowe-dock-root .crowe-dock-pane .crowe-dock-head {
+  padding: 8px 12px;
+}
+
+.crowe-dock-root .crowe-dock-pane .crowe-dock-title {
+  font-family: var(--font-sans);
+}
+
+.crowe-dock-root [role="separator"]:focus-visible {
+  outline-offset: -2px;
+}
+
+.crowe-dock-root .crowe-model-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  overflow-wrap: anywhere;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.crowe-dock-root .crowe-panel-hint,
+.crowe-dock-root .crowe-model-desc,
+.crowe-dock-root .crowe-metric-lbl,
+.crowe-dock-root .crowe-status-src {
+  color: var(--text-dim);
+}
+
+.crowe-dock-root .crowe-status-line {
+  flex-wrap: wrap;
+}
+
+.crowe-dock-root .crowe-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.crowe-dock-root .crowe-status-dot {
+  animation: none;
+  box-shadow: none;
+}
+
+.crowe-dock-root .crowe-status-running .crowe-status-dot {
+  background: var(--text-dim);
+}
+
+.crowe-dock-root :is(button, input, select, textarea, [role="separator"]):focus-visible,
+.crowe-onboarding :is(button, a, input):focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+.crowe-onboarding .crowe-welcome-title {
+  font-family: var(--font-serif);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crowe-dock-root *,
+  .crowe-onboarding * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

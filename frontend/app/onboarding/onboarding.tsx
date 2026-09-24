@@ -4,7 +4,6 @@
 import Logo from "@/app/asset/logo.svg";
 import { Button } from "@/app/element/button";
 import { FlexiModal } from "@/app/modals/modal";
-import { OnboardingGradientBg } from "@/app/onboarding/onboarding-common";
 import { OnboardingFeatures } from "@/app/onboarding/onboarding-features";
 import { ClientModel } from "@/app/store/client-model";
 import { useSettingsKeyAtom } from "@/app/store/global";
@@ -13,7 +12,6 @@ import { modalsModel } from "@/app/store/modalmodel";
 import * as WOS from "@/app/store/wos";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
-import { WorkspaceLayoutModel } from "@/app/workspace/workspace-layout-model";
 import * as services from "@/store/services";
 import { fireAndForget } from "@/util/util";
 import { atom, PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -40,6 +38,9 @@ const InitPage = ({
     const clientData = useAtomValue(ClientModel.getInstance().clientAtom);
     const [telemetryEnabled, setTelemetryEnabled] = useState<boolean>(!!telemetrySetting);
     const setPageName = useSetAtom(pageNameAtom);
+    const [consentPending, setConsentPending] = useState(false);
+    const [consentError, setConsentError] = useState("");
+    const consentInFlight = useRef(false);
 
     const handleStarClick = async () => {
         RpcApi.RecordTEventCommand(
@@ -58,21 +59,27 @@ const InitPage = ({
     };
 
     const acceptTos = () => {
+        if (consentInFlight.current || consentError) return;
         if (!clientData?.tosagreed) {
             fireAndForget(() => services.ClientService.AgreeTos());
         }
-        if (telemetryEnabled) {
-            WorkspaceLayoutModel.getInstance().setAIPanelVisible(true);
-        }
-        setPageName(telemetryEnabled ? "features" : "notelemetrystar");
+        setPageName("features");
     };
 
-    const setTelemetry = (value: boolean) => {
-        fireAndForget(() =>
-            telemetryUpdateFn(value).then(() => {
-                setTelemetryEnabled(value);
-            })
-        );
+    const setTelemetry = async (value: boolean) => {
+        if (consentInFlight.current) return;
+        consentInFlight.current = true;
+        setConsentPending(true);
+        setConsentError("");
+        try {
+            await telemetryUpdateFn(value);
+            setTelemetryEnabled(value);
+        } catch {
+            setConsentError("Could not save your preference. Try again before continuing.");
+        } finally {
+            consentInFlight.current = false;
+            setConsentPending(false);
+        }
     };
 
     const label = telemetryEnabled ? "Enabled" : "Disabled";
@@ -85,14 +92,14 @@ const InitPage = ({
                 <div className={`${isCompact ? "" : "mb-2.5"} flex justify-center`}>
                     <Logo />
                 </div>
-                <div className="text-center text-[25px] font-normal text-foreground">Welcome to Hypheus</div>
+                <h1 className="crowe-welcome-title text-center text-2xl font-normal text-foreground">Welcome to Hypheus</h1>
             </header>
             <OverlayScrollbarsComponent
                 className="flex-1 overflow-y-auto min-h-0"
                 options={{ scrollbars: { autoHide: "never" } }}
             >
                 <div className="flex flex-col items-start gap-8 w-full mb-5 unselectable">
-                    <div className="flex w-full items-center gap-[18px]">
+                    <div className="flex w-full items-center gap-4">
                         <div>
                             <a
                                 target="_blank"
@@ -121,7 +128,7 @@ const InitPage = ({
                             </div>
                         </div>
                     </div>
-                    <div className="flex w-full items-center gap-[18px]">
+                    <div className="flex w-full items-center gap-4">
                         <div>
                             <a
                                 target="_blank"
@@ -148,13 +155,13 @@ const InitPage = ({
                             </div>
                         </div>
                     </div>
-                    <div className="flex w-full items-center gap-[18px]">
+                    <div className="flex w-full items-center gap-4">
                         <div>
                             <i className="text-[32px] text-white/50 fa-solid fa-chart-line"></i>
                         </div>
                         <div className="flex flex-col items-start gap-1 flex-1">
                             <div className="text-secondary leading-5">
-                                Anonymous usage data helps us improve features you use.
+                                Optional usage analytics help us improve features you use. Your choice does not change access to the operator panel.
                                 <br />
                                 <a
                                     className="text-secondary! hover:underline!"
@@ -169,18 +176,24 @@ const InitPage = ({
                                 <input
                                     type="checkbox"
                                     checked={telemetryEnabled}
-                                    onChange={(e) => setTelemetry(e.target.checked)}
+                                    disabled={consentPending}
+                                    aria-label="Share usage analytics"
+                                    aria-describedby="crowe-consent-status"
+                                    onChange={(e) => void setTelemetry(e.target.checked)}
                                     className="cursor-pointer accent-gray-500"
                                 />
                                 <span>{label}</span>
                             </label>
+                            <div id="crowe-consent-status" role="status" className="text-secondary">
+                                {consentPending ? "Saving preference" : consentError}
+                            </div>
                         </div>
                     </div>
                 </div>
             </OverlayScrollbarsComponent>
             <footer className={`unselectable flex-shrink-0 ${isCompact ? "mt-2" : "mt-5"}`}>
                 <div className="flex flex-row items-center justify-center [&>button]:!px-5 [&>button]:!py-2 [&>button]:text-sm [&>button:not(:first-child)]:ml-2.5">
-                    <Button className="font-[600]" onClick={acceptTos}>
+                    <Button className="font-[600]" disabled={consentPending || !!consentError} onClick={acceptTos}>
                         Continue
                     </Button>
                 </div>
@@ -316,12 +329,11 @@ const NewInstallOnboardingModal = () => {
         return null;
     }
 
-    const paddingClass = isCompact ? "!py-3 !px-[30px]" : "!p-[30px]";
+    const paddingClass = isCompact ? "!py-3 !px-8" : "!p-8";
     const widthClass = pageName === "features" ? "w-[800px]" : "w-[560px]";
 
     return (
-        <FlexiModal className={`${widthClass} rounded-[10px] ${paddingClass} relative overflow-hidden`} ref={modalRef}>
-            <OnboardingGradientBg />
+        <FlexiModal className={`crowe-onboarding ${widthClass} rounded-[8px] ${paddingClass} relative overflow-hidden`} ref={modalRef}>
             <div className="flex flex-col w-full h-full relative z-10">{pageComp}</div>
         </FlexiModal>
     );

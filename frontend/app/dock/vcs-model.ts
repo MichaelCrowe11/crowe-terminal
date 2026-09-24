@@ -6,6 +6,7 @@ import { globalStore } from "@/app/store/jotaiStore";
 import * as WOS from "@/app/store/wos";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
+import { getEnv } from "@/util/getenv";
 import * as jotai from "jotai";
 import { DockModel } from "./dock-model";
 
@@ -65,8 +66,16 @@ export class VcsModel {
         return globalStore.get(dock.activeToolAtom) === "repo" && !globalStore.get(dock.collapsedAtom);
     }
 
+    rehearsalDisabled(): boolean {
+        if (getEnv("CROWE_REHEARSAL_OFFLINE") !== "1") {
+            return false;
+        }
+        globalStore.set(this.errorAtom, "Version control is disabled during offline rehearsal.");
+        return true;
+    }
+
     async refresh(includeHistory?: boolean) {
-        if (VcsModel.fetchDisabled) {
+        if (this.rehearsalDisabled() || VcsModel.fetchDisabled) {
             return;
         }
         // A restore/init-triggered refresh must win over a slower in-flight poll
@@ -100,6 +109,9 @@ export class VcsModel {
     // Runs for the life of the app so the rail pip stays honest while the
     // panel is closed; history is only fetched while the panel is open.
     startPolling() {
+        if (this.rehearsalDisabled()) {
+            return;
+        }
         if (this.pollTimer != null) {
             return;
         }
@@ -108,6 +120,9 @@ export class VcsModel {
     }
 
     async toggleOp(opId: string) {
+        if (this.rehearsalDisabled()) {
+            return;
+        }
         if (globalStore.get(this.expandedOpAtom) === opId) {
             globalStore.set(this.expandedOpAtom, null);
             return;
@@ -131,6 +146,9 @@ export class VcsModel {
     // The panel's only mutating action. jj's own message comes back verbatim
     // on failure; paraphrasing loses information exactly when it matters.
     async restoreTo(opId?: string) {
+        if (this.rehearsalDisabled()) {
+            return;
+        }
         if (globalStore.get(this.busyAtom)) {
             return;
         }
@@ -160,6 +178,9 @@ export class VcsModel {
     }
 
     async initRepo() {
+        if (this.rehearsalDisabled()) {
+            return;
+        }
         if (globalStore.get(this.busyAtom)) {
             return;
         }

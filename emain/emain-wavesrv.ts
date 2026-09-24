@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import * as electron from "electron";
@@ -60,6 +60,17 @@ export function runWaveSrv(handleWSEvent: (evtMsg: WSEventType) => void): Promis
         pReject = argReject;
     });
     const envCopy = { ...process.env };
+    if (envCopy.CROWE_REHEARSAL_OFFLINE === "1") {
+        const requiredFlags = ["CROWE_FOUNDRY_DISABLED", "CROWE_AGENT_DISABLED", "WAVETERM_NOPING"];
+        const missingFlags = requiredFlags.filter((name) => envCopy[name] !== "1");
+        if (missingFlags.length > 0) {
+            pReject(new Error(`Offline rehearsal requires ${missingFlags.map((name) => `${name}=1`).join(", ")}`));
+            return rtnPromise;
+        }
+        // Keep Electron's development UI while preventing backend development-mode overrides.
+        delete envCopy.WAVETERM_DEV;
+        delete envCopy.WAVETERM_DEV_VITE;
+    }
     const xdgCurrentDesktop = getXdgCurrentDesktop();
     if (xdgCurrentDesktop != null) {
         envCopy["XDG_CURRENT_DESKTOP"] = xdgCurrentDesktop;

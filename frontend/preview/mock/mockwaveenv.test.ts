@@ -1,6 +1,7 @@
 import { base64ToString } from "@/util/util";
 import { describe, expect, it, vi } from "vitest";
 import { DefaultMockFilesystem } from "./mockfilesystem";
+import { makeMockWaveEnv } from "./mockwaveenv";
 
 const { showPreviewContextMenu } = vi.hoisted(() => ({
     showPreviewContextMenu: vi.fn(),
@@ -12,7 +13,6 @@ vi.mock("../preview-contextmenu", () => ({
 
 describe("makeMockWaveEnv", () => {
     it("uses the preview context menu by default", async () => {
-        const { makeMockWaveEnv } = await import("./mockwaveenv");
         const env = makeMockWaveEnv();
         const menu = [{ label: "Open" }];
         const event = { stopPropagation: vi.fn() } as any;
@@ -29,7 +29,6 @@ describe("makeMockWaveEnv", () => {
     });
 
     it("implements file info, read, list, and join commands", async () => {
-        const { makeMockWaveEnv } = await import("./mockwaveenv");
         const env = makeMockWaveEnv();
 
         const bashrcInfo = await env.rpc.FileInfoCommand(null as any, {
@@ -70,7 +69,6 @@ describe("makeMockWaveEnv", () => {
     });
 
     it("implements file list and read stream commands", async () => {
-        const { makeMockWaveEnv } = await import("./mockwaveenv");
         const env = makeMockWaveEnv();
 
         const listPackets: CommandRemoteListEntriesRtnData[] = [];

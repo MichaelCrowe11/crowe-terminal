@@ -107,6 +107,7 @@
         "css-tree": "^3.1.0",
         "dayjs": "^1.11.19",
         "debug": "^4.4.3",
+        "dompurify": "3.4.15",
         "electron-updater": "^6.6",
         "env-paths": "^3.0.0",
         "fast-average-color": "^9.5.0",
@@ -157,6 +158,14 @@
         "ws": "^8.19.0",
         "yaml": "^2.8.3",
         "zod": "^4.4.3"
+    },
+    "overrides": {
+        "monaco-editor": {
+            "dompurify": "$dompurify"
+        },
+        "@codingame/monaco-vscode-api": {
+            "dompurify": "$dompurify"
+        }
     },
     "packageManager": "npm@10.9.2",
     "workspaces": [

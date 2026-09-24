@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { NewInstallOnboardingModal } from "@/app/onboarding/onboarding";
@@ -8,6 +8,7 @@ import { ClientModel } from "@/app/store/client-model";
 import { globalStore } from "@/app/store/jotaiStore";
 import { atoms, globalPrimaryTabStartup } from "@/store/global";
 import { modalsModel } from "@/store/modalmodel";
+import { getEnv } from "@/util/getenv";
 import * as jotai from "jotai";
 import { useEffect } from "react";
 import * as semver from "semver";
@@ -32,12 +33,18 @@ const ModalsRenderer = () => {
         rtn.push(<UpgradeOnboardingModal key={UpgradeOnboardingModal.displayName} />);
     }
     useEffect(() => {
+        if (getEnv("CROWE_REHEARSAL_OFFLINE") === "1") {
+            return;
+        }
         if (!clientData.tosagreed) {
             setNewInstallOnboardingOpen(true);
         }
     }, [clientData]);
 
     useEffect(() => {
+        if (getEnv("CROWE_REHEARSAL_OFFLINE") === "1") {
+            return;
+        }
         if (!globalPrimaryTabStartup) {
             return;
         }
