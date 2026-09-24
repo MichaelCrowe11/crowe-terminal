@@ -3,6 +3,7 @@
 
 import { ipcMain } from "electron";
 import { getWebServerEndpoint, getWSServerEndpoint } from "../frontend/util/endpoints";
+import { setHostBackendHeaders } from "../frontend/util/fetchutil";
 
 const AuthKeyHeader = "X-AuthKey";
 export const WaveAuthKeyEnv = "WAVETERM_AUTH_KEY";
@@ -10,6 +11,11 @@ export const AuthKey = crypto.randomUUID();
 const FrontendKeyHeader = "X-Wave-Frontend-Key";
 const FrontendKeyEnv = "WAVETERM_FRONTEND_KEY";
 const FrontendKey = crypto.randomUUID();
+// Main-process net.fetch calls have no webContents. They prove their origin with a key
+// that never leaves this process (no IPC exposure) and is stripped before sending.
+const MainProcessKeyHeader = "X-Hypheus-Main-Process";
+const MainProcessKey = crypto.randomUUID();
+setHostBackendHeaders({ [MainProcessKeyHeader]: MainProcessKey });
 const TrustedRenderers = new Map<number, { contents: Electron.WebContents; document: string }>();
 
 function documentURL(url: string): string {
@@ -70,8 +76,14 @@ export function configureAuthKeyRequestInjection(session: Electron.Session) {
     // Inspect redirect destinations too, so privileged headers cannot follow a redirect off the backend.
     const filter: Electron.WebRequestFilter = { urls: ["<all_urls>"] };
     session.webRequest.onBeforeSendHeaders(filter, (details, callback) => {
+        const stripped = [AuthKeyHeader, FrontendKeyHeader, MainProcessKeyHeader].map((name) => name.toLowerCase());
+        const mainProcessValues: string[] = [];
         for (const name of Object.keys(details.requestHeaders)) {
-            if ([AuthKeyHeader.toLowerCase(), FrontendKeyHeader.toLowerCase()].includes(name.toLowerCase())) {
+            const lower = name.toLowerCase();
+            if (lower === MainProcessKeyHeader.toLowerCase()) {
+                mainProcessValues.push(details.requestHeaders[name]);
+            }
+            if (stripped.includes(lower)) {
                 delete details.requestHeaders[name];
             }
         }
@@ -79,6 +91,21 @@ export function configureAuthKeyRequestInjection(session: Electron.Session) {
         const isWebBackend = target.origin === new URL(getWebServerEndpoint()).origin;
         const isWSBackend = target.origin === new URL(getWSServerEndpoint()).origin;
         if (!isWebBackend && !isWSBackend) {
+            callback({ requestHeaders: details.requestHeaders });
+            return;
+        }
+        const fromMainProcess =
+            details.webContents == null &&
+            details.webContentsId == null &&
+            mainProcessValues.length === 1 &&
+            mainProcessValues[0] === MainProcessKey;
+        if (
+            fromMainProcess &&
+            isWebBackend &&
+            details.resourceType !== "mainFrame" &&
+            details.resourceType !== "subFrame"
+        ) {
+            details.requestHeaders[AuthKeyHeader] = AuthKey;
             callback({ requestHeaders: details.requestHeaders });
             return;
         }

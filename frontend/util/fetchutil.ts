@@ -1,6 +1,8 @@
 // Copyright 2025, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { getWebServerEndpoint } from "./endpoints";
+
 // Utility to abstract the fetch function so the Electron net module can be used when available.
 
 // Structurally typed rather than Electron.Net so this module needs no Electron
@@ -11,6 +13,27 @@ type HostNet = {
 };
 
 let net: HostNet;
+let hostBackendHeaders: Record<string, string> = {};
+
+// Main process only: headers attached to requests for the local web backend.
+export function setHostBackendHeaders(headers: Record<string, string>) {
+    hostBackendHeaders = { ...headers };
+}
+
+function withHostBackendHeaders(url: string, init?: RequestInit): RequestInit {
+    try {
+        if (new URL(url).origin !== new URL(getWebServerEndpoint()).origin) {
+            return init;
+        }
+    } catch {
+        return init;
+    }
+    const headers = new Headers(init?.headers);
+    for (const [name, value] of Object.entries(hostBackendHeaders)) {
+        headers.set(name, value);
+    }
+    return { ...init, headers };
+}
 
 if (typeof window === "undefined") {
     try {
@@ -22,7 +45,8 @@ if (typeof window === "undefined") {
 
 export function fetch(input: string | GlobalRequest | URL, init?: RequestInit): Promise<Response> {
     if (net) {
-        return net.fetch(input.toString(), init);
+        const url = input.toString();
+        return net.fetch(url, withHostBackendHeaders(url, init));
     } else {
         return globalThis.fetch(input, init);
     }

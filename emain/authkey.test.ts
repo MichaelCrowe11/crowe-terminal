@@ -6,6 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const Ipc = vi.hoisted(() => ({ on: vi.fn() }));
 vi.mock("electron", () => ({ ipcMain: Ipc }));
+const HostHeaders = vi.hoisted(() => ({ value: {} as Record<string, string> }));
+vi.mock("../frontend/util/fetchutil", () => ({
+    setHostBackendHeaders: (headers: Record<string, string>) => (HostHeaders.value = { ...headers }),
+}));
 vi.mock("../frontend/util/endpoints", () => ({
     getWebServerEndpoint: () => "http://127.0.0.1:5010",
     getWSServerEndpoint: () => "ws://127.0.0.1:5011",
@@ -119,6 +123,32 @@ describe("frontend authentication provenance", () => {
         };
         const result = request({ url: "https://external.test/redirect", requestHeaders: headers });
         expect(result.requestHeaders).toEqual({ Accept: "text/html" });
+    });
+
+    it("admits only exact main-process key requests to the web backend", () => {
+        const [[name, key]] = Object.entries(HostHeaders.value);
+        const main = { url: "http://127.0.0.1:5010/wave/service", resourceType: "other" as const };
+        const allowed = request({ ...main, requestHeaders: { [name.toLowerCase()]: key, Accept: "*/*" } });
+        expect(allowed.cancel).not.toBe(true);
+        expect(allowed.requestHeaders).toEqual({ Accept: "*/*", "X-AuthKey": AuthKey });
+
+        const contents = makeContents();
+        const denied = [
+            { ...main, requestHeaders: { [name]: "wrong" } },
+            { ...main, requestHeaders: { [name]: key, [name.toUpperCase()]: key } },
+            { ...main, requestHeaders: {} },
+            { url: "ws://127.0.0.1:5011/ws", resourceType: "webSocket", requestHeaders: { [name]: key } },
+            { ...main, resourceType: "mainFrame", requestHeaders: { [name]: key } },
+            { ...main, resourceType: "subFrame", requestHeaders: { [name]: key } },
+            { ...main, webContents: contents, webContentsId: contents.id, requestHeaders: { [name]: key } },
+            { ...main, webContentsId: 7, requestHeaders: { [name]: key } },
+        ];
+        for (const attack of denied) {
+            expect(request(attack as any).cancel).toBe(true);
+        }
+        const external = request({ url: "https://external.test/", requestHeaders: { [name]: key, Accept: "*/*" } });
+        expect(external.cancel).not.toBe(true);
+        expect(external.requestHeaders).toEqual({ Accept: "*/*" });
     });
 
     it("limits key IPC to the registered main frame", () => {
