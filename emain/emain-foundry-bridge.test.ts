@@ -93,7 +93,10 @@ describe("Foundry startup opt-in guard", () => {
 
         expect(await bridge.startFoundryBridge()).toBe(true);
         expect(bridge.isBridgeReady()).toBe(true);
-        expect(Fakes.fetch).toHaveBeenCalledExactlyOnceWith("http://127.0.0.1:8011/healthz");
+        expect(Fakes.fetch).toHaveBeenCalledExactlyOnceWith("http://127.0.0.1:8011/healthz", {
+            signal: expect.any(AbortSignal),
+            redirect: "error",
+        });
         expect(Fakes.existsSync).not.toHaveBeenCalled();
         expect(Fakes.spawn).not.toHaveBeenCalled();
     });
