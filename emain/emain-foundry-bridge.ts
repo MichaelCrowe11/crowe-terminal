@@ -6,9 +6,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { AuthKey } from "./authkey";
+import { probeBridgeHealth } from "./bridge-health";
 
 const BRIDGE_PORT = 8011;
 const BRIDGE_HOST = "127.0.0.1";
+const BRIDGE_HEALTH_URL = `http://${BRIDGE_HOST}:${BRIDGE_PORT}/healthz`;
 const MinPythonMajor = 3;
 const MinPythonMinor = 10;
 
@@ -100,20 +102,6 @@ async function findPython(foundryRoot: string): Promise<string | null> {
     return null;
 }
 
-async function probeBridge(timeoutMs = 8000): Promise<boolean> {
-    const deadline = Date.now() + timeoutMs;
-    while (Date.now() < deadline) {
-        try {
-            const res = await fetch(`http://${BRIDGE_HOST}:${BRIDGE_PORT}/healthz`);
-            if (res.ok) return true;
-        } catch {
-            // not up yet
-        }
-        await new Promise((r) => setTimeout(r, 250));
-    }
-    return false;
-}
-
 export function isBridgeReady(): boolean {
     return bridgeReady;
 }
@@ -122,7 +110,7 @@ export async function startFoundryBridge(): Promise<boolean> {
     if (process.env.CROWE_FOUNDRY_DISABLED === "1") return false;
     if (bridgeProc) return bridgeReady;
 
-    if (await probeBridge(800)) {
+    if (await probeBridgeHealth(BRIDGE_HEALTH_URL, 800)) {
         console.log("[foundry-bridge] external bridge already running on", BRIDGE_PORT);
         bridgeReady = true;
         return true;
@@ -176,7 +164,7 @@ export async function startFoundryBridge(): Promise<boolean> {
         bridgeReady = false;
     });
 
-    bridgeReady = await probeBridge();
+    bridgeReady = await probeBridgeHealth(BRIDGE_HEALTH_URL);
     if (!bridgeReady) {
         console.warn("[foundry-bridge] failed to become ready within timeout");
     } else {
