@@ -50,6 +50,55 @@
         ],
         "ai:apitokensecretname": "CROWE_MODELS_KEY"
     },
+    "waveai@azure-sol": {
+        "display:name": "CroweLM Sol",
+        "display:order": 0,
+        "display:icon": "sun",
+        "display:description": "CroweLM flagship on GPT-6 Sol, served straight from the michael-0286 Azure resource. Tools on the Responses surface.",
+        "ai:provider": "azure",
+        "ai:apitype": "openai-responses",
+        "ai:endpoint": "https://michael-0286-resource.cognitiveservices.azure.com/openai/v1/responses",
+        "ai:model": "gpt-6-sol",
+        "ai:capabilities": [
+            "tools"
+        ],
+        "ai:switchcompat": [
+            "openai"
+        ],
+        "ai:apitokensecretname": "AZURE_MICHAEL0286_KEY"
+    },
+    "waveai@azure-luna": {
+        "display:name": "CroweLM Luna",
+        "display:order": 0.5,
+        "display:icon": "moon",
+        "display:description": "GPT-6 Luna on the michael-0286 Azure resource. Tools on the Responses surface.",
+        "ai:provider": "azure",
+        "ai:apitype": "openai-responses",
+        "ai:endpoint": "https://michael-0286-resource.cognitiveservices.azure.com/openai/v1/responses",
+        "ai:model": "gpt-6-luna",
+        "ai:capabilities": [
+            "tools"
+        ],
+        "ai:switchcompat": [
+            "openai"
+        ],
+        "ai:apitokensecretname": "AZURE_MICHAEL0286_KEY"
+    },
+    "waveai@azure-zenith": {
+        "display:name": "CroweLM Zenith",
+        "display:order": 1,
+        "display:icon": "sparkles",
+        "display:description": "Frontier reasoning on GPT-6 Astra, michael-0286 Azure resource. Chat surface; no tool loop.",
+        "ai:provider": "azure",
+        "ai:apitype": "openai-chat",
+        "ai:endpoint": "https://michael-0286-resource.cognitiveservices.azure.com/openai/v1/chat/completions",
+        "ai:model": "gpt-6-astra",
+        "ai:capabilities": [],
+        "ai:switchcompat": [
+            "openai"
+        ],
+        "ai:apitokensecretname": "AZURE_MICHAEL0286_KEY"
+    },
     "waveai@crowelm-local": {
         "display:name": "CroweLM Local",
         "display:order": 1.5,
