@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 import { RpcApi } from "@/app/store/wshclientapi";
@@ -6,8 +6,9 @@ import { adaptFromElectronKeyEvent, checkKeyPressed } from "@/util/keyutil";
 import { CHORD_TIMEOUT } from "@/util/sharedconst";
 import { Rectangle, shell, WebContentsView } from "electron";
 import { createNewWaveWindow, getWaveWindowById } from "emain/emain-window";
+import { pathToFileURL } from "node:url";
 import path from "path";
-import { configureAuthKeyRequestInjection } from "./authkey";
+import { configureAuthKeyRequestInjection, registerTrustedRenderer } from "./authkey";
 import { setWasActive } from "./emain-activity";
 import { getElectronAppBasePath, isDevVite, unamePlatform } from "./emain-platform";
 import {
@@ -159,6 +160,12 @@ export class WaveTabView extends WebContentsView {
         });
         const wcId = this.webContents.id;
         wcIdToWaveTabMap.set(wcId, this);
+        registerTrustedRenderer(
+            this.webContents,
+            isDevVite
+                ? `${process.env.ELECTRON_RENDERER_URL}/index.html`
+                : pathToFileURL(path.join(getElectronAppBasePath(), "frontend", "index.html")).href
+        );
         if (isDevVite) {
             this.webContents.loadURL(`${process.env.ELECTRON_RENDERER_URL}/index.html`);
         } else {

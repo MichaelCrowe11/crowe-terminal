@@ -191,6 +191,30 @@ func CreateSubBlockCommand(w *wshutil.WshRpc, data wshrpc.CommandCreateSubBlockD
 	return resp, err
 }
 
+// command "croweauthcancel", wshserver.CroweAuthCancelCommand
+func CroweAuthCancelCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (*wshrpc.CroweAuthStatus, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CroweAuthStatus](w, "croweauthcancel", nil, opts)
+	return resp, err
+}
+
+// command "croweauthdisconnect", wshserver.CroweAuthDisconnectCommand
+func CroweAuthDisconnectCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (*wshrpc.CroweAuthStatus, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CroweAuthStatus](w, "croweauthdisconnect", nil, opts)
+	return resp, err
+}
+
+// command "croweauthstart", wshserver.CroweAuthStartCommand
+func CroweAuthStartCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (*wshrpc.CroweAuthStatus, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CroweAuthStatus](w, "croweauthstart", nil, opts)
+	return resp, err
+}
+
+// command "croweauthstatus", wshserver.CroweAuthStatusCommand
+func CroweAuthStatusCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (*wshrpc.CroweAuthStatus, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CroweAuthStatus](w, "croweauthstatus", nil, opts)
+	return resp, err
+}
+
 // command "crowecodebootstrapscope", wshserver.CroweCodeBootstrapScopeCommand
 func CroweCodeBootstrapScopeCommand(w *wshutil.WshRpc, data wshrpc.CommandCroweCodeBootstrapScopeData, opts *wshrpc.RpcOpts) (*wshrpc.CommandCroweCodeBootstrapScopeRtnData, error) {
 	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandCroweCodeBootstrapScopeRtnData](w, "crowecodebootstrapscope", data, opts)

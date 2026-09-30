@@ -1,4 +1,4 @@
-// Copyright 2025, Command Line Inc.
+// Copyright 2026, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 package web
@@ -219,7 +219,7 @@ func WriteLoop(conn *websocket.Conn, outputCh chan any, closeCh chan any, routeI
 	}
 }
 
-func registerConn(wsConnId string, stableId string, wproxy *wshutil.WshRpcProxy) {
+func registerConn(wsConnId string, stableId string, wproxy *wshutil.WshRpcProxy, localFrontend bool) {
 	GlobalLock.Lock()
 	defer GlobalLock.Unlock()
 	curConnInfo := RouteToConnMap[stableId]
@@ -229,7 +229,12 @@ func registerConn(wsConnId string, stableId string, wproxy *wshutil.WshRpcProxy)
 			wshutil.DefaultRouter.UnregisterLink(curConnInfo.LinkId)
 		}
 	}
-	linkId := wshutil.DefaultRouter.RegisterTrustedRouter(wproxy)
+	var linkId baseds.LinkId
+	if localFrontend {
+		linkId = wshutil.DefaultRouter.RegisterLocalFrontendRouter(wproxy)
+	} else {
+		linkId = wshutil.DefaultRouter.RegisterTrustedRouter(wproxy)
+	}
 	RouteToConnMap[stableId] = &StableConnInfo{
 		ConnId: wsConnId,
 		LinkId: linkId,
@@ -275,7 +280,7 @@ func HandleWsInternal(w http.ResponseWriter, r *http.Request) error {
 	defer eventbus.UnregisterWSChannel(wsConnId)
 	wproxy := wshutil.MakeRpcProxyWithSize(fmt.Sprintf("ws:%s", stableId), WebSocketChannelSize, WebSocketChannelSize)
 	defer close(wproxy.ToRemoteCh)
-	registerConn(wsConnId, stableId, wproxy)
+	registerConn(wsConnId, stableId, wproxy, authkey.IsLocalFrontendRequest(r))
 	defer unregisterConn(wsConnId, stableId)
 	wg := &sync.WaitGroup{}
 	wg.Add(2)

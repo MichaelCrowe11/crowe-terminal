@@ -6,26 +6,9 @@ const UpgradeOnboardingModal_v0_15_7_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    You are running <strong className="text-foreground">Hypheus 0.15</strong>, the mycelial terminal. A
-                    surface of the Crowe Logic platform.
+                    <strong className="text-foreground">Hypheus 0.15.7</strong> introduced updates to the operator
+                    panel, dock, and startup.
                 </p>
-            </div>
-
-            <div className="flex w-full items-start gap-4">
-                <div className="flex-shrink-0">
-                    <i className="text-[24px] text-accent fa-solid fa-diagram-project"></i>
-                </div>
-                <div className="flex flex-col items-start gap-2 flex-1">
-                    <div className="text-foreground text-base font-semibold leading-[18px]">
-                        Connect CroweLM with your own credential
-                    </div>
-                    <div className="text-secondary leading-5">
-                        Workspace, Code, and Deep Work run on Crowe Logic's model edge
-                        with tools. No local model server or Python is required for these modes. In Settings, open
-                        Secrets, choose Add New Secret, and save your own model-edge credential as{" "}
-                        <span className="font-mono">CROWE_MODELS_KEY</span> before sending a request.
-                    </div>
-                </div>
             </div>
 
             <div className="flex w-full items-start gap-4">

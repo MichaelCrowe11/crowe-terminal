@@ -40,6 +40,6 @@
     "term:trimtrailingwhitespace": true,
     "term:durable": false,
     "waveai:showcloudmodes": false,
-    "waveai:defaultmode": "waveai@crowelm-auto",
+    "waveai:defaultmode": "waveai@crowe-account",
     "preview:defaultsort": "name"
 }

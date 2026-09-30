@@ -11,6 +11,35 @@ import (
 	"github.com/wavetermdev/waveterm/pkg/wconfig/defaultconfig"
 )
 
+func TestDefaultModeUsesCroweAccount(t *testing.T) {
+	raw, err := defaultconfig.ConfigFS.ReadFile("waveai.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var modes map[string]AIModeConfigType
+	if err := json.Unmarshal(raw, &modes); err != nil {
+		t.Fatal(err)
+	}
+	mode, ok := modes["waveai@crowe-account"]
+	if !ok || mode.APIType != "crowe-gateway" || mode.Endpoint != "https://api.crowelogic.com/api/gateway/chat" || mode.Model != "crowelm-account-default" {
+		t.Fatal("account mode must use the authenticated gateway and plan default")
+	}
+	if mode.APIToken != "" || mode.APITokenSecretName != "" || mode.ProxyURL != "" {
+		t.Fatal("account mode must not require or fall back to API keys or proxies")
+	}
+	settingsRaw, err := defaultconfig.ConfigFS.ReadFile("settings.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var settings map[string]any
+	if err := json.Unmarshal(settingsRaw, &settings); err != nil {
+		t.Fatal(err)
+	}
+	if settings["waveai:defaultmode"] != "waveai@crowe-account" {
+		t.Fatal("fresh installs must start in account mode")
+	}
+}
+
 // The shipped CroweLM modes target the Crowe Logic model edge without a local
 // server or a credential in source. Authentication is supplied by each user
 // through the CROWE_MODELS_KEY secret or the runtime environment fallback.

@@ -4,14 +4,13 @@
 import Logo from "@/app/asset/logo.svg";
 import { InitPage, NoTelemetryStarPage } from "@/app/onboarding/onboarding";
 import { OnboardingGradientBg } from "@/app/onboarding/onboarding-common";
-import { DurableSessionPage } from "@/app/onboarding/onboarding-durable";
-import { FilesPage, MagnifyBlocksPage, WaveAIPage } from "@/app/onboarding/onboarding-features";
+import { WorkspaceWelcome } from "@/app/onboarding/onboarding-features";
 import { UpgradeMinorWelcomePage } from "@/app/onboarding/onboarding-upgrade-minor";
 import { UpgradeOnboardingFooter, UpgradeOnboardingVersions } from "@/app/onboarding/onboarding-upgrade-patch";
 
 function OnboardingModalWrapper({ width, children }: { width: string; children: React.ReactNode }) {
     return (
-        <div className={`${width} rounded-[10px] p-[30px] relative overflow-hidden bg-panel`}>
+        <div className={`crowe-onboarding ${width} max-w-full rounded-lg p-6 relative overflow-hidden bg-panel`}>
             <OnboardingGradientBg />
             <div className="relative z-10 flex flex-col w-full h-full">{children}</div>
         </div>
@@ -28,17 +27,8 @@ function OnboardingFeaturesV() {
             <OnboardingModalWrapper width="w-[560px]">
                 <NoTelemetryStarPage isCompact={false} />
             </OnboardingModalWrapper>
-            <OnboardingModalWrapper width="w-[800px]">
-                <WaveAIPage onNext={noop} onSkip={noop} />
-            </OnboardingModalWrapper>
-            <OnboardingModalWrapper width="w-[800px]">
-                <DurableSessionPage onNext={noop} onSkip={noop} onPrev={noop} />
-            </OnboardingModalWrapper>
-            <OnboardingModalWrapper width="w-[800px]">
-                <MagnifyBlocksPage onNext={noop} onSkip={noop} onPrev={noop} />
-            </OnboardingModalWrapper>
-            <OnboardingModalWrapper width="w-[800px]">
-                <FilesPage onFinish={noop} onPrev={noop} />
+            <OnboardingModalWrapper width="w-[560px]">
+                <WorkspaceWelcome onComplete={noop} />
             </OnboardingModalWrapper>
         </div>
     );
@@ -94,7 +84,8 @@ export function OnboardingPreview() {
             <OnboardingFeaturesV />
             <div className="text-sm font-mono text-muted mt-6">Onboarding minor upgrade</div>
             <UpgradeOnboardingMinorV />
-            <div className="text-sm font-mono text-muted mt-6">Onboarding star ask</div>            <div className="text-sm font-mono text-muted mt-6">Onboarding patch updates</div>
+            <div className="text-sm font-mono text-muted mt-6">Onboarding star ask</div>{" "}
+            <div className="text-sm font-mono text-muted mt-6">Onboarding patch updates</div>
             <UpgradeOnboardingPatchV />
         </div>
     );

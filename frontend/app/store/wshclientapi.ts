@@ -192,6 +192,30 @@ export class RpcApiType {
         return client.wshRpcCall("createsubblock", data, opts);
     }
 
+    // command "croweauthcancel" [call]
+    CroweAuthCancelCommand(client: WshClient, opts?: RpcOpts): Promise<CroweAuthStatus> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "croweauthcancel", null, opts);
+        return client.wshRpcCall("croweauthcancel", null, opts);
+    }
+
+    // command "croweauthdisconnect" [call]
+    CroweAuthDisconnectCommand(client: WshClient, opts?: RpcOpts): Promise<CroweAuthStatus> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "croweauthdisconnect", null, opts);
+        return client.wshRpcCall("croweauthdisconnect", null, opts);
+    }
+
+    // command "croweauthstart" [call]
+    CroweAuthStartCommand(client: WshClient, opts?: RpcOpts): Promise<CroweAuthStatus> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "croweauthstart", null, opts);
+        return client.wshRpcCall("croweauthstart", null, opts);
+    }
+
+    // command "croweauthstatus" [call]
+    CroweAuthStatusCommand(client: WshClient, opts?: RpcOpts): Promise<CroweAuthStatus> {
+        if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "croweauthstatus", null, opts);
+        return client.wshRpcCall("croweauthstatus", null, opts);
+    }
+
     // command "crowecodebootstrapscope" [call]
     CroweCodeBootstrapScopeCommand(client: WshClient, data: CommandCroweCodeBootstrapScopeData, opts?: RpcOpts): Promise<CommandCroweCodeBootstrapScopeRtnData> {
         if (this.mockClient) return this.mockClient.mockWshRpcCall(client, "crowecodebootstrapscope", data, opts);

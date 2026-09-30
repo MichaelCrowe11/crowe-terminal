@@ -23,6 +23,7 @@ const (
 	APIType_OpenAIResponses   = "openai-responses"
 	APIType_OpenAIChat        = "openai-chat"
 	APIType_GoogleGemini      = "google-gemini"
+	APIType_CroweGateway      = "crowe-gateway"
 )
 
 const (

@@ -23,293 +23,302 @@
  */
 
 :root {
-  /* Base hues (platform canon) */
-  --crowe-gold: #bfa669;
-  --crowe-gold-dim: #8a7848;
-  --crowe-gold-bright: #d4b878;
-  /* Hypheus blue (the hexagon; Crowe Logic family). Interactive/chrome accent;
+    /* Base hues (platform canon) */
+    --crowe-gold: #bfa669;
+    --crowe-gold-dim: #8a7848;
+    --crowe-gold-bright: #d4b878;
+    /* Hypheus blue (the hexagon; Crowe Logic family). Interactive/chrome accent;
    * gold is retained for terminal content and the wordmark gradient. */
-  --crowe-blue: #2a5090;
-  --crowe-blue-dim: #1b3a6b;
-  --crowe-blue-bright: #3d6bb0;
-  --crowe-blue-04: rgb(from var(--crowe-blue) r g b / 0.04);
-  --crowe-blue-08: rgb(from var(--crowe-blue) r g b / 0.08);
-  --crowe-blue-12: rgb(from var(--crowe-blue) r g b / 0.12);
-  --crowe-blue-15: rgb(from var(--crowe-blue) r g b / 0.15);
-  --crowe-blue-18: rgb(from var(--crowe-blue) r g b / 0.18);
-  --crowe-blue-25: rgb(from var(--crowe-blue) r g b / 0.25);
-  --crowe-blue-35: rgb(from var(--crowe-blue) r g b / 0.35);
-  --crowe-blue-40: rgb(from var(--crowe-blue) r g b / 0.40);
-  --crowe-blue-45: rgb(from var(--crowe-blue) r g b / 0.45);
-  --crowe-graphite: #0b0b0c;
-  --crowe-graphite-soft: #15151a;
-  --crowe-graphite-card: #16161b;
-  /* Stepped surface ladder: sunken < base < card < card-hover < overlay.
+    --crowe-blue: #2a5090;
+    --crowe-blue-dim: #1b3a6b;
+    --crowe-blue-bright: #3d6bb0;
+    --crowe-blue-04: rgb(from var(--crowe-blue) r g b / 0.04);
+    --crowe-blue-08: rgb(from var(--crowe-blue) r g b / 0.08);
+    --crowe-blue-12: rgb(from var(--crowe-blue) r g b / 0.12);
+    --crowe-blue-15: rgb(from var(--crowe-blue) r g b / 0.15);
+    --crowe-blue-18: rgb(from var(--crowe-blue) r g b / 0.18);
+    --crowe-blue-25: rgb(from var(--crowe-blue) r g b / 0.25);
+    --crowe-blue-35: rgb(from var(--crowe-blue) r g b / 0.35);
+    --crowe-blue-40: rgb(from var(--crowe-blue) r g b / 0.4);
+    --crowe-blue-45: rgb(from var(--crowe-blue) r g b / 0.45);
+    --crowe-graphite: #0b0b0c;
+    --crowe-graphite-soft: #15151a;
+    --crowe-graphite-card: #16161b;
+    /* Stepped surface ladder: sunken < base < card < card-hover < overlay.
    * Surfaces lighten as they rise toward the viewer (the depth cue), paired
    * with --hair-top. */
-  --crowe-graphite-sunken: #08080a;
-  --crowe-graphite-raised-hover: #1e1e26;
-  --crowe-graphite-overlay: #202028;
-  --crowe-parchment: #e8e2cf;
-  --crowe-cache-glow: #66bb6a;
-  --crowe-error: #d97356;
+    --crowe-graphite-sunken: #08080a;
+    --crowe-graphite-raised-hover: #1e1e26;
+    --crowe-graphite-overlay: #202028;
+    --crowe-parchment: #e8e2cf;
+    --crowe-cache-glow: #66bb6a;
+    --crowe-error: #d97356;
 
-  /* Gold alpha steps — derived from --crowe-gold. Replace ad-hoc
+    /* Gold alpha steps — derived from --crowe-gold. Replace ad-hoc
    * rgba(191, 166, 105, .X) calls with these. */
-  --crowe-gold-00: rgb(from var(--crowe-gold) r g b / 0.0);
-  --crowe-gold-035: rgb(from var(--crowe-gold) r g b / 0.035);
-  --crowe-gold-04: rgb(from var(--crowe-gold) r g b / 0.04);
-  --crowe-gold-05: rgb(from var(--crowe-gold) r g b / 0.05);
-  --crowe-gold-06: rgb(from var(--crowe-gold) r g b / 0.06);
-  --crowe-gold-07: rgb(from var(--crowe-gold) r g b / 0.07);
-  --crowe-gold-08: rgb(from var(--crowe-gold) r g b / 0.08);
-  --crowe-gold-10: rgb(from var(--crowe-gold) r g b / 0.10);
-  --crowe-gold-12: rgb(from var(--crowe-gold) r g b / 0.12);
-  --crowe-gold-14: rgb(from var(--crowe-gold) r g b / 0.14);
-  --crowe-gold-15: rgb(from var(--crowe-gold) r g b / 0.15);
-  --crowe-gold-16: rgb(from var(--crowe-gold) r g b / 0.16);
-  --crowe-gold-18: rgb(from var(--crowe-gold) r g b / 0.18);
-  --crowe-gold-20: rgb(from var(--crowe-gold) r g b / 0.20);
-  --crowe-gold-22: rgb(from var(--crowe-gold) r g b / 0.22);
-  --crowe-gold-25: rgb(from var(--crowe-gold) r g b / 0.25);
-  --crowe-gold-28: rgb(from var(--crowe-gold) r g b / 0.28);
-  --crowe-gold-30: rgb(from var(--crowe-gold) r g b / 0.30);
-  --crowe-gold-32: rgb(from var(--crowe-gold) r g b / 0.32);
-  --crowe-gold-35: rgb(from var(--crowe-gold) r g b / 0.35);
-  --crowe-gold-40: rgb(from var(--crowe-gold) r g b / 0.40);
-  --crowe-gold-45: rgb(from var(--crowe-gold) r g b / 0.45);
-  --crowe-gold-50: rgb(from var(--crowe-gold) r g b / 0.50);
-  --crowe-gold-55: rgb(from var(--crowe-gold) r g b / 0.55);
-  --crowe-gold-60: rgb(from var(--crowe-gold) r g b / 0.60);
-  --crowe-gold-65: rgb(from var(--crowe-gold) r g b / 0.65);
-  --crowe-gold-muted-40: rgb(from var(--crowe-gold) r g b / 0.40);
+    --crowe-gold-00: rgb(from var(--crowe-gold) r g b / 0);
+    --crowe-gold-035: rgb(from var(--crowe-gold) r g b / 0.035);
+    --crowe-gold-04: rgb(from var(--crowe-gold) r g b / 0.04);
+    --crowe-gold-05: rgb(from var(--crowe-gold) r g b / 0.05);
+    --crowe-gold-06: rgb(from var(--crowe-gold) r g b / 0.06);
+    --crowe-gold-07: rgb(from var(--crowe-gold) r g b / 0.07);
+    --crowe-gold-08: rgb(from var(--crowe-gold) r g b / 0.08);
+    --crowe-gold-10: rgb(from var(--crowe-gold) r g b / 0.1);
+    --crowe-gold-12: rgb(from var(--crowe-gold) r g b / 0.12);
+    --crowe-gold-14: rgb(from var(--crowe-gold) r g b / 0.14);
+    --crowe-gold-15: rgb(from var(--crowe-gold) r g b / 0.15);
+    --crowe-gold-16: rgb(from var(--crowe-gold) r g b / 0.16);
+    --crowe-gold-18: rgb(from var(--crowe-gold) r g b / 0.18);
+    --crowe-gold-20: rgb(from var(--crowe-gold) r g b / 0.2);
+    --crowe-gold-22: rgb(from var(--crowe-gold) r g b / 0.22);
+    --crowe-gold-25: rgb(from var(--crowe-gold) r g b / 0.25);
+    --crowe-gold-28: rgb(from var(--crowe-gold) r g b / 0.28);
+    --crowe-gold-30: rgb(from var(--crowe-gold) r g b / 0.3);
+    --crowe-gold-32: rgb(from var(--crowe-gold) r g b / 0.32);
+    --crowe-gold-35: rgb(from var(--crowe-gold) r g b / 0.35);
+    --crowe-gold-40: rgb(from var(--crowe-gold) r g b / 0.4);
+    --crowe-gold-45: rgb(from var(--crowe-gold) r g b / 0.45);
+    --crowe-gold-50: rgb(from var(--crowe-gold) r g b / 0.5);
+    --crowe-gold-55: rgb(from var(--crowe-gold) r g b / 0.55);
+    --crowe-gold-60: rgb(from var(--crowe-gold) r g b / 0.6);
+    --crowe-gold-65: rgb(from var(--crowe-gold) r g b / 0.65);
+    --crowe-gold-muted-40: rgb(from var(--crowe-gold) r g b / 0.4);
 
-  /* Parchment alpha steps — derived from --crowe-parchment. */
-  --crowe-parchment-04: rgb(from var(--crowe-parchment) r g b / 0.04);
-  --crowe-parchment-32: rgb(from var(--crowe-parchment) r g b / 0.32);
-  --crowe-parchment-40: rgb(from var(--crowe-parchment) r g b / 0.40);
-  --crowe-parchment-45: rgb(from var(--crowe-parchment) r g b / 0.45);
-  --crowe-parchment-60: rgb(from var(--crowe-parchment) r g b / 0.60);
-  --crowe-parchment-66: rgb(from var(--crowe-parchment) r g b / 0.66);
-  --crowe-parchment-dim: var(--crowe-parchment-60);
+    /* Parchment alpha steps — derived from --crowe-parchment. */
+    --crowe-parchment-04: rgb(from var(--crowe-parchment) r g b / 0.04);
+    --crowe-parchment-32: rgb(from var(--crowe-parchment) r g b / 0.32);
+    --crowe-parchment-40: rgb(from var(--crowe-parchment) r g b / 0.4);
+    --crowe-parchment-45: rgb(from var(--crowe-parchment) r g b / 0.45);
+    --crowe-parchment-60: rgb(from var(--crowe-parchment) r g b / 0.6);
+    --crowe-parchment-66: rgb(from var(--crowe-parchment) r g b / 0.66);
+    --crowe-parchment-dim: var(--crowe-parchment-60);
 
-  /* Cache + error alpha steps — derived from their base hues. */
-  --crowe-cache-30: rgb(from var(--crowe-cache-glow) r g b / 0.30);
-  --crowe-cache-50: rgb(from var(--crowe-cache-glow) r g b / 0.50);
-  --crowe-cache-55: rgb(from var(--crowe-cache-glow) r g b / 0.55);
-  --crowe-error-06: rgb(from var(--crowe-error) r g b / 0.06);
-  --crowe-error-08: rgb(from var(--crowe-error) r g b / 0.08);
-  --crowe-error-15: rgb(from var(--crowe-error) r g b / 0.15);
-  --crowe-error-18: rgb(from var(--crowe-error) r g b / 0.18);
-  --crowe-error-20: rgb(from var(--crowe-error) r g b / 0.20);
-  --crowe-error-25: rgb(from var(--crowe-error) r g b / 0.25);
-  --crowe-error-35: rgb(from var(--crowe-error) r g b / 0.35);
-  --crowe-error-40: rgb(from var(--crowe-error) r g b / 0.40);
-  --crowe-error-50: rgb(from var(--crowe-error) r g b / 0.50);
-  --crowe-error-55: rgb(from var(--crowe-error) r g b / 0.55);
-  --crowe-error-65: rgb(from var(--crowe-error) r g b / 0.65);
+    /* Cache + error alpha steps — derived from their base hues. */
+    --crowe-cache-30: rgb(from var(--crowe-cache-glow) r g b / 0.3);
+    --crowe-cache-50: rgb(from var(--crowe-cache-glow) r g b / 0.5);
+    --crowe-cache-55: rgb(from var(--crowe-cache-glow) r g b / 0.55);
+    --crowe-error-06: rgb(from var(--crowe-error) r g b / 0.06);
+    --crowe-error-08: rgb(from var(--crowe-error) r g b / 0.08);
+    --crowe-error-15: rgb(from var(--crowe-error) r g b / 0.15);
+    --crowe-error-18: rgb(from var(--crowe-error) r g b / 0.18);
+    --crowe-error-20: rgb(from var(--crowe-error) r g b / 0.2);
+    --crowe-error-25: rgb(from var(--crowe-error) r g b / 0.25);
+    --crowe-error-35: rgb(from var(--crowe-error) r g b / 0.35);
+    --crowe-error-40: rgb(from var(--crowe-error) r g b / 0.4);
+    --crowe-error-50: rgb(from var(--crowe-error) r g b / 0.5);
+    --crowe-error-55: rgb(from var(--crowe-error) r g b / 0.55);
+    --crowe-error-65: rgb(from var(--crowe-error) r g b / 0.65);
 
-  /* White wash steps — faint top-edge highlights / inset glints on dark glass. */
-  --wash-light-015: rgba(255, 255, 255, 0.015);
-  --wash-light-02: rgba(255, 255, 255, 0.02);
-  --wash-light-025: rgba(255, 255, 255, 0.025);
-  --wash-light-04: rgba(255, 255, 255, 0.04);
-  --wash-light-06: rgba(255, 255, 255, 0.06);
-  --wash-light-10: rgba(255, 255, 255, 0.10);
-  --wash-light-15: rgba(255, 255, 255, 0.15);
+    /* White wash steps — faint top-edge highlights / inset glints on dark glass. */
+    --wash-light-015: rgba(255, 255, 255, 0.015);
+    --wash-light-02: rgba(255, 255, 255, 0.02);
+    --wash-light-025: rgba(255, 255, 255, 0.025);
+    --wash-light-04: rgba(255, 255, 255, 0.04);
+    --wash-light-06: rgba(255, 255, 255, 0.06);
+    --wash-light-10: rgba(255, 255, 255, 0.1);
+    --wash-light-15: rgba(255, 255, 255, 0.15);
 
-  /* Warm-parchment wash — hairlines + faint fills on editorial surfaces. */
-  --wash-parchment-04: rgb(from var(--crowe-parchment) r g b / 0.04);
-  --wash-parchment-07: rgb(from var(--crowe-parchment) r g b / 0.07);
-  --wash-parchment-08: rgb(from var(--crowe-parchment) r g b / 0.08);
-  --wash-parchment-16: rgb(from var(--crowe-parchment) r g b / 0.16);
-  --wash-parchment-18: rgb(from var(--crowe-parchment) r g b / 0.18);
+    /* Warm-parchment wash — hairlines + faint fills on editorial surfaces. */
+    --wash-parchment-04: rgb(from var(--crowe-parchment) r g b / 0.04);
+    --wash-parchment-07: rgb(from var(--crowe-parchment) r g b / 0.07);
+    --wash-parchment-08: rgb(from var(--crowe-parchment) r g b / 0.08);
+    --wash-parchment-16: rgb(from var(--crowe-parchment) r g b / 0.16);
+    --wash-parchment-18: rgb(from var(--crowe-parchment) r g b / 0.18);
 
-  /* Black shadow alphas — pure-black drop/inset shadows on graphite. */
-  --shadow-ink-20: rgba(0, 0, 0, 0.20);
-  --shadow-ink-25: rgba(0, 0, 0, 0.25);
-  --shadow-ink-32: rgba(0, 0, 0, 0.32);
-  --shadow-ink-35: rgba(0, 0, 0, 0.35);
-  --shadow-ink-38: rgba(0, 0, 0, 0.38);
-  --shadow-ink-40: rgba(0, 0, 0, 0.40);
-  --shadow-ink-45: rgba(0, 0, 0, 0.45);
-  --shadow-ink-55: rgba(0, 0, 0, 0.55);
+    /* Black shadow alphas — pure-black drop/inset shadows on graphite. */
+    --shadow-ink-20: rgba(0, 0, 0, 0.2);
+    --shadow-ink-25: rgba(0, 0, 0, 0.25);
+    --shadow-ink-32: rgba(0, 0, 0, 0.32);
+    --shadow-ink-35: rgba(0, 0, 0, 0.35);
+    --shadow-ink-38: rgba(0, 0, 0, 0.38);
+    --shadow-ink-40: rgba(0, 0, 0, 0.4);
+    --shadow-ink-45: rgba(0, 0, 0, 0.45);
+    --shadow-ink-55: rgba(0, 0, 0, 0.55);
 
-  /* Graphite-TINTED shadow alphas. Pure-black drop shadows read cheap on a
+    /* Graphite-TINTED shadow alphas. Pure-black drop shadows read cheap on a
    * warm-graphite UI; these carry the base hue so elevation looks like the
    * surface casting onto itself, not a sticker. */
-  --shadow-graphite-30: rgba(6, 6, 9, 0.30);
-  --shadow-graphite-45: rgba(6, 6, 9, 0.46);
-  --shadow-graphite-60: rgba(5, 5, 8, 0.62);
+    --shadow-graphite-30: rgba(6, 6, 9, 0.3);
+    --shadow-graphite-45: rgba(6, 6, 9, 0.46);
+    --shadow-graphite-60: rgba(5, 5, 8, 0.62);
 
-  /* Ink scrims — opaque-ish graphite-family washes behind popovers/menus. */
-  --ink-scrim-60: rgba(10, 10, 12, 0.6);
-  --ink-scrim-graphite-88: rgba(13, 13, 15, 0.88);
-  --ink-scrim-graphite-92: rgba(13, 13, 15, 0.92);
-  --ink-scrim-graphite-row-92: rgba(13, 13, 14, 0.92);
-  --ink-scrim-deep-85: rgba(9, 9, 10, 0.85);
-  --ink-scrim-black-50: rgba(8, 8, 10, 0.5);
-  --ink-scrim-black-55: rgba(8, 8, 9, 0.55);
-  --ink-scrim-slate-85: rgba(18, 18, 20, 0.85);
+    /* Ink scrims — opaque-ish graphite-family washes behind popovers/menus. */
+    --ink-scrim-60: rgba(10, 10, 12, 0.6);
+    --ink-scrim-graphite-88: rgba(13, 13, 15, 0.88);
+    --ink-scrim-graphite-92: rgba(13, 13, 15, 0.92);
+    --ink-scrim-graphite-row-92: rgba(13, 13, 14, 0.92);
+    --ink-scrim-deep-85: rgba(9, 9, 10, 0.85);
+    --ink-scrim-black-50: rgba(8, 8, 10, 0.5);
+    --ink-scrim-black-55: rgba(8, 8, 9, 0.55);
+    --ink-scrim-slate-85: rgba(18, 18, 20, 0.85);
 
-  /* Syntax + organic accents (editor token colors, moss-green deposit, danger
+    /* Syntax + organic accents (editor token colors, moss-green deposit, danger
    * coral). */
-  --syntax-comment: #abb2bf;
-  --syntax-string: #8fb99a;
-  --syntax-moss: #9ac28a;
-  --syntax-warn: #e5b454;
-  --syntax-coral: #ff8a78;
-  --crowe-moss-soft: #9ac28a;
-  --crowe-moss-35: rgba(154, 194, 138, 0.35);
-  --crowe-danger-wash-18: rgba(220, 80, 60, 0.18);
+    --syntax-comment: #abb2bf;
+    --syntax-string: #8fb99a;
+    --syntax-moss: #9ac28a;
+    --syntax-warn: #e5b454;
+    --syntax-coral: #ff8a78;
+    --crowe-moss-soft: #9ac28a;
+    --crowe-moss-35: rgba(154, 194, 138, 0.35);
+    --crowe-danger-wash-18: rgba(220, 80, 60, 0.18);
 
-  /* Opaque stop for luminance masks. Only the alpha matters; must be opaque. */
-  --mask-opaque: #000;
+    /* Opaque stop for luminance masks. Only the alpha matters; must be opaque. */
+    --mask-opaque: #000;
 
-  /* Spacing scale (8pt base, two minor steps) */
-  --space-3xs: 2px;
-  --space-2xs: 4px;
-  --space-xs: 6px;
-  --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 22px;
-  --space-2xl: 28px;
-  --space-3xl: 40px;
+    /* Spacing scale (8pt base, two minor steps) */
+    --space-3xs: 2px;
+    --space-2xs: 4px;
+    --space-xs: 6px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 22px;
+    --space-2xl: 28px;
+    --space-3xl: 40px;
 
-  /* Radius scale — organic / mycelial. The estate moved OFF square corners
+    /* Radius scale — organic / mycelial. The estate moved OFF square corners
    * (2026-07-16): biology has no straight lines, so the living-workspace
    * language uses soft, rounded geometry throughout. Pill stays reserved for
    * chips + status indicators. This single scale rounds the whole app. */
-  --radius-xs: 5px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 26px;
-  --radius-pill: 999px;
+    --radius-xs: 5px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 26px;
+    --radius-pill: 999px;
 
-  /* Elevation — graphite-tinted shadows for cards on graphite, calibrated to
+    /* Elevation — graphite-tinted shadows for cards on graphite, calibrated to
    * feel embossed not floating. */
-  --elev-0: none;
-  --elev-1: 0 1px 0 rgba(0, 0, 0, 0.4);
-  --elev-2: var(--shadow-card);
-  --elev-3: var(--shadow-card-strong);
-  --ring-gold: 0 0 0 1px var(--crowe-gold-40);
-  --ring-gold-soft: 0 0 0 1px var(--crowe-gold-25);
+    --elev-0: none;
+    --elev-1: 0 1px 0 rgba(0, 0, 0, 0.4);
+    --elev-2: var(--shadow-card);
+    --elev-3: var(--shadow-card-strong);
+    --ring-gold: 0 0 0 1px var(--crowe-gold-40);
+    --ring-gold-soft: 0 0 0 1px var(--crowe-gold-25);
 
-  /* Typography */
-  --font-serif: "Fraunces Variable", "Fraunces", Georgia, "Times New Roman", serif;
-  --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --font-body: var(--font-sans);
-  --font-display: var(--font-serif);
+    /* Typography */
+    --font-serif: "Fraunces Variable", "Fraunces", Georgia, "Times New Roman", serif;
+    --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --font-body: var(--font-sans);
+    --font-display: var(--font-serif);
 
-  /* Wordmark-specific tracking. Stacked all-caps lockup wants generous
+    /* Wordmark-specific tracking. Stacked all-caps lockup wants generous
    * letter-spacing; the small endorser eyebrow wants more. */
-  --tracking-wordmark-caps: 0.14em;
-  --tracking-eyebrow: 0.2em;
+    --tracking-wordmark-caps: 0.14em;
+    --tracking-eyebrow: 0.2em;
 
-  /* Letter-spacing tracks for the gold-on-graphite aesthetic */
-  --track-wide: 0.5px;
-  --track-wider: 1px;
-  --track-widest: 2px;
-  --track-cosmic: 3px;
+    /* Letter-spacing tracks for the gold-on-graphite aesthetic */
+    --track-wide: 0.5px;
+    --track-wider: 1px;
+    --track-widest: 2px;
+    --track-cosmic: 3px;
 
-  /* Type scale (instrument ramp) */
-  --type-step: 1;
-  --type-display-size: 26px; --type-display-leading: 1.0; --type-display-track: -0.02em;
-  --type-serif-size: 15px; --type-serif-leading: 1.4;
-  --type-eyebrow-size: 9px; --type-eyebrow-leading: 1.2; --type-eyebrow-track: 0.22em;
-  --type-body-size: 13px; --type-body-leading: 1.6;
-  --type-telemetry-size: 10.5px; --type-telemetry-leading: 1.3;
-  --type-data-size: 11px; --type-data-leading: 1.4; --type-data-track: 0.01em;
+    /* Type scale (instrument ramp) */
+    --type-step: 1;
+    --type-display-size: 26px;
+    --type-display-leading: 1;
+    --type-display-track: -0.02em;
+    --type-serif-size: 15px;
+    --type-serif-leading: 1.4;
+    --type-eyebrow-size: 9px;
+    --type-eyebrow-leading: 1.2;
+    --type-eyebrow-track: 0.22em;
+    --type-body-size: 13px;
+    --type-body-leading: 1.6;
+    --type-telemetry-size: 10.5px;
+    --type-telemetry-leading: 1.3;
+    --type-data-size: 11px;
+    --type-data-leading: 1.4;
+    --type-data-track: 0.01em;
 
-  /* --- Semantic tier (theme contract) ---------------------------------------
+    /* --- Semantic tier (theme contract) ---------------------------------------
    * Components consume THESE, never the --crowe-* primitives above. Dark values
    * here; parchment overrides in the [data-theme="light"] block below. */
 
-  /* Surfaces + ink */
-  --surface: var(--crowe-graphite);
-  --surface-raised: var(--crowe-graphite-card);
-  --surface-sunken: var(--crowe-graphite-sunken);
-  --surface-raised-hover: var(--crowe-graphite-raised-hover);
-  --surface-overlay: var(--crowe-graphite-overlay);
-  --text: var(--crowe-parchment);
-  --text-dim: var(--crowe-parchment-66);
+    /* Surfaces + ink */
+    --surface: var(--crowe-graphite);
+    --surface-raised: var(--crowe-graphite-card);
+    --surface-sunken: var(--crowe-graphite-sunken);
+    --surface-raised-hover: var(--crowe-graphite-raised-hover);
+    --surface-overlay: var(--crowe-graphite-overlay);
+    --text: var(--crowe-parchment);
+    --text-dim: var(--crowe-parchment-66);
 
-  /* Accent = Hypheus blue (interactive chrome: CTAs, focus, active fills). */
-  --accent: var(--crowe-blue);
-  --accent-bright: var(--crowe-blue-bright);
+    /* Accent = Hypheus blue (interactive chrome: CTAs, focus, active fills). */
+    --accent: var(--crowe-blue);
+    --accent-bright: var(--crowe-blue-bright);
 
-  /* Ink painted ON the accent (text on a blue fill). Light, for contrast. */
-  --accent-ink: #eef2f8;
+    /* Ink painted ON the accent (text on a blue fill). Light, for contrast. */
+    --accent-ink: #eef2f8;
 
-  /* Accent used AS TEXT (active tab/segment labels). Gold-as-fill is
+    /* Accent used AS TEXT (active tab/segment labels). Gold-as-fill is
    * theme-invariant, but gold-as-text fails WCAG on paper — the light block
    * deepens this one to gold-dim while fills keep --accent. */
-  --accent-text: var(--accent-bright);
+    --accent-text: var(--accent-bright);
 
-  /* Brand gold GRADIENT (mark, wordmark, accent text-fills). Themed: the
+    /* Brand gold GRADIENT (mark, wordmark, accent text-fills). Themed: the
    * luminous mid-stop is ~the parchment surface color, so it dissolves on
    * paper — the light block deepens the whole gradient to bronze. */
-  --crowe-gold-gradient: linear-gradient(135deg, #9c7b34, #f3e2ad 45%, #c6a866);
+    --crowe-gold-gradient: linear-gradient(135deg, #9c7b34, #f3e2ad 45%, #c6a866);
 
-  /* Default 1px separator color for non-glass borders/dividers. */
-  --hairline: var(--crowe-gold-15);
+    /* Default 1px separator color for non-glass borders/dividers. */
+    --hairline: var(--crowe-gold-15);
 
-  /* Glass tints — graphite ink at tier-specific alphas (a glass layer supplies
+    /* Glass tints — graphite ink at tier-specific alphas (a glass layer supplies
    * the blur/saturate halves; these are the themed color halves). chrome = nav
    * surfaces, raised = cards/sheets, overlay = modals/menus. */
-  --glass-tint-chrome: rgb(from var(--crowe-graphite) r g b / 0.55);
-  --glass-tint-raised: rgb(from var(--crowe-graphite-card) r g b / 0.62);
-  --glass-tint-overlay: rgb(from var(--crowe-graphite) r g b / 0.78);
+    --glass-tint-chrome: rgb(from var(--crowe-graphite) r g b / 0.55);
+    --glass-tint-raised: rgb(from var(--crowe-graphite-card) r g b / 0.62);
+    --glass-tint-overlay: rgb(from var(--crowe-graphite) r g b / 0.78);
 
-  /* Glass hairlines — gold alpha steps, 1px only. */
-  --glass-hairline-chrome: var(--crowe-gold-15);
-  --glass-hairline-raised: var(--crowe-gold-08);
-  --glass-hairline-overlay: var(--crowe-gold-18);
+    /* Glass hairlines — gold alpha steps, 1px only. */
+    --glass-hairline-chrome: var(--crowe-gold-15);
+    --glass-hairline-raised: var(--crowe-gold-08);
+    --glass-hairline-overlay: var(--crowe-gold-18);
 
-  /* Dim layer painted behind overlay-glass content. Graphite-ink dim. */
-  --glass-scrim: rgb(from var(--crowe-graphite) r g b / 0.55);
+    /* Dim layer painted behind overlay-glass content. Graphite-ink dim. */
+    --glass-scrim: rgb(from var(--crowe-graphite) r g b / 0.55);
 
-  /* Hairline tiers (BORDER/divider use). */
-  --hairline-faint: var(--crowe-gold-08);
-  --hairline-strong: var(--crowe-gold-18);
+    /* Hairline tiers (BORDER/divider use). */
+    --hairline-faint: var(--crowe-gold-08);
+    --hairline-strong: var(--crowe-gold-18);
 
-  /* Accent FILLS (faint blue backgrounds: chips, hovers, active washes). */
-  --wash-accent-faint: var(--crowe-blue-04);
-  --wash-accent: var(--crowe-blue-08);
-  --wash-accent-mid: var(--crowe-blue-18);
-  --wash-accent-strong: var(--crowe-blue-40);
+    /* Accent FILLS (faint blue backgrounds: chips, hovers, active washes). */
+    --wash-accent-faint: var(--crowe-blue-04);
+    --wash-accent: var(--crowe-blue-08);
+    --wash-accent-mid: var(--crowe-blue-18);
+    --wash-accent-strong: var(--crowe-blue-40);
 
-  /* Card shadows (drop/elevation). Graphite-tinted, never pure black: a
+    /* Card shadows (drop/elevation). Graphite-tinted, never pure black: a
    * two-layer cast (tight contact + soft ambient) so raised surfaces sit ON
    * the canvas instead of floating over a black halo. */
-  --shadow-card: 0 1px 2px var(--shadow-graphite-30), 0 6px 18px var(--shadow-graphite-45);
-  --shadow-card-strong: 0 2px 4px var(--shadow-graphite-45), 0 16px 40px var(--shadow-graphite-60);
+    --shadow-card: 0 1px 2px var(--shadow-graphite-30), 0 6px 18px var(--shadow-graphite-45);
+    --shadow-card-strong: 0 2px 4px var(--shadow-graphite-45), 0 16px 40px var(--shadow-graphite-60);
 
-  /* Panel scrims (opaque-ish panel bg / dim wash). */
-  --scrim-panel: var(--crowe-graphite-card);
-  --scrim-overlay: var(--ink-scrim-graphite-88);
+    /* Panel scrims (opaque-ish panel bg / dim wash). */
+    --scrim-panel: var(--crowe-graphite-card);
+    --scrim-overlay: var(--ink-scrim-graphite-88);
 
-  /* Faint surface scrims — low-alpha background tints, NOT heavy overlays. */
-  --scrim-tint: rgba(0, 0, 0, 0.25);
-  --scrim-dim: rgba(9, 9, 11, 0.60);
+    /* Faint surface scrims — low-alpha background tints, NOT heavy overlays. */
+    --scrim-tint: rgba(0, 0, 0, 0.25);
+    --scrim-dim: rgba(9, 9, 11, 0.6);
 
-  /* Edge highlight (white emboss glint on dark; inverted on paper). */
-  --edge-highlight: var(--wash-light-06);
+    /* Edge highlight (white emboss glint on dark; inverted on paper). */
+    --edge-highlight: var(--wash-light-06);
 
-  /* Lit top-bevel. A border whose TOP edge is brighter than its sides reads as
+    /* Lit top-bevel. A border whose TOP edge is brighter than its sides reads as
    * a surface catching light from above — the highest-leverage depth cue.
    * Apply as border-top-color on raised surfaces over a --hairline base. */
-  --hair-top: var(--wash-light-10);
+    --hair-top: var(--wash-light-10);
 
-  /* Accent glow (gold halo/ring at component level; theme-invariant). */
-  --glow-gold: var(--crowe-gold-40);
+    /* Accent glow (gold halo/ring at component level; theme-invariant). */
+    --glow-gold: var(--crowe-gold-40);
 
-  /* Canvas dot (flow/graph backgrounds). */
-  --canvas-dot: var(--crowe-gold-18);
+    /* Canvas dot (flow/graph backgrounds). */
+    --canvas-dot: var(--crowe-gold-18);
 }
 
 /* --- Parchment mode (light theme) --------------------------------------------
@@ -319,210 +328,459 @@
  * text becomes graphite ink, hairlines warm to gold-dim. */
 
 [data-theme="light"] {
-  --surface: #efeadc;
-  --surface-raised: #f5f1e6;
-  --surface-sunken: #e6e0cf;
-  --surface-raised-hover: #faf7ee;
-  --surface-overlay: #f9f5eb;
+    --surface: #efeadc;
+    --surface-raised: #f5f1e6;
+    --surface-sunken: #e6e0cf;
+    --surface-raised-hover: #faf7ee;
+    --surface-overlay: #f9f5eb;
 
-  --text: #1c1c21;
-  --text-dim: rgba(28, 28, 33, 0.70);
+    --text: #1c1c21;
+    --text-dim: rgba(28, 28, 33, 0.7);
 
-  /* Gold-as-text deepens to gold-dim on paper; fills stay --accent. */
-  --accent-text: var(--crowe-gold-dim);
+    /* Gold-as-text deepens to gold-dim on paper; fills stay --accent. */
+    --accent-text: var(--crowe-gold-dim);
 
-  /* Gold GRADIENT deepened for paper so the mark/wordmark stay legible without
+    /* Gold GRADIENT deepened for paper so the mark/wordmark stay legible without
    * a forbidden light-gold recolor. */
-  --crowe-gold-gradient: linear-gradient(135deg, #6b5218, #8a6b28 45%, #5a4514);
+    --crowe-gold-gradient: linear-gradient(135deg, #6b5218, #8a6b28 45%, #5a4514);
 
-  --hairline: rgb(from var(--crowe-gold-dim) r g b / 0.30);
+    --hairline: rgb(from var(--crowe-gold-dim) r g b / 0.3);
 
-  --glass-tint-chrome: rgba(239, 234, 220, 0.60);
-  --glass-tint-raised: rgba(245, 241, 230, 0.67);
-  --glass-tint-overlay: rgba(239, 234, 220, 0.83);
+    --glass-tint-chrome: rgba(239, 234, 220, 0.6);
+    --glass-tint-raised: rgba(245, 241, 230, 0.67);
+    --glass-tint-overlay: rgba(239, 234, 220, 0.83);
 
-  --glass-hairline-chrome: rgb(from var(--crowe-gold-dim) r g b / 0.30);
-  --glass-hairline-raised: rgb(from var(--crowe-gold-dim) r g b / 0.16);
-  --glass-hairline-overlay: rgb(from var(--crowe-gold-dim) r g b / 0.36);
+    --glass-hairline-chrome: rgb(from var(--crowe-gold-dim) r g b / 0.3);
+    --glass-hairline-raised: rgb(from var(--crowe-gold-dim) r g b / 0.16);
+    --glass-hairline-overlay: rgb(from var(--crowe-gold-dim) r g b / 0.36);
 
-  --glass-scrim: rgba(47, 41, 33, 0.45);
+    --glass-scrim: rgba(47, 41, 33, 0.45);
 
-  --hairline-faint: rgb(from var(--crowe-gold-dim) r g b / 0.16);
-  --hairline-strong: rgb(from var(--crowe-gold-dim) r g b / 0.38);
+    --hairline-faint: rgb(from var(--crowe-gold-dim) r g b / 0.16);
+    --hairline-strong: rgb(from var(--crowe-gold-dim) r g b / 0.38);
 
-  --wash-accent-faint: rgb(from var(--crowe-blue-dim) r g b / 0.08);
-  --wash-accent: rgb(from var(--crowe-blue-dim) r g b / 0.13);
-  --wash-accent-mid: rgb(from var(--crowe-blue-dim) r g b / 0.20);
-  --wash-accent-strong: rgb(from var(--crowe-blue-dim) r g b / 0.30);
+    --wash-accent-faint: rgb(from var(--crowe-blue-dim) r g b / 0.08);
+    --wash-accent: rgb(from var(--crowe-blue-dim) r g b / 0.13);
+    --wash-accent-mid: rgb(from var(--crowe-blue-dim) r g b / 0.2);
+    --wash-accent-strong: rgb(from var(--crowe-blue-dim) r g b / 0.3);
 
-  --elev-1: 0 1px 0 rgba(74, 60, 28, 0.10);
-  --shadow-card: 0 1px 2px rgba(74, 60, 28, 0.08), 0 6px 18px rgba(74, 60, 28, 0.12);
-  --shadow-card-strong: 0 2px 4px rgba(74, 60, 28, 0.12), 0 16px 40px rgba(74, 60, 28, 0.20);
+    --elev-1: 0 1px 0 rgba(74, 60, 28, 0.1);
+    --shadow-card: 0 1px 2px rgba(74, 60, 28, 0.08), 0 6px 18px rgba(74, 60, 28, 0.12);
+    --shadow-card-strong: 0 2px 4px rgba(74, 60, 28, 0.12), 0 16px 40px rgba(74, 60, 28, 0.2);
 
-  --scrim-panel: var(--surface-raised);
-  --scrim-overlay: rgba(239, 234, 220, 0.88);
+    --scrim-panel: var(--surface-raised);
+    --scrim-overlay: rgba(239, 234, 220, 0.88);
 
-  --scrim-tint: rgba(74, 60, 28, 0.08);
-  --scrim-dim: rgba(239, 234, 220, 0.72);
+    --scrim-tint: rgba(74, 60, 28, 0.08);
+    --scrim-dim: rgba(239, 234, 220, 0.72);
 
-  --edge-highlight: rgba(255, 255, 255, 0.45);
-  --hair-top: rgba(255, 255, 255, 0.55);
+    --edge-highlight: rgba(255, 255, 255, 0.45);
+    --hair-top: rgba(255, 255, 255, 0.55);
 
-  --glow-gold: var(--crowe-gold-40);
-  --canvas-dot: rgb(from var(--crowe-gold-dim) r g b / 0.22);
+    --glow-gold: var(--crowe-gold-40);
+    --canvas-dot: rgb(from var(--crowe-gold-dim) r g b / 0.22);
 }
 
 /* Scoped instrument chrome leaves terminal ANSI, syntax and user themes intact. */
 .crowe-dock-root,
+.crowe-operator-panel,
+.crowe-launcher,
 .crowe-onboarding {
-  --surface: #121212;
-  --surface-raised: #191919;
-  --text: #f4f0e7;
-  --text-dim: #b6b0a5;
-  --accent: #b99a5b;
-  --accent-bright: #d0b471;
-  --accent-text: #d0b471;
-  --accent-ink: #121212;
-  --hairline: #2b2a28;
-  --hairline-faint: var(--hairline);
-  --hairline-strong: var(--hairline);
-  --wash-accent-faint: rgb(185 154 91 / 0.04);
-  --wash-accent: rgb(185 154 91 / 0.08);
-  --wash-accent-mid: rgb(185 154 91 / 0.12);
-  --wash-accent-strong: rgb(185 154 91 / 0.18);
-  --radius-xs: 3px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 8px;
-  --radius-2xl: 8px;
-  color: var(--text);
-  font-family: var(--font-sans);
+    --surface: #121212;
+    --surface-raised: #191919;
+    --surface-sunken: var(--surface);
+    --surface-raised-hover: #23221f;
+    --border: var(--hairline);
+    --text: #f4f0e7;
+    --text-dim: #b6b0a5;
+    --accent: #b99a5b;
+    --accent-bright: #d0b471;
+    --accent-text: #d0b471;
+    --accent-ink: #121212;
+    --hairline: #2b2a28;
+    --hairline-faint: var(--hairline);
+    --hairline-strong: var(--hairline);
+    --wash-accent-faint: rgb(185 154 91 / 0.04);
+    --wash-accent: rgb(185 154 91 / 0.08);
+    --wash-accent-mid: rgb(185 154 91 / 0.12);
+    --wash-accent-strong: rgb(185 154 91 / 0.18);
+    --radius-xs: 3px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 8px;
+    --radius-2xl: 8px;
+    color: var(--text);
+    font-family: var(--font-sans);
 }
 
 [data-theme="light"] .crowe-dock-root,
+[data-theme="light"] .crowe-operator-panel,
+[data-theme="light"] .crowe-launcher,
 [data-theme="light"] .crowe-onboarding {
-  --surface: #f4f0e7;
-  --surface-raised: #fbf9f4;
-  --text: #121212;
-  --text-dim: #615c53;
-  --accent-text: #121212;
-  --hairline: #ded8cd;
+    --surface: #f4f0e7;
+    --surface-raised: #fbf9f4;
+    --surface-raised-hover: #e9e4da;
+    --text: #121212;
+    --text-dim: #615c53;
+    --accent-text: #121212;
+    --hairline: #ded8cd;
 }
 
 .crowe-dock-root .crowe-instrument-surface,
 .crowe-onboarding {
-  background: var(--surface);
-  backdrop-filter: none;
-  box-shadow: none;
-  border-color: var(--hairline);
+    background: var(--surface);
+    backdrop-filter: none;
+    box-shadow: none;
+    border-color: var(--hairline);
 }
 
 .crowe-dock-root .crowe-dock-column {
-  max-width: none;
-  transition: none;
+    max-width: none;
+    transition: none;
 }
 
 .crowe-dock-root .crowe-dock-head {
-  background: var(--surface-raised);
-  border-bottom: 1px solid var(--hairline);
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--hairline);
 }
 
 .crowe-dock-root .crowe-model-item {
-  border-radius: 4px;
-  color: var(--text);
-  background: var(--surface-raised);
-  box-shadow: none;
+    border-radius: 4px;
+    color: var(--text);
+    background: var(--surface-raised);
+    box-shadow: none;
 }
 
 .crowe-dock-root .crowe-model-item-active {
-  border-color: var(--accent);
+    border-color: var(--accent);
 }
 
 .crowe-dock-root .crowe-dock-rail .crowe-dock-btn-active {
-  color: var(--accent-text);
-  background: var(--surface-raised);
-  border-color: var(--accent);
-  box-shadow: none;
+    color: var(--accent-text);
+    background: var(--surface-raised);
+    border-color: var(--accent);
+    box-shadow: none;
 }
 
 .crowe-dock-root .crowe-dock-rail .crowe-dock-btn-active .crowe-dock-glyph,
 .crowe-dock-root .crowe-dock-brand img {
-  animation: none;
-  filter: none;
+    animation: none;
+    filter: none;
 }
 
 .crowe-dock-root .crowe-dock-pane .crowe-chat-model {
-  border-radius: 4px;
-  background: var(--surface-raised);
+    border-radius: 4px;
+    background: var(--surface-raised);
 }
 
 .crowe-dock-root .crowe-chat-model-dot {
-  box-shadow: none;
+    box-shadow: none;
 }
 
 .crowe-dock-root .crowe-dock-pane .crowe-dock-head {
-  padding: 8px 12px;
+    padding: 8px 12px;
 }
 
 .crowe-dock-root .crowe-dock-pane .crowe-dock-title {
-  font-family: var(--font-sans);
+    font-family: var(--font-sans);
 }
 
 .crowe-dock-root [role="separator"]:focus-visible {
-  outline-offset: -2px;
+    outline-offset: -2px;
 }
 
 .crowe-dock-root .crowe-model-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  overflow-wrap: anywhere;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    overflow-wrap: anywhere;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
 }
 
 .crowe-dock-root .crowe-panel-hint,
 .crowe-dock-root .crowe-model-desc,
 .crowe-dock-root .crowe-metric-lbl,
 .crowe-dock-root .crowe-status-src {
-  color: var(--text-dim);
+    color: var(--text-dim);
 }
 
 .crowe-dock-root .crowe-status-line {
-  flex-wrap: wrap;
+    flex-wrap: wrap;
 }
 
 .crowe-dock-root .crowe-activity {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .crowe-dock-root .crowe-status-dot {
-  animation: none;
-  box-shadow: none;
+    animation: none;
+    box-shadow: none;
 }
 
 .crowe-dock-root .crowe-status-running .crowe-status-dot {
-  background: var(--text-dim);
+    background: var(--text-dim);
 }
 
 .crowe-dock-root :is(button, input, select, textarea, [role="separator"]):focus-visible,
 .crowe-onboarding :is(button, a, input):focus-visible {
-  outline: 2px solid var(--accent-text);
-  outline-offset: 2px;
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
 }
 
 .crowe-onboarding .crowe-welcome-title {
-  font-family: var(--font-serif);
+    font-family: var(--font-serif);
+}
+
+.crowe-operator-panel .crowe-operator-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 4px 8px;
+    padding: 8px;
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--hairline);
+    font-size: 12px;
+}
+
+.crowe-operator-panel .crowe-operator-engine {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 120px;
+    padding: 4px;
+    border-radius: 4px;
+    color: var(--accent-text);
+    text-align: left;
+    font-family: var(--font-mono);
+}
+
+.crowe-operator-session-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.crowe-operator-panel .crowe-account-button {
+    max-width: 172px;
+    min-width: 0;
+    min-height: 28px;
+}
+
+.crowe-operator-panel .crowe-account-button span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.crowe-operator-panel .crowe-operator-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 28px;
+    height: 28px;
+    border-radius: 4px;
+    color: var(--text-dim);
+}
+
+.crowe-operator-panel :is(.crowe-operator-icon, .crowe-operator-engine, .crowe-authority-control):hover {
+    color: var(--text);
+    background: var(--surface-raised-hover);
+}
+
+.crowe-operator-panel .crowe-operator-authority {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 8px;
+    min-width: 0;
+    padding: 4px 12px;
+    border-bottom: 1px solid var(--hairline);
+    color: var(--text-dim);
+    font-size: 12px;
+}
+
+.crowe-operator-panel .crowe-authority-control {
+    flex-shrink: 0;
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    padding: 2px 4px;
+    color: var(--text);
+}
+
+.crowe-operator-panel .crowe-authority-enabled {
+    border-color: var(--accent);
+    color: var(--accent-text);
+}
+
+.crowe-operator-context {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.crowe-operator-run-state {
+    margin-left: auto;
+    font-family: var(--font-mono);
+}
+
+.crowe-operator-welcome {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 16px 16px;
+}
+
+.crowe-operator-welcome h1 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    line-height: 1.2;
+    color: var(--text);
+}
+
+.crowe-operator-shortcuts {
+    border-top: 1px solid var(--hairline);
+    padding-top: 12px;
+}
+
+.crowe-operator-starters button {
+    border: 0;
+    border-bottom: 1px solid var(--hairline);
+    border-radius: 0;
+    padding: 8px 0;
+    background: var(--surface);
+    box-shadow: none;
+    transform: none;
+    transition: none;
+}
+
+.crowe-operator-starters button:hover {
+    background: var(--surface-raised);
+    box-shadow: none;
+    transform: none;
+}
+
+.crowe-operator-starters button i {
+    color: var(--text-dim);
+    transform: none;
+}
+
+.crowe-account-setup {
+    min-width: 0;
+    padding: 16px 0;
+    border-top: 1px solid var(--hairline);
+    overflow-wrap: anywhere;
+}
+
+.crowe-account-setup-compact {
+    margin: 8px;
+    padding: 12px 0;
+}
+
+.crowe-account-default {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--hairline);
+}
+
+.crowe-operator-panel .crowe-account-primary {
+    border-color: var(--accent);
+    background: var(--surface-raised);
+    color: var(--text);
+}
+
+.crowe-operator-panel .crowe-account-primary:hover {
+    background: var(--surface-raised-hover);
+}
+
+.crowe-account-alternative {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--text);
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.crowe-operator-panel .crowe-operator-composer {
+    flex-shrink: 0;
+    min-width: 0;
+    background: var(--surface);
+}
+
+.crowe-operator-panel .crowe-operator-composer form > div {
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    background: var(--surface-raised);
+    box-shadow: none;
+    backdrop-filter: none;
+    transition: none;
+}
+
+.crowe-operator-panel .crowe-operator-composer form > div:focus-within {
+    border-color: var(--accent);
+}
+
+.crowe-operator-panel .crowe-operator-composer button {
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+.crowe-operator-panel .crowe-operator-composer button[aria-label="Connect Crowe account"] {
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--accent);
+}
+
+.crowe-operator-panel .crowe-operator-error {
+    position: relative;
+    margin: 8px;
+    padding: 12px;
+    border-left: 2px solid var(--crowe-error);
+    background: var(--surface-raised);
+    color: var(--text);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+@container (max-width: 380px) {
+    .crowe-operator-header .crowe-account-button span {
+        display: none;
+    }
+
+    .crowe-operator-header .crowe-account-button {
+        width: 28px;
+        justify-content: center;
+        padding: 4px;
+    }
+
+    .crowe-operator-panel .crowe-operator-engine {
+        flex-basis: 80px;
+    }
+}
+
+.crowe-operator-panel :is(button, a, input, textarea):focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .crowe-dock-root *,
-  .crowe-onboarding * {
-    animation: none !important;
-    transition: none !important;
-  }
+    .crowe-operator-panel *,
+    .crowe-dock-root *,
+    .crowe-onboarding * {
+        animation: none !important;
+        transition: none !important;
+    }
 }

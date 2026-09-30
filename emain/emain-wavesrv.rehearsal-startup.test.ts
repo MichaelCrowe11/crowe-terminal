@@ -12,7 +12,13 @@ vi.mock("../frontend/util/endpoints", () => ({
     WebServerEndpointVarName: "WAVE_SERVER_WEB_ENDPOINT",
     WSServerEndpointVarName: "WAVE_SERVER_WS_ENDPOINT",
 }));
-vi.mock("./authkey", () => ({ AuthKey: "synthetic-unit-test-auth", WaveAuthKeyEnv: "WAVETERM_AUTH_KEY" }));
+vi.mock("./authkey", () => ({
+    AuthKey: "synthetic-unit-test-auth",
+    WaveAuthKeyEnv: "WAVETERM_AUTH_KEY",
+    setWaveSrvFrontendKey: (env: NodeJS.ProcessEnv) => {
+        env.WAVETERM_FRONTEND_KEY = "synthetic-frontend-key";
+    },
+}));
 vi.mock("./emain-activity", () => ({ setForceQuit: vi.fn(), setUserConfirmedQuit: vi.fn() }));
 vi.mock("./updater", () => ({ updater: null }));
 vi.mock("./emain-platform", () => ({
@@ -70,6 +76,8 @@ describe("backend offline rehearsal startup", () => {
         expect(childEnv).not.toHaveProperty("WAVETERM_DEV");
         expect(childEnv).not.toHaveProperty("WAVETERM_DEV_VITE");
         expect(childEnv.SYNTHETIC_KEEP).toBe("unchanged");
+        expect(childEnv.WAVETERM_FRONTEND_KEY).toBe("synthetic-frontend-key");
+        expect(env).not.toHaveProperty("WAVETERM_FRONTEND_KEY");
         for (const name of SafetyFlags) expect(childEnv[name]).toBe("1");
         expect(env).toEqual(before);
         expect(process.env).toBe(env);
